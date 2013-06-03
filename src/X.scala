@@ -377,19 +377,22 @@ object X extends App {
   val druzinarkaHana = new Druzinar(schoolSchedule,Teacher("Hana"),4)
 
   // <preassignment>
-  def preassign(tj:TeachersJob,cls:Int,day:Int,hour:Int) {
+  def preassign(tj:TeachersJob,cls:Int,day:Int,hour:Int):Unit = preassign(tj,List(cls),day,hour)
+  def preassign(tj:TeachersJob,cls:Iterable[Int],day:Int,hour:Int):Unit = {
     if(!(teachersJobs.contains(tj))) throw new RuntimeException("Preassigning non-existent TJ")
     teachersJobs = teachersJobs diff List(tj)
-    schoolSchedule.schoolSchedule(cls).classSchedule(day)(hour) = tj
+    cls.foreach(c => schoolSchedule.schoolSchedule(c).classSchedule(day)(hour) = tj)
   }
 
   preassign(IvaJobs(0),6,FRIDAY,2)
   preassign(IvaJobs(1),6,FRIDAY,3)
 
-  (5 to LAST_GRADE).foreach(preassign(TeachersJob(Teacher("Lucka"),ClassHour("Tv_Dív 6/7/8/9",Set(5,6,7,8))),_,MONDAY,5))
-  (5 to LAST_GRADE).foreach(preassign(TeachersJob(Teacher("Lucka"),ClassHour("Tv_Dív 6/7/8/9",Set(5,6,7,8))),_,THURSDAY,6))
-  (5 to LAST_GRADE).foreach(preassign(TeachersJob(Teacher("Lucka"),ClassHour("Tv_Chl 6/7/8/9",Set(5,6,7,8))),_,MONDAY,6))
-  (5 to LAST_GRADE).foreach(preassign(TeachersJob(Teacher("Lucka"),ClassHour("Tv_Chl 6/7/8/9",Set(5,6,7,8))),_,THURSDAY,5))
+  val secondary = Set(5,6,7,8)
+
+  preassign(TeachersJob(Teacher("Lucka"),ClassHour("Tv_Dív 6/7/8/9",secondary)),secondary,MONDAY,5)
+  preassign(TeachersJob(Teacher("Lucka"),ClassHour("Tv_Dív 6/7/8/9",secondary)),secondary,THURSDAY,6)
+  preassign(TeachersJob(Teacher("Lucka"),ClassHour("Tv_Chl 6/7/8/9",secondary)),secondary,MONDAY,6)
+  preassign(TeachersJob(Teacher("Lucka"),ClassHour("Tv_Chl 6/7/8/9",secondary)),secondary,THURSDAY,5)
 
   // </preassignment>
 

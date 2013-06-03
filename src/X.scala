@@ -2,6 +2,20 @@ import scala.collection.immutable.IndexedSeq
 
 object X extends App {
 
+  private val MONDAY = 0
+  private val TUESDAY = 1
+  private val WEDNESDAY = 2
+  private val THURSDAY = 3
+  private val FRIDAY = 4
+
+  private val FIRST_HOUR = 0
+  private val LAST_HOUR = 7
+
+  private val FIRST_GRADE = 0
+  private val LAST_GRADE = 8
+
+  private val VERY_HIGH_H = 10000
+
   class ClassHour(val subject:String, val classes:Set[Int]) {
     val arts = subject=="Vv"
     val mainSubject = Set("Čj","Aj","M").contains(subject)
@@ -16,16 +30,16 @@ object X extends App {
 
   class ClassSchedule {
     val classSchedule = {
-      val aux = new Array[Array[TeachersJob]](5)
-      0 to 4 foreach (i => aux(i) = new Array[TeachersJob](8))
+      val aux = new Array[Array[TeachersJob]](FRIDAY - MONDAY + 1)
+      MONDAY to FRIDAY foreach (i => aux(i) = new Array[TeachersJob](LAST_HOUR - FIRST_HOUR + 1))
       aux
     }
   }
 
   class SchoolSchedule {
     val schoolSchedule = {
-      val aux = new Array[ClassSchedule](9)
-      0 to 8 foreach (i => aux(i) = new ClassSchedule())
+      val aux = new Array[ClassSchedule](LAST_GRADE - FIRST_GRADE + 1)
+      FIRST_GRADE to LAST_GRADE foreach (i => aux(i) = new ClassSchedule())
       aux
     }
   }
@@ -40,7 +54,7 @@ object X extends App {
 
   abstract class NecessaryConstraint extends Constraint {
     def preferred:Boolean = {valid}
-    def h:Int = {if(valid) 0 else 1000}
+    def h:Int = {if(valid) 0 else VERY_HIGH_H}
   }
 
   abstract class PreferenceConstraint extends Constraint {
@@ -52,7 +66,7 @@ object X extends App {
     def valid = {
       schoolSchedule.schoolSchedule forall (x => x.classSchedule.zipWithIndex forall (x => {
         val daySch = x._1
-        !((daySch(6)!=null || daySch(7)!=null) && !days.contains(x._2))
+        !((daySch(LAST_HOUR-1)!=null || daySch(LAST_HOUR)!=null) && !days.contains(x._2))
       }))
     }
   }
@@ -70,34 +84,34 @@ object X extends App {
   }
 
   def morningSchoolNtimes(cs:ClassSchedule,ntimes:Int) = {
-    cs.classSchedule.filter(x => x(0)!=null).size<=ntimes
+    cs.classSchedule.filter(x => x(FIRST_HOUR)!=null).size<=ntimes
   }
 
   def afternoonSchoolNtimes(cs:ClassSchedule,ntimes:Int) = {
-    cs.classSchedule.filter(ds => (ds(6)!=null || ds(7)!=null)).size<=ntimes
+    cs.classSchedule.filter(ds => (ds(LAST_HOUR-1)!=null || ds(LAST_HOUR)!=null)).size<=ntimes
   }
 
   class PrvniDruha(val schoolSchedule:SchoolSchedule) extends NecessaryConstraint {
     def valid = {
-      0 to 1 forall (i => morningSchoolNtimes(schoolSchedule.schoolSchedule(i),0) && afternoonSchoolNtimes(schoolSchedule.schoolSchedule(i),0))
+      FIRST_GRADE to (FIRST_GRADE+1) forall (i => morningSchoolNtimes(schoolSchedule.schoolSchedule(i),0) && afternoonSchoolNtimes(schoolSchedule.schoolSchedule(i),0))
     }
   }
 
   class Treti(val schoolSchedule:SchoolSchedule) extends NecessaryConstraint {
     def valid = {
-      morningSchoolNtimes(schoolSchedule.schoolSchedule(2),1) && afternoonSchoolNtimes(schoolSchedule.schoolSchedule(2),0)
+      morningSchoolNtimes(schoolSchedule.schoolSchedule(FIRST_GRADE+2),1) && afternoonSchoolNtimes(schoolSchedule.schoolSchedule(FIRST_GRADE+2),0)
     }
   }
 
   class CtvrtaPata(val schoolSchedule:SchoolSchedule) extends NecessaryConstraint {
     def valid = {
-      3 to 4 forall (i => morningSchoolNtimes(schoolSchedule.schoolSchedule(i),1) && afternoonSchoolNtimes(schoolSchedule.schoolSchedule(i),1))
+      FIRST_GRADE+3 to FIRST_GRADE+4 forall (i => morningSchoolNtimes(schoolSchedule.schoolSchedule(i),1) && afternoonSchoolNtimes(schoolSchedule.schoolSchedule(i),1))
     }
   }
 
   class JedenUcitelJednaHodina(val schoolSchedule:SchoolSchedule) extends NecessaryConstraint {
     def valid = {
-      0 to 4 forall (i => 0 to 7 forall (j => {
+      MONDAY to FRIDAY forall (i => FIRST_HOUR to LAST_HOUR forall (j => {
         val aux = schoolSchedule.schoolSchedule.map(cs => cs.classSchedule(i)(j)).filter(tj=>tj!=null).map(_.teacher)
         aux.distinct.size == aux.size
       }))
@@ -106,13 +120,13 @@ object X extends App {
 
   class UcitelUciVUrciteDny(val schoolSchedule:SchoolSchedule, t:Teacher, days:Set[Int]) extends NecessaryConstraint {
     def valid = {
-      schoolSchedule.schoolSchedule forall (x => ((0 to 4).toSet -- days) forall (i => x.classSchedule(i) forall (tj => tj == null || tj.teacher!=t)))
+      schoolSchedule.schoolSchedule forall (x => ((MONDAY to FRIDAY).toSet -- days) forall (i => x.classSchedule(i) forall (tj => tj == null || tj.teacher!=t)))
     }
   }
 
   class UcitelUciVUrciteHodiny(val schoolSchedule:SchoolSchedule, t:Teacher, hours:Set[Int]) extends NecessaryConstraint {
     def valid = {
-      schoolSchedule.schoolSchedule.forall(cs => cs.classSchedule forall(ds => (0 to 7).toSet -- hours forall(i => ds(i)==null || ds(i).teacher!=t)))
+      schoolSchedule.schoolSchedule.forall(cs => cs.classSchedule forall(ds => (FIRST_HOUR to LAST_HOUR).toSet -- hours forall(i => ds(i)==null || ds(i).teacher!=t)))
     }
   }
 
@@ -125,10 +139,10 @@ object X extends App {
           })
       }).foldLeft(0)((b, lh) => if (lh > b) lh else b)
 
-      val endsOfDays: IndexedSeq[Int] = (0 to 4).map(findEndOfDay)
+      val endsOfDays: IndexedSeq[Int] = (MONDAY to FRIDAY).map(findEndOfDay)
 
       endsOfDays.zipWithIndex.forall(endOfDay => {
-        schoolSchedule.schoolSchedule.forall(cs => ((normalHour+1) to 7) forall (i => {
+        schoolSchedule.schoolSchedule.forall(cs => ((normalHour+1) to LAST_HOUR) forall (i => {
           val ds = cs.classSchedule(endOfDay._2)
           ds(i) == null || ds(i).teacher!=t || i==endOfDay._1
         }))
@@ -163,7 +177,7 @@ object X extends App {
 
   class DvojhodinnovePredmetyNeVeDnechPoSobe(val schoolSchedule:SchoolSchedule) extends NecessaryConstraint {
     def valid = {
-      val twoHourSubjects: IndexedSeq[IndexedSeq[Array[String]]] = (0 to 8).map(cls => (0 to 4).map(day => {
+      val twoHourSubjects: IndexedSeq[IndexedSeq[Array[String]]] = (FIRST_GRADE to LAST_GRADE).map(cls => (MONDAY to FRIDAY).map(day => {
         schoolSchedule.schoolSchedule(cls).classSchedule(day).filter(tj => tj!=null && tj.classHour.twoHour).map(tj => tj.classHour.subject)
       }))
       twoHourSubjects.forall(allDaysForClass => {
@@ -199,6 +213,22 @@ object X extends App {
     }
   }
 
+  def penalizeSubjectsInGivenHours(schoolSchedule:SchoolSchedule,selector:(ClassHour => Boolean),hours:Seq[Int]) = {
+    schoolSchedule.schoolSchedule.foldLeft(0)((totalPerSchool,cs) => {
+      totalPerSchool + cs.classSchedule.foldLeft(0)((totalPerClass,ds) => {
+        totalPerClass + hours.map(i => ds(i)).filter(tj => tj!=null && selector(tj.classHour)).size
+      })
+    })
+  }
+
+  class HlavniPredmetyRano(val schoolSchedule:SchoolSchedule) extends PreferenceConstraint {
+    def h = penalizeSubjectsInGivenHours(schoolSchedule,(ch => ch.mainSubject),(FIRST_HOUR :: (4 to LAST_HOUR).toList))
+  }
+
+  class SpojenePredmetyRano(val schoolSchedule:SchoolSchedule) extends PreferenceConstraint {
+    def h = penalizeSubjectsInGivenHours(schoolSchedule,(ch => ch.combinedClasses && ch.mainSubject),5 to LAST_HOUR)
+  }
+
   val schoolSchedule: SchoolSchedule = new SchoolSchedule()
 
   val t1 = new Teacher("A")
@@ -206,12 +236,14 @@ object X extends App {
   val t3 = new Teacher("C")
   val tVv = new Teacher("VvT")
   val tD = new Teacher("D")
+  val tM = new Teacher("M")
 
   val ch1 = new ClassHour("P1",Set(1))
   val ch2 = new ClassHour("P2",Set(1))
   val vv = new ClassHour("Vv",Set(1))
   val tv = new ClassHour("Tv chlapci",Set(1))
   val d = new ClassHour("D",Set(5))
+  val m = new ClassHour("M",Set(5))
 
   val tj11 = new TeachersJob(t1,ch1)
   val tj12 = new TeachersJob(t1,ch2)
@@ -227,12 +259,14 @@ object X extends App {
   val tjD1 = new TeachersJob(tD,d)
   val tjD2 = new TeachersJob(tD,d)
 
+  val tjM = new TeachersJob(tM,m)
+
 //  schoolSchedule.schoolSchedule(0).classSchedule(0)(1) = tj11
-  schoolSchedule.schoolSchedule(0).classSchedule(0)(5) = tj11
+//  schoolSchedule.schoolSchedule(0).classSchedule(0)(5) = tj11
 //  schoolSchedule.schoolSchedule(1).classSchedule(0)(1) = tj22
-  schoolSchedule.schoolSchedule(1).classSchedule(0)(5) = tj22
+//  schoolSchedule.schoolSchedule(1).classSchedule(0)(5) = tj22
 //  schoolSchedule.schoolSchedule(2).classSchedule(0)(6) = tj22
-  schoolSchedule.schoolSchedule(2).classSchedule(0)(4) = tj22
+//  schoolSchedule.schoolSchedule(2).classSchedule(0)(4) = tj22
 
 //  schoolSchedule.schoolSchedule(3).classSchedule(0)(0) = tj32
 //  schoolSchedule.schoolSchedule(3).classSchedule(0)(1) = tj32
@@ -241,15 +275,15 @@ object X extends App {
 //  schoolSchedule.schoolSchedule(3).classSchedule(0)(4) = tj32
 //  schoolSchedule.schoolSchedule(3).classSchedule(0)(5) = tj32
 
-  schoolSchedule.schoolSchedule(0).classSchedule(0)(5) = tj32
-  schoolSchedule.schoolSchedule(1).classSchedule(0)(5) = tj32
-  schoolSchedule.schoolSchedule(2).classSchedule(0)(5) = tj32
-  schoolSchedule.schoolSchedule(3).classSchedule(0)(5) = tj32
-  schoolSchedule.schoolSchedule(4).classSchedule(0)(5) = tj32
-  schoolSchedule.schoolSchedule(5).classSchedule(0)(5) = tj32
-  schoolSchedule.schoolSchedule(6).classSchedule(0)(5) = tj32
-  schoolSchedule.schoolSchedule(7).classSchedule(0)(5) = tj32
-  schoolSchedule.schoolSchedule(8).classSchedule(0)(5) = tj32
+//  schoolSchedule.schoolSchedule(0).classSchedule(0)(5) = tj32
+//  schoolSchedule.schoolSchedule(1).classSchedule(0)(5) = tj32
+//  schoolSchedule.schoolSchedule(2).classSchedule(0)(5) = tj32
+//  schoolSchedule.schoolSchedule(3).classSchedule(0)(5) = tj32
+//  schoolSchedule.schoolSchedule(4).classSchedule(0)(5) = tj32
+//  schoolSchedule.schoolSchedule(5).classSchedule(0)(5) = tj32
+//  schoolSchedule.schoolSchedule(6).classSchedule(0)(5) = tj32
+//  schoolSchedule.schoolSchedule(7).classSchedule(0)(5) = tj32
+//  schoolSchedule.schoolSchedule(8).classSchedule(0)(5) = tj32
 //
 //  schoolSchedule.schoolSchedule(1).classSchedule(3)(4) = tjvv1
 //  schoolSchedule.schoolSchedule(1).classSchedule(3)(5) = tv1
@@ -258,7 +292,15 @@ object X extends App {
 //  schoolSchedule.schoolSchedule(5).classSchedule(0)(0) = tjD1
 //  schoolSchedule.schoolSchedule(5).classSchedule(1)(1) = tjD2
 
-  val odpol = new OdpoledniVUrciteDny(schoolSchedule,Set(0,3))
+  schoolSchedule.schoolSchedule(5).classSchedule(WEDNESDAY)(LAST_HOUR) = tjM
+
+  val combM = new ClassHour("M",Set(3,4))
+
+  val tjCM1 = new TeachersJob(tM,combM)
+  schoolSchedule.schoolSchedule(3).classSchedule(WEDNESDAY)(3) = tjCM1
+  schoolSchedule.schoolSchedule(4).classSchedule(WEDNESDAY)(3) = tjCM1
+
+  val odpol = new OdpoledniVUrciteDny(schoolSchedule,Set(MONDAY,THURSDAY))
   val volna = new VolnaHodina(schoolSchedule)
   val prvniDruha = new PrvniDruha(schoolSchedule)
   val neprerusene = new NepreruseneVyucovaniDopoledne(schoolSchedule)
@@ -269,17 +311,21 @@ object X extends App {
   val vvVzdyPoSobe = new VvVzdyPoSobe(schoolSchedule)
   val dvojHodinoveNePoSobe = new DvojhodinnovePredmetyNeVeDnechPoSobe(schoolSchedule)
   val stejnyNeVeStejnyDen = new StejnyPredmetNeVTenSamyDen(schoolSchedule)
+  val hlavniPredmety = new HlavniPredmetyRano(schoolSchedule)
+  val spojenePredmety = new SpojenePredmetyRano(schoolSchedule)
 
-  println(odpol.valid)
-  println(volna.valid)
-  println(prvniDruha.valid)
-  println(neprerusene.valid)
-  println(t2UciJenVPo.valid)
-  println(exklusivitaUcitele.valid)
-  println(t1JenDopoledne.valid)
-  println(t3druzinar.valid)
-  println(vvVzdyPoSobe.valid)
-  println(dvojHodinoveNePoSobe.valid)
-  println(stejnyNeVeStejnyDen.h)
+  println("odpol = "+(odpol.valid))
+  println("volna = "+(volna.valid))
+  println("prvniDruha = "+(prvniDruha.valid))
+  println("neprerusene = "+(neprerusene.valid))
+  println("t2UciJenVPo = "+(t2UciJenVPo.valid))
+  println("exklusivitaUcitele = "+(exklusivitaUcitele.valid))
+  println("t1JenDopoledne = "+(t1JenDopoledne.valid))
+  println("t3druzinar = "+(t3druzinar.valid))
+  println("vvVzdyPoSobe = "+(vvVzdyPoSobe.valid))
+  println("dvojHodinoveNePoSobe = "+(dvojHodinoveNePoSobe.valid))
+  println("stejnyNeVeStejnyDen = "+(stejnyNeVeStejnyDen.h))
+  println("hlavniPredmety = "+(hlavniPredmety.h))
+  println("spojenePredmety = "+(spojenePredmety.h))
 
 }

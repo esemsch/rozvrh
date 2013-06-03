@@ -159,20 +159,26 @@ object X extends App {
   class DvojhodinnovePredmetyNeVeDnechPoSobe(val schoolSchedule:SchoolSchedule) extends NecessaryConstraint {
     def valid = {
       val twoHourSubjects: IndexedSeq[IndexedSeq[Array[String]]] = (0 to 8).map(cls => (0 to 4).map(day => {
-        schoolSchedule.schoolSchedule(cls).classSchedule(day).filter(tj => tj.classHour.twoHour).map(tj => tj.classHour.subject)
+        schoolSchedule.schoolSchedule(cls).classSchedule(day).filter(tj => tj!=null && tj.classHour.twoHour).map(tj => tj.classHour.subject)
       }))
       twoHourSubjects.forall(allDaysForClass => {
         allDaysForClass.zipWithIndex.foldLeft((Map[String,Int](),true))((twoHoursSubjectsWithDays,oneDay) => {
           val currentDaysTwoHourSubjects: Array[String] = oneDay._1
           val currentDay: Int = oneDay._2
 
+          val twoInTheSameDay = currentDaysTwoHourSubjects.distinct.size != currentDaysTwoHourSubjects.size
+
           val ok = currentDaysTwoHourSubjects.forall(subj => {
-            if(twoHoursSubjectsWithDays._1.get(subj).forall(day => currentDay-day <= 1)) false else true
-          })
+            if(twoHoursSubjectsWithDays._1.get(subj).exists(day => currentDay-day <= 1)) {
+              false
+            } else {
+              true
+            }
+          }) && !twoInTheSameDay
           val outMap = currentDaysTwoHourSubjects.foldLeft(twoHoursSubjectsWithDays._1)((m,subj) => m + (subj -> currentDay))
 
           (outMap,twoHoursSubjectsWithDays._2 && ok)
-        })
+        })._2
       })
     }
   }
@@ -182,12 +188,14 @@ object X extends App {
   val t1 = new Teacher("A")
   val t2 = new Teacher("B")
   val t3 = new Teacher("C")
-  val vvt = new Teacher("VvT")
+  val tVv = new Teacher("VvT")
+  val tD = new Teacher("D")
 
   val ch1 = new ClassHour("P1",Set(1))
   val ch2 = new ClassHour("P2",Set(1))
   val vv = new ClassHour("Vv",Set(1))
   val tv = new ClassHour("Tv chlapci",Set(1))
+  val d = new ClassHour("D",Set(5))
 
   val tj11 = new TeachersJob(t1,ch1)
   val tj12 = new TeachersJob(t1,ch2)
@@ -196,9 +204,12 @@ object X extends App {
   val tj31 = new TeachersJob(t3,ch1)
   val tj32 = new TeachersJob(t3,ch2)
 
-  val tjvv1 = new TeachersJob(vvt,vv)
-  val tjvv2 = new TeachersJob(vvt,vv)
+  val tjvv1 = new TeachersJob(tVv,vv)
+  val tjvv2 = new TeachersJob(tVv,vv)
   val tv1 = new TeachersJob(t2,tv)
+
+  val tjD1 = new TeachersJob(tD,d)
+  val tjD2 = new TeachersJob(tD,d)
 
   schoolSchedule.schoolSchedule(0).classSchedule(0)(1) = tj11
   schoolSchedule.schoolSchedule(0).classSchedule(0)(5) = tj11
@@ -228,6 +239,9 @@ object X extends App {
   schoolSchedule.schoolSchedule(1).classSchedule(3)(5) = tv1
   schoolSchedule.schoolSchedule(1).classSchedule(3)(6) = tjvv2
 
+  schoolSchedule.schoolSchedule(5).classSchedule(0)(0) = tjD1
+  schoolSchedule.schoolSchedule(5).classSchedule(1)(1) = tjD2
+
   val odpol = new OdpoledniVUrciteDny(schoolSchedule,Set(0,3))
   val volna = new VolnaHodina(schoolSchedule)
   val prvniDruha = new PrvniDruha(schoolSchedule)
@@ -237,6 +251,7 @@ object X extends App {
   val t1JenDopoledne = new UcitelUciVUrciteHodiny(schoolSchedule,t1,Set(0,1,2,3,4))
   val t3druzinar = new Druzinar(schoolSchedule,t3,4)
   val vvVzdyPoSobe = new VvVzdyPoSobe(schoolSchedule)
+  val dvojHodinoveNePoSobe = new DvojhodinnovePredmetyNeVeDnechPoSobe(schoolSchedule)
 
   println(odpol.valid)
   println(volna.valid)
@@ -247,5 +262,6 @@ object X extends App {
   println(t1JenDopoledne.valid)
   println(t3druzinar.valid)
   println(vvVzdyPoSobe.valid)
+  println(dvojHodinoveNePoSobe.valid)
 
 }

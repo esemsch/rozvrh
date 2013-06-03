@@ -112,9 +112,15 @@ object X extends App {
   class JedenUcitelJednaHodina(val schoolSchedule:SchoolSchedule) extends NecessaryConstraint {
     def valid = {
       MONDAY to FRIDAY forall (i => FIRST_HOUR to LAST_HOUR forall (j => {
-        val aux = schoolSchedule.schoolSchedule.map(cs => cs.classSchedule(i)(j)).filter(tj=>tj!=null).map(_.teacher)
+        val aux = schoolSchedule.schoolSchedule.map(cs => cs.classSchedule(i)(j)).filter(tj=>tj!=null).distinct.map(_.teacher)
         aux.distinct.size == aux.size
       }))
+    }
+  }
+
+  class PredmetySpravnePrirazeneTridam(val schoolSchedule:SchoolSchedule) extends NecessaryConstraint {
+    def valid = {
+      schoolSchedule.schoolSchedule.zipWithIndex.forall(csi => csi._1.classSchedule.forall(ds => ds.filter(_!=null).forall(tj => tj.classHour.classes.contains(csi._2))))
     }
   }
 
@@ -275,15 +281,15 @@ object X extends App {
 //  schoolSchedule.schoolSchedule(3).classSchedule(0)(4) = tj32
 //  schoolSchedule.schoolSchedule(3).classSchedule(0)(5) = tj32
 
-//  schoolSchedule.schoolSchedule(0).classSchedule(0)(5) = tj32
-//  schoolSchedule.schoolSchedule(1).classSchedule(0)(5) = tj32
-//  schoolSchedule.schoolSchedule(2).classSchedule(0)(5) = tj32
-//  schoolSchedule.schoolSchedule(3).classSchedule(0)(5) = tj32
-//  schoolSchedule.schoolSchedule(4).classSchedule(0)(5) = tj32
-//  schoolSchedule.schoolSchedule(5).classSchedule(0)(5) = tj32
-//  schoolSchedule.schoolSchedule(6).classSchedule(0)(5) = tj32
-//  schoolSchedule.schoolSchedule(7).classSchedule(0)(5) = tj32
-//  schoolSchedule.schoolSchedule(8).classSchedule(0)(5) = tj32
+  schoolSchedule.schoolSchedule(0).classSchedule(0)(5) = tj32
+  schoolSchedule.schoolSchedule(1).classSchedule(0)(5) = tj32
+  schoolSchedule.schoolSchedule(2).classSchedule(0)(5) = tj32
+  schoolSchedule.schoolSchedule(3).classSchedule(0)(5) = tj32
+  schoolSchedule.schoolSchedule(4).classSchedule(0)(5) = tj32
+  schoolSchedule.schoolSchedule(5).classSchedule(0)(5) = tj32
+  schoolSchedule.schoolSchedule(6).classSchedule(0)(5) = tj32
+  schoolSchedule.schoolSchedule(7).classSchedule(0)(5) = tj32
+  schoolSchedule.schoolSchedule(8).classSchedule(0)(5) = tj32
 //
 //  schoolSchedule.schoolSchedule(1).classSchedule(3)(4) = tjvv1
 //  schoolSchedule.schoolSchedule(1).classSchedule(3)(5) = tv1
@@ -313,6 +319,7 @@ object X extends App {
   val stejnyNeVeStejnyDen = new StejnyPredmetNeVTenSamyDen(schoolSchedule)
   val hlavniPredmety = new HlavniPredmetyRano(schoolSchedule)
   val spojenePredmety = new SpojenePredmetyRano(schoolSchedule)
+  val spravnePrirazene = new PredmetySpravnePrirazeneTridam(schoolSchedule)
 
   println("odpol = "+(odpol.valid))
   println("volna = "+(volna.valid))
@@ -327,5 +334,6 @@ object X extends App {
   println("stejnyNeVeStejnyDen = "+(stejnyNeVeStejnyDen.h))
   println("hlavniPredmety = "+(hlavniPredmety.h))
   println("spojenePredmety = "+(spojenePredmety.h))
+  println("spravnePrirazene = "+(spravnePrirazene.valid))
 
 }

@@ -1,7 +1,7 @@
 object Y extends App {
 
-  val m = Map[String,Int]() + ("x" -> -10)
+  val l = List(1,1,2,2,2,3)
 
-  if(m.get("x").exists(x => x<0)) println("Ahoj")
+  println(l contains 2)
 
 }

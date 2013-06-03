@@ -16,17 +16,17 @@ object X extends App {
 
   private val VERY_HIGH_H = 10000
 
-  class ClassHour(val subject:String, val classes:Set[Int]) {
-    val arts = subject=="Vv"
-    val mainSubject = Set("Čj","Aj","M").contains(subject)
-    val twoHour = Set("Vl", "Př", "D", "Z", "F", "Ch").contains(subject)
+  case class ClassHour(val subject:String, val classes:Set[Int]) {
+    val arts = subject.contains("Vv")
+    val mainSubject = Set("Čj","Aj","M").exists(subject.contains(_))
+    val twoHour = Set("Vl", "Př", "D", "Z", "F", "Ch").exists(subject.contains(_))
     val combinedClasses = classes.size>1
     val pe = subject.contains("Tv")
   }
 
-  class Teacher(val name:String)
+  case class Teacher(val name:String)
 
-  class TeachersJob(val teacher:Teacher, val classHour:ClassHour)
+  case class TeachersJob(val teacher:Teacher, val classHour:ClassHour)
 
   class ClassSchedule {
     val classSchedule = {
@@ -43,8 +43,6 @@ object X extends App {
       aux
     }
   }
-
-  def noSense = throw new RuntimeException("Does not make sense")
 
   abstract class Constraint {
     def valid:Boolean
@@ -235,85 +233,137 @@ object X extends App {
     def h = penalizeSubjectsInGivenHours(schoolSchedule,(ch => ch.combinedClasses && ch.mainSubject),5 to LAST_HOUR)
   }
 
+  def createTeachersJobs(subject:String,count:Int,teacher:String) = {
+    val clss = subject.filter(_.isDigit).map(_.toString.toInt-1).toSet
+    val ch = new ClassHour(subject,clss)
+    (1 to count).map(i => new TeachersJob(Teacher(teacher),ch)).toList
+  }
+
+  val TerezaJobs = Map(
+    "Aj 8/9" -> 1,
+    "Aj 8" -> 2,
+    "Aj 9" -> 2,
+    "Aj 6/7" -> 1,
+    "Aj 6" -> 2,
+    "Aj 7" -> 2,
+    "Vl 4/5" -> 1,
+    "Vl 4" -> 1,
+    "Vl 5" -> 1,
+    "Prv 3/Př 4" -> 2,
+    "Prv 3" -> 1,
+    "Vv 2/4" -> 1,
+    "Vv 4" -> 1,
+    "Hv 3/5" -> 1,
+    "Vv 6/7" -> 2,
+    "Vv 8/9" -> 1
+  ).flatMap(e => createTeachersJobs(e._1,e._2,"Tereza")).toList
+
+  val AlenaJobs = Map(
+    "F/M 6/7" -> 1,
+    "M/F 6/7" -> 1,
+    "F 6" -> 1,
+    "F 7" -> 1,
+    "M 6" -> 3,
+    "M 7" -> 3,
+    "M 6/7" -> 1,
+    "F/M 8/9" -> 1,
+    "M/F 8/9" -> 1,
+    "M 8" -> 3,
+    "M 9" -> 3,
+    "M 8/9" -> 1,
+    "F 8" -> 1,
+    "F 9" -> 1
+  ).flatMap(e => createTeachersJobs(e._1,e._2,"Alena")).toList
+
+  val HanaJobs = Map(
+    "Čj 6/7" -> 1,
+    "Čj 6" -> 3,
+    "Čj 7" -> 3,
+    "D 6/7" -> 1,
+    "D 6" -> 1,
+    "D 7" -> 1,
+    "D 8" -> 2,
+    "D 9" -> 2,
+    "Z 6/7" -> 1,
+    "Z 6" -> 1,
+    "Z 7" -> 1,
+    "Z 8/9" -> 1,
+    "Z 8" -> 1,
+    "Z 9" -> 1,
+    "Hv 6/7" -> 1,
+    "Hv 8/9" -> 1
+  ).flatMap(e => createTeachersJobs(e._1,e._2,"Hana")).toList
+
+  val GitaJobs = Map(
+    "Čj 2/4" -> 8,
+    "Čj 2" -> 2,
+    "M 2/4" -> 5,
+    "Prv/Př  2/4" -> 1,
+    "Prv 2" -> 1,
+    "Hv 2/4" -> 1,
+    "Tv 2/4" -> 2,
+    "Pč 2/4" -> 1
+  ).flatMap(e => createTeachersJobs(e._1,e._2,"Gita")).toList
+
+  val MartinaJobs = Map(
+    "Čj 3/5" -> 7,
+    "Čj 3" -> 2,
+    "M 3/5" -> 5,
+    "Aj 4/5" -> 3,
+    "Aj 3" -> 3,
+    "Vv 3/5" -> 1,
+    "Vv 5" -> 1
+  ).flatMap(e => createTeachersJobs(e._1,e._2,"Martina")).toList
+
+  val BohunkaJobs = Map(
+    "Čj 8/9" -> 1,
+    "Čj 8" -> 3,
+    "Čj 9" -> 3,
+    "SPV 9" -> 1
+  ).flatMap(e => createTeachersJobs(e._1,e._2,"Bohunka")).toList
+
+  val LuckaJobs = Map(
+    "Př 8/9" -> 1,
+    "Př 8" -> 1,
+    "Př 9" -> 1,
+    "Ch 8/9" -> 1,
+    "Ch 8" -> 1,
+    "Ch 9" -> 1,
+    "Př 6/7" -> 1,
+    "Př 6" -> 1,
+    "Př 7" -> 1,
+    "Vo 6/7" -> 1,
+    "Rv 7" -> 1,
+    "Tv 3/5" -> 2,
+    "Tv_Dív 6/7/8/9" -> 2,
+    "Tv_Chl 6/7/8/9" -> 2
+  ).flatMap(e => createTeachersJobs(e._1,e._2,"Lucka")).toList
+
+  val EvaJobs = Map(
+    "Inf 5/6" -> 1,
+    "Inf 8" -> 2,
+    "Inf 9" -> 2,
+    "Spv 8" -> 1,
+    "Vo 8/9" -> 1,
+    "Rv 8/9" -> 1,
+    "Pč 3/5" -> 1,
+    "Pč 6/7" -> 1,
+    "Pč 8/9" -> 1
+  ).flatMap(e => createTeachersJobs(e._1,e._2,"Eva")).toList
+
+  val IvaJobs = Map(
+    "Rj 7" ->	2
+  ).flatMap(e => createTeachersJobs(e._1,e._2,"Iva")).toList
+
+  var teachersJobs = (TerezaJobs ++ AlenaJobs ++ HanaJobs ++ GitaJobs ++ MartinaJobs ++ BohunkaJobs ++ LuckaJobs ++ EvaJobs ++ IvaJobs)
+
   val schoolSchedule: SchoolSchedule = new SchoolSchedule()
-
-  val t1 = new Teacher("A")
-  val t2 = new Teacher("B")
-  val t3 = new Teacher("C")
-  val tVv = new Teacher("VvT")
-  val tD = new Teacher("D")
-  val tM = new Teacher("M")
-
-  val ch1 = new ClassHour("P1",Set(1))
-  val ch2 = new ClassHour("P2",Set(1))
-  val vv = new ClassHour("Vv",Set(1))
-  val tv = new ClassHour("Tv chlapci",Set(1))
-  val d = new ClassHour("D",Set(5))
-  val m = new ClassHour("M",Set(5))
-
-  val tj11 = new TeachersJob(t1,ch1)
-  val tj12 = new TeachersJob(t1,ch2)
-  val tj21 = new TeachersJob(t2,ch1)
-  val tj22 = new TeachersJob(t2,ch2)
-  val tj31 = new TeachersJob(t3,ch1)
-  val tj32 = new TeachersJob(t3,ch2)
-
-  val tjvv1 = new TeachersJob(tVv,vv)
-  val tjvv2 = new TeachersJob(tVv,vv)
-  val tv1 = new TeachersJob(t2,tv)
-
-  val tjD1 = new TeachersJob(tD,d)
-  val tjD2 = new TeachersJob(tD,d)
-
-  val tjM = new TeachersJob(tM,m)
-
-//  schoolSchedule.schoolSchedule(0).classSchedule(0)(1) = tj11
-//  schoolSchedule.schoolSchedule(0).classSchedule(0)(5) = tj11
-//  schoolSchedule.schoolSchedule(1).classSchedule(0)(1) = tj22
-//  schoolSchedule.schoolSchedule(1).classSchedule(0)(5) = tj22
-//  schoolSchedule.schoolSchedule(2).classSchedule(0)(6) = tj22
-//  schoolSchedule.schoolSchedule(2).classSchedule(0)(4) = tj22
-
-//  schoolSchedule.schoolSchedule(3).classSchedule(0)(0) = tj32
-//  schoolSchedule.schoolSchedule(3).classSchedule(0)(1) = tj32
-//  schoolSchedule.schoolSchedule(3).classSchedule(0)(2) = tj32
-//  schoolSchedule.schoolSchedule(3).classSchedule(0)(3) = tj32
-//  schoolSchedule.schoolSchedule(3).classSchedule(0)(4) = tj32
-//  schoolSchedule.schoolSchedule(3).classSchedule(0)(5) = tj32
-
-  schoolSchedule.schoolSchedule(0).classSchedule(0)(5) = tj32
-  schoolSchedule.schoolSchedule(1).classSchedule(0)(5) = tj32
-  schoolSchedule.schoolSchedule(2).classSchedule(0)(5) = tj32
-  schoolSchedule.schoolSchedule(3).classSchedule(0)(5) = tj32
-  schoolSchedule.schoolSchedule(4).classSchedule(0)(5) = tj32
-  schoolSchedule.schoolSchedule(5).classSchedule(0)(5) = tj32
-  schoolSchedule.schoolSchedule(6).classSchedule(0)(5) = tj32
-  schoolSchedule.schoolSchedule(7).classSchedule(0)(5) = tj32
-  schoolSchedule.schoolSchedule(8).classSchedule(0)(5) = tj32
-//
-//  schoolSchedule.schoolSchedule(1).classSchedule(3)(4) = tjvv1
-//  schoolSchedule.schoolSchedule(1).classSchedule(3)(5) = tv1
-//  schoolSchedule.schoolSchedule(1).classSchedule(3)(6) = tjvv2
-//
-//  schoolSchedule.schoolSchedule(5).classSchedule(0)(0) = tjD1
-//  schoolSchedule.schoolSchedule(5).classSchedule(1)(1) = tjD2
-
-  schoolSchedule.schoolSchedule(5).classSchedule(WEDNESDAY)(LAST_HOUR) = tjM
-
-  val combM = new ClassHour("M",Set(3,4))
-
-  val tjCM1 = new TeachersJob(tM,combM)
-  schoolSchedule.schoolSchedule(3).classSchedule(WEDNESDAY)(3) = tjCM1
-  schoolSchedule.schoolSchedule(4).classSchedule(WEDNESDAY)(3) = tjCM1
 
   val odpol = new OdpoledniVUrciteDny(schoolSchedule,Set(MONDAY,THURSDAY))
   val volna = new VolnaHodina(schoolSchedule)
   val prvniDruha = new PrvniDruha(schoolSchedule)
   val neprerusene = new NepreruseneVyucovaniDopoledne(schoolSchedule)
-  val t2UciJenVPo = new UcitelUciVUrciteDny(schoolSchedule,t2,Set(0))
   val exklusivitaUcitele = new JedenUcitelJednaHodina(schoolSchedule)
-  val t1JenDopoledne = new UcitelUciVUrciteHodiny(schoolSchedule,t1,Set(0,1,2,3,4))
-  val t3druzinar = new Druzinar(schoolSchedule,t3,4)
   val vvVzdyPoSobe = new VvVzdyPoSobe(schoolSchedule)
   val dvojHodinoveNePoSobe = new DvojhodinnovePredmetyNeVeDnechPoSobe(schoolSchedule)
   val stejnyNeVeStejnyDen = new StejnyPredmetNeVTenSamyDen(schoolSchedule)
@@ -321,19 +371,43 @@ object X extends App {
   val spojenePredmety = new SpojenePredmetyRano(schoolSchedule)
   val spravnePrirazene = new PredmetySpravnePrirazeneTridam(schoolSchedule)
 
+  val reditelUciJenVPoAPa = new UcitelUciVUrciteDny(schoolSchedule,Teacher("Bohunka"),Set(MONDAY,FRIDAY))
+  val evaVolnoVUtAPa = new UcitelUciVUrciteDny(schoolSchedule,Teacher("Eva"),Set(MONDAY,WEDNESDAY,THURSDAY))
+  val luckaVolnoVPa = new UcitelUciVUrciteDny(schoolSchedule,Teacher("Lucka"),Set(MONDAY,TUESDAY,WEDNESDAY,THURSDAY))
+  val druzinarkaHana = new Druzinar(schoolSchedule,Teacher("Hana"),4)
+
+  // <preassignment>
+  def preassign(tj:TeachersJob,cls:Int,day:Int,hour:Int) {
+    if(!(teachersJobs.contains(tj))) throw new RuntimeException("Preassigning non-existent TJ")
+    teachersJobs = teachersJobs diff List(tj)
+    schoolSchedule.schoolSchedule(cls).classSchedule(day)(hour) = tj
+  }
+
+  preassign(IvaJobs(0),6,FRIDAY,2)
+  preassign(IvaJobs(1),6,FRIDAY,3)
+
+  (5 to LAST_GRADE).foreach(preassign(TeachersJob(Teacher("Lucka"),ClassHour("Tv_Dív 6/7/8/9",Set(5,6,7,8))),_,MONDAY,5))
+  (5 to LAST_GRADE).foreach(preassign(TeachersJob(Teacher("Lucka"),ClassHour("Tv_Dív 6/7/8/9",Set(5,6,7,8))),_,THURSDAY,6))
+  (5 to LAST_GRADE).foreach(preassign(TeachersJob(Teacher("Lucka"),ClassHour("Tv_Chl 6/7/8/9",Set(5,6,7,8))),_,MONDAY,6))
+  (5 to LAST_GRADE).foreach(preassign(TeachersJob(Teacher("Lucka"),ClassHour("Tv_Chl 6/7/8/9",Set(5,6,7,8))),_,THURSDAY,5))
+
+  // </preassignment>
+
   println("odpol = "+(odpol.valid))
   println("volna = "+(volna.valid))
   println("prvniDruha = "+(prvniDruha.valid))
   println("neprerusene = "+(neprerusene.valid))
-  println("t2UciJenVPo = "+(t2UciJenVPo.valid))
   println("exklusivitaUcitele = "+(exklusivitaUcitele.valid))
-  println("t1JenDopoledne = "+(t1JenDopoledne.valid))
-  println("t3druzinar = "+(t3druzinar.valid))
   println("vvVzdyPoSobe = "+(vvVzdyPoSobe.valid))
   println("dvojHodinoveNePoSobe = "+(dvojHodinoveNePoSobe.valid))
   println("stejnyNeVeStejnyDen = "+(stejnyNeVeStejnyDen.h))
   println("hlavniPredmety = "+(hlavniPredmety.h))
   println("spojenePredmety = "+(spojenePredmety.h))
   println("spravnePrirazene = "+(spravnePrirazene.valid))
+
+  println("reditelUciJenVPoAPa = "+(reditelUciJenVPoAPa.valid))
+  println("evaVolnoVUtAPa = "+(evaVolnoVUtAPa.valid))
+  println("luckaVolnoVPa = "+(luckaVolnoVPa.valid))
+  println("druzinarkaHana = "+(druzinarkaHana.valid))
 
 }

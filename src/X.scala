@@ -76,18 +76,15 @@ object X extends App {
     def h(day: Int, hour: Int):Int = {if(valid(day,hour)) 0 else 1000}
   }
 
-  class OneClassOneSubject(val schoolSchedule:SchoolSchedule) extends CrossHourConstraint {
-    def valid(day: Int, hour: Int): Boolean = {
-
+  class SixthAndSeventhInCertainDaysOnly(val schoolSchedule:SchoolSchedule, days:Set[Int]) extends CrossWeekConstraint {
+    def valid: Boolean = {
+      schoolSchedule.schoolSchedule forall (x => x.classSchedule.zipWithIndex forall (x => {
+        val daySch = x._1
+        !((daySch(6)!=null || daySch(7)!=null) && !days.contains(x._2))
+      }))
     }
-
-    def preferred(day: Int, hour: Int): Boolean = {
-
-    }
-
-    def h(day: Int, hour: Int): Int = {
-
-    }
+    def preferred: Boolean = valid()
+    def h(): Int = if(valid()) 0 else 1000
   }
 
   val schoolSchedule: SchoolSchedule = new SchoolSchedule()
@@ -103,11 +100,14 @@ object X extends App {
   val tj21 = new TeachersJob(t2,ch1)
   val tj22 = new TeachersJob(t2,ch2)
 
-  schoolSchedule.schoolSchedule(0).classSchedule(0)(0) = tj21
+  schoolSchedule.schoolSchedule(0).classSchedule(0)(0) = tj11
   schoolSchedule.schoolSchedule(1).classSchedule(0)(0) = tj22
+  schoolSchedule.schoolSchedule(1).classSchedule(1)(5) = tj22
 
   val c = new OneTeacherOneHour(schoolSchedule)
+  val odpol = new SixthAndSeventhInCertainDaysOnly(schoolSchedule,Set(0,3))
 
   println(c.valid(0,0))
+  println(odpol.valid)
 
 }

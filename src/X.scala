@@ -17,7 +17,11 @@ object X extends App {
   }
 
   class SchoolSchedule {
-    val schoolSchedule = new Array[ClassSchedule](9)
+    val schoolSchedule = {
+      val aux = new Array[ClassSchedule](9)
+      0 to 8 foreach (i => aux(i) = new ClassSchedule())
+      aux
+    }
 
     def daySchedules(day:Int) = {schoolSchedule.map(_.daySchedule(day))}
     def hourSchedules(day:Int,hour:Int) = {
@@ -25,40 +29,85 @@ object X extends App {
     }
   }
 
-  abstract class HourConstraint(schoolSchedule:SchoolSchedule) {
-    def valid(cls:Int,day:Int,hour:Int)
-    def preferred(cls:Int,day:Int,hour:Int)
-    def h(cls:Int,day:Int,hour:Int)
+  def noSense = throw new RuntimeException("Does not make sense")
+
+  abstract class HourConstraint {
+    def valid(cls:Int,day:Int,hour:Int):Boolean
+    def preferred(cls:Int,day:Int,hour:Int):Boolean
+    def h(cls:Int,day:Int,hour:Int):Int
   }
 
-  abstract class CrossHourConstraint(schoolSchedule:SchoolSchedule) {
-    def valid(day:Int,hour:Int)
-    def preferred(day:Int,hour:Int)
-    def h(day:Int,hour:Int)
+  abstract class CrossHourConstraint {
+    def valid(day:Int,hour:Int):Boolean
+    def preferred(day:Int,hour:Int):Boolean
+    def h(day:Int,hour:Int):Int
   }
 
-  abstract class DayConstraint(schoolSchedule:SchoolSchedule) {
-    def valid(cls:Int,day:Int)
-    def preferred(cls:Int,day:Int)
-    def h(cls:Int,day:Int)
+  abstract class DayConstraint {
+    def valid(cls:Int,day:Int):Boolean
+    def preferred(cls:Int,day:Int):Boolean
+    def h(cls:Int,day:Int):Int
   }
 
-  abstract class CrossDayConstraint(schoolSchedule:SchoolSchedule) {
-    def valid(day:Int)
-    def preferred(day:Int)
-    def h(day:Int)
+  abstract class CrossDayConstraint {
+    def valid(day:Int):Boolean
+    def preferred(day:Int):Boolean
+    def h(day:Int):Int
   }
 
-  abstract class WeekConstraint(schoolSchedule:SchoolSchedule) {
-    def valid(cls:Int)
-    def preferred(cls:Int)
-    def h(cls:Int)
+  abstract class WeekConstraint {
+    def valid(cls:Int):Boolean
+    def preferred(cls:Int):Boolean
+    def h(cls:Int):Int
   }
 
-  abstract class CrossWeekConstraint(schoolSchedule:SchoolSchedule) {
-    def valid()
-    def preferred()
-    def h()
+  abstract class CrossWeekConstraint {
+    def valid():Boolean
+    def preferred():Boolean
+    def h():Int
   }
+
+  class OneTeacherOneHour(val schoolSchedule:SchoolSchedule) extends CrossHourConstraint {
+    def valid(day: Int, hour: Int):Boolean = {
+      val d = schoolSchedule.hourSchedules(day,hour) filter (x => x!=null) map (x => x.teacher)
+      d.distinct.size == d.size
+    }
+    def preferred(day: Int, hour: Int):Boolean = {valid(day,hour)}
+    def h(day: Int, hour: Int):Int = {if(valid(day,hour)) 0 else 1000}
+  }
+
+  class OneClassOneSubject(val schoolSchedule:SchoolSchedule) extends CrossHourConstraint {
+    def valid(day: Int, hour: Int): Boolean = {
+
+    }
+
+    def preferred(day: Int, hour: Int): Boolean = {
+
+    }
+
+    def h(day: Int, hour: Int): Int = {
+
+    }
+  }
+
+  val schoolSchedule: SchoolSchedule = new SchoolSchedule()
+
+  val t1 = new Teacher("A")
+  val t2 = new Teacher("B")
+
+  val ch1 = new ClassHour("P1",Set(1))
+  val ch2 = new ClassHour("P2",Set(1))
+
+  val tj11 = new TeachersJob(t1,ch1)
+  val tj12 = new TeachersJob(t1,ch2)
+  val tj21 = new TeachersJob(t2,ch1)
+  val tj22 = new TeachersJob(t2,ch2)
+
+  schoolSchedule.schoolSchedule(0).classSchedule(0)(0) = tj21
+  schoolSchedule.schoolSchedule(1).classSchedule(0)(0) = tj22
+
+  val c = new OneTeacherOneHour(schoolSchedule)
+
+  println(c.valid(0,0))
 
 }

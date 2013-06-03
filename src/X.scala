@@ -43,6 +43,11 @@ object X extends App {
     def h:Int = {if(valid) 0 else 1000}
   }
 
+  abstract class PreferenceConstraint extends Constraint {
+    def valid = true
+    def preferred = h == 0
+  }
+
   class OdpoledniVUrciteDny(val schoolSchedule:SchoolSchedule, days:Set[Int]) extends NecessaryConstraint {
     def valid = {
       schoolSchedule.schoolSchedule forall (x => x.classSchedule.zipWithIndex forall (x => {
@@ -183,6 +188,17 @@ object X extends App {
     }
   }
 
+  class StejnyPredmetNeVTenSamyDen(val schoolSchedule:SchoolSchedule) extends PreferenceConstraint {
+    def h = {
+      schoolSchedule.schoolSchedule.foldLeft(0)((totalPerSchool,cs) => {
+        totalPerSchool + cs.classSchedule.foldLeft(0)((totalPerClass,ds) => {
+          val subjectsOfTheDay: Array[String] = ds.filter(tj => tj != null && !tj.classHour.arts && !tj.classHour.pe).map(tj => tj.classHour.subject)
+          totalPerClass + (subjectsOfTheDay.size - subjectsOfTheDay.distinct.size)
+        })
+      })
+    }
+  }
+
   val schoolSchedule: SchoolSchedule = new SchoolSchedule()
 
   val t1 = new Teacher("A")
@@ -211,19 +227,19 @@ object X extends App {
   val tjD1 = new TeachersJob(tD,d)
   val tjD2 = new TeachersJob(tD,d)
 
-  schoolSchedule.schoolSchedule(0).classSchedule(0)(1) = tj11
+//  schoolSchedule.schoolSchedule(0).classSchedule(0)(1) = tj11
   schoolSchedule.schoolSchedule(0).classSchedule(0)(5) = tj11
-  schoolSchedule.schoolSchedule(1).classSchedule(0)(1) = tj22
+//  schoolSchedule.schoolSchedule(1).classSchedule(0)(1) = tj22
   schoolSchedule.schoolSchedule(1).classSchedule(0)(5) = tj22
 //  schoolSchedule.schoolSchedule(2).classSchedule(0)(6) = tj22
   schoolSchedule.schoolSchedule(2).classSchedule(0)(4) = tj22
 
-  schoolSchedule.schoolSchedule(3).classSchedule(0)(0) = tj32
-  schoolSchedule.schoolSchedule(3).classSchedule(0)(1) = tj32
-  schoolSchedule.schoolSchedule(3).classSchedule(0)(2) = tj32
-  schoolSchedule.schoolSchedule(3).classSchedule(0)(3) = tj32
-  schoolSchedule.schoolSchedule(3).classSchedule(0)(4) = tj32
-  schoolSchedule.schoolSchedule(3).classSchedule(0)(5) = tj32
+//  schoolSchedule.schoolSchedule(3).classSchedule(0)(0) = tj32
+//  schoolSchedule.schoolSchedule(3).classSchedule(0)(1) = tj32
+//  schoolSchedule.schoolSchedule(3).classSchedule(0)(2) = tj32
+//  schoolSchedule.schoolSchedule(3).classSchedule(0)(3) = tj32
+//  schoolSchedule.schoolSchedule(3).classSchedule(0)(4) = tj32
+//  schoolSchedule.schoolSchedule(3).classSchedule(0)(5) = tj32
 
   schoolSchedule.schoolSchedule(0).classSchedule(0)(5) = tj32
   schoolSchedule.schoolSchedule(1).classSchedule(0)(5) = tj32
@@ -234,13 +250,13 @@ object X extends App {
   schoolSchedule.schoolSchedule(6).classSchedule(0)(5) = tj32
   schoolSchedule.schoolSchedule(7).classSchedule(0)(5) = tj32
   schoolSchedule.schoolSchedule(8).classSchedule(0)(5) = tj32
-
-  schoolSchedule.schoolSchedule(1).classSchedule(3)(4) = tjvv1
-  schoolSchedule.schoolSchedule(1).classSchedule(3)(5) = tv1
-  schoolSchedule.schoolSchedule(1).classSchedule(3)(6) = tjvv2
-
-  schoolSchedule.schoolSchedule(5).classSchedule(0)(0) = tjD1
-  schoolSchedule.schoolSchedule(5).classSchedule(1)(1) = tjD2
+//
+//  schoolSchedule.schoolSchedule(1).classSchedule(3)(4) = tjvv1
+//  schoolSchedule.schoolSchedule(1).classSchedule(3)(5) = tv1
+//  schoolSchedule.schoolSchedule(1).classSchedule(3)(6) = tjvv2
+//
+//  schoolSchedule.schoolSchedule(5).classSchedule(0)(0) = tjD1
+//  schoolSchedule.schoolSchedule(5).classSchedule(1)(1) = tjD2
 
   val odpol = new OdpoledniVUrciteDny(schoolSchedule,Set(0,3))
   val volna = new VolnaHodina(schoolSchedule)
@@ -252,6 +268,7 @@ object X extends App {
   val t3druzinar = new Druzinar(schoolSchedule,t3,4)
   val vvVzdyPoSobe = new VvVzdyPoSobe(schoolSchedule)
   val dvojHodinoveNePoSobe = new DvojhodinnovePredmetyNeVeDnechPoSobe(schoolSchedule)
+  val stejnyNeVeStejnyDen = new StejnyPredmetNeVTenSamyDen(schoolSchedule)
 
   println(odpol.valid)
   println(volna.valid)
@@ -263,5 +280,6 @@ object X extends App {
   println(t3druzinar.valid)
   println(vvVzdyPoSobe.valid)
   println(dvojHodinoveNePoSobe.valid)
+  println(stejnyNeVeStejnyDen.h)
 
 }

@@ -26,7 +26,9 @@ object X extends App {
 
   case class Teacher(val name:String)
 
-  case class TeachersJob(val teacher:Teacher, val classHour:ClassHour)
+  case class TeachersJob(val teacher:Teacher, val classHour:ClassHour) {
+    override def toString = classHour.subject + " ("+teacher.name+")"
+  }
 
   class ClassSchedule {
     val classSchedule = {
@@ -393,8 +395,28 @@ object X extends App {
   preassign(TeachersJob(Teacher("Lucka"),ClassHour("Tv_Dív 6/7/8/9",secondary)),secondary,THURSDAY,6)
   preassign(TeachersJob(Teacher("Lucka"),ClassHour("Tv_Chl 6/7/8/9",secondary)),secondary,MONDAY,6)
   preassign(TeachersJob(Teacher("Lucka"),ClassHour("Tv_Chl 6/7/8/9",secondary)),secondary,THURSDAY,5)
-
   // </preassignment>
+
+//  def printSchedule(s:SchoolSchedule) {
+    def printClassSchedule(cs:ClassSchedule) {
+      val colLengths = cs.classSchedule.map(ds => ds.map(tj => if(tj==null) 0 else tj.toString.length)).foldLeft((FIRST_HOUR to LAST_HOUR).map(x=>0))((lengths,dayLengths) => {
+        lengths.zip(dayLengths).map(x => math.max(x._1,x._2))
+      })
+
+      colLengths.foreach(cl => print("--"+"".padTo(cl,"-").mkString+"--"))
+      print("\n")
+
+      cs.classSchedule.foreach(ds => {
+        ds.zip(colLengths).foreach(x => {
+          val tj: String = if (x._1==null) "" else x._1.toString
+          print("| "+tj.padTo(x._2," ").mkString+" |")
+        })
+        print("\n")
+        colLengths.foreach(cl => print("--"+"".padTo(cl,"-").mkString+"--"))
+        print("\n")
+      })
+    }
+//  }
 
   println("odpol = "+(odpol.valid))
   println("volna = "+(volna.valid))
@@ -413,4 +435,5 @@ object X extends App {
   println("luckaVolnoVPa = "+(luckaVolnoVPa.valid))
   println("druzinarkaHana = "+(druzinarkaHana.valid))
 
+  printClassSchedule(schoolSchedule.schoolSchedule(5))
 }

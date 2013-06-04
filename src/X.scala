@@ -467,11 +467,12 @@ object X extends App {
   }
 
   // <subject groups>
-  val hlavniPredmetyTJ = teachersJobs.filter(tj => tj.classHour.mainSubject)
-  val peTJ = teachersJobs.filter(tj => tj.classHour.pe)
-  val dvojhodinoveTJ = teachersJobs.filter(tj => tj.classHour.twoHour) diff hlavniPredmetyTJ
-  val vvTJ = teachersJobs.filter(tj => tj.classHour.arts)
-  val ostatniTJ: List[TeachersJob] = teachersJobs diff hlavniPredmetyTJ diff peTJ diff dvojhodinoveTJ diff vvTJ
+  val combinedComparator: (TeachersJob, TeachersJob) => Boolean = (tj1, tj2) => (tj1.classHour.combinedClasses && !tj2.classHour.combinedClasses)
+  val hlavniPredmetyTJ = teachersJobs.filter(tj => tj.classHour.mainSubject).sortWith(combinedComparator)
+  val peTJ = teachersJobs.filter(tj => tj.classHour.pe).sortWith(combinedComparator)
+  val dvojhodinoveTJ = (teachersJobs.filter(tj => tj.classHour.twoHour) diff hlavniPredmetyTJ).sortWith(combinedComparator)
+  val vvTJ = teachersJobs.filter(tj => tj.classHour.arts).sortWith(combinedComparator)
+  val ostatniTJ: List[TeachersJob] = (teachersJobs diff hlavniPredmetyTJ diff peTJ diff dvojhodinoveTJ diff vvTJ).sortWith(combinedComparator)
 
 
   val subjectGroups: List[List[TeachersJob]] = List(hlavniPredmetyTJ, peTJ, dvojhodinoveTJ, vvTJ)
@@ -563,10 +564,16 @@ object X extends App {
   def scheduleSubjectGroup(subjGr:Seq[X.TeachersJob],prefHours:Seq[Int]) {
     subjGr.zipWithIndex.foreach(tji => {
       val day = tji._2 % 5
-      (day to (day+5)).exists(d => {
+      val ok = (day to (day+5)).exists(d => {
         val daux = d % 5
         schedule(tji._1,prefHours,daux)
       })
+      if(!ok) {
+        val canSch = (MONDAY to FRIDAY).exists(d => {
+          schedule(tji._1,(0 to 7),d)
+        })
+        if(!canSch) println("Cannot schedule: "+tji._1)
+      }
     })
   }
 
@@ -580,8 +587,13 @@ object X extends App {
 
   printSchedule(schoolSchedule)
 
-  println("Total jobs = "+teachersJobs.foldLeft(0)((total,tj) => total + tj.classHour.classes.size))
-  println("Scheduled jobs = "+schoolSchedule.schoolSchedule.foldLeft(0)((total,cs) => total + cs.classSchedule.foldLeft(0)((ctotal,ds) => ctotal + ds.foldLeft(0)((dtotal,tj) => dtotal + (if(tj!=null) 1 else 0)))))
+  val scheduledJobs: List[TeachersJob] = schoolSchedule.schoolSchedule.foldLeft(List[TeachersJob]())((coll, cs) => coll ++ cs.classSchedule.foldLeft(List[TeachersJob]())((ccoll, ds) => {
+    ccoll ++ ds.filter(_ != null)
+  }))
+
+  println("Total jobs = "+(teachersJobs.foldLeft(0)((total,tj) => total + tj.classHour.classes.size)+18))
+  println("Scheduled jobs = "+scheduledJobs.size)
+  println(teachersJobs diff scheduledJobs)
 
   println("odpol = "+(odpol.valid))
   println("volna = "+(volna.valid))

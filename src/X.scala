@@ -523,17 +523,59 @@ object X extends App {
   printPredmetyByClasses(ostatniTJByClasses)
   // </subject groups by classes>
 
-  hlavniPredmetyTJByClasses.zipWithIndex.foreach(clstjs => {
-    val cls = clstjs._2
-    val tjs = clstjs._1
-    tjs.zipWithIndex.foreach(tji => {
-      val d = (tji._2 / 3) % 5
-      val h = tji._2 % 3 + (tji._2 / 15)*3 +1
-      schoolSchedule.schoolSchedule(cls).classSchedule(d)(h) = tji._1
+  // <schedule>
+  def schedule(tj:TeachersJob,hoursToSch:Seq[Int],day:Int) = {
+
+    def checkAssgnOk(tj:TeachersJob,day:Int,hour:Int) = {
+      if(!teachersAvailability(day).contains(tj.teacher)) false
+      else {
+        val free = tj.classHour.classes.forall(cls => schoolSchedule.schoolSchedule(cls).classSchedule(day)(hour)==null)
+        val nonExcluded = (FIRST_GRADE to LAST_GRADE).forall(gr => {
+          val aux = schoolSchedule.schoolSchedule(gr).classSchedule(day)(hour)
+          aux == null || aux.teacher != tj.teacher
+        })
+        free && nonExcluded
+      }
+    }
+
+    def scheduleForHours(hours:Seq[Int]) = {
+      (hours.toList ++ List(0)).exists(h => {
+        if(!(day == MONDAY || day == THURSDAY) && h>5) false
+        else {
+          val ok = checkAssgnOk(tj,day,h)
+          if(ok) {
+            tj.classHour.classes.foreach(cls =>schoolSchedule.schoolSchedule(cls).classSchedule(day)(h) = tj)
+          }
+          ok
+        }
+      })
+    }
+
+    scheduleForHours(hoursToSch)
+  }
+
+  def scheduleSubjectGroup(subjGr:Seq[X.TeachersJob],prefHours:Seq[Int]) {
+    subjGr.zipWithIndex.foreach(tji => {
+      val day = tji._2 % 5
+      (day to (day+5)).exists(d => {
+        val daux = d % 5
+        schedule(tji._1,prefHours,daux)
+      })
     })
-  })
+  }
+
+  scheduleSubjectGroup(hlavniPredmetyTJ,(1 to 5))
+  scheduleSubjectGroup(peTJ,(5 to 5))
+  scheduleSubjectGroup(dvojhodinoveTJ,(0 to 7))
+  scheduleSubjectGroup(vvTJ,(5 to 7))
+  scheduleSubjectGroup(ostatniTJ,(0 to 7))
+
+  // </schedule>
 
   printSchedule(schoolSchedule)
+
+  println("Total jobs = "+teachersJobs.foldLeft(0)((total,tj) => total + tj.classHour.classes.size))
+  println("Scheduled jobs = "+schoolSchedule.schoolSchedule.foldLeft(0)((total,cs) => total + cs.classSchedule.foldLeft(0)((ctotal,ds) => ctotal + ds.foldLeft(0)((dtotal,tj) => dtotal + (if(tj!=null) 1 else 0)))))
 
   println("odpol = "+(odpol.valid))
   println("volna = "+(volna.valid))

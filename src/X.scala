@@ -397,7 +397,7 @@ object X extends App {
   preassign(TeachersJob(Teacher("Lucka"),ClassHour("Tv_Chl 6/7/8/9",secondary)),secondary,THURSDAY,5)
   // </preassignment>
 
-//  def printSchedule(s:SchoolSchedule) {
+  def printSchedule(s:SchoolSchedule) {
     def printClassSchedule(cs:ClassSchedule) {
       val colLengths = cs.classSchedule.map(ds => ds.map(tj => if(tj==null) 0 else tj.toString.length)).foldLeft((FIRST_HOUR to LAST_HOUR).map(x=>0))((lengths,dayLengths) => {
         lengths.zip(dayLengths).map(x => math.max(x._1,x._2))
@@ -416,7 +416,13 @@ object X extends App {
         print("\n")
       })
     }
-//  }
+
+    (FIRST_GRADE to LAST_GRADE).foreach(gr => {
+      println((gr+1)+". Třída")
+      printClassSchedule(schoolSchedule.schoolSchedule(gr))
+    })
+
+  }
 
   println("odpol = "+(odpol.valid))
   println("volna = "+(volna.valid))
@@ -435,5 +441,5 @@ object X extends App {
   println("luckaVolnoVPa = "+(luckaVolnoVPa.valid))
   println("druzinarkaHana = "+(druzinarkaHana.valid))
 
-  printClassSchedule(schoolSchedule.schoolSchedule(5))
+  printSchedule(schoolSchedule)
 }

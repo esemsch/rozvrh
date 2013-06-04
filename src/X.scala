@@ -31,6 +31,10 @@ object X extends App {
     val twoHour = Set("Vl", "Př", "D", "Z", "F", "Ch", "Inf 8", "Inf 9").exists(subject.contains(_))
     val combinedClasses = classes.size>1
     val pe = subject.contains("Tv")
+    val firstSecond = classes.contains(FIRST_GRADE) || classes.contains(FIRST_GRADE+1)
+    val third = classes.contains(FIRST_GRADE+2)
+    val fourthFifth = classes.contains(FIRST_GRADE+3) || classes.contains(FIRST_GRADE+4)
+    val secondary = classes.contains(FIRST_GRADE+5) || classes.contains(FIRST_GRADE+6) || classes.contains(FIRST_GRADE+7) || classes.contains(FIRST_GRADE+8)
   }
 
   case class Teacher(val name:String)
@@ -527,7 +531,9 @@ object X extends App {
   def schedule(tj:TeachersJob,hoursToSch:Seq[Int],day:Int) = {
 
     def checkAssgnOk(tj:TeachersJob,day:Int,hour:Int) = {
-      if(!teachersAvailability(day).contains(tj.teacher)) false
+      if(!teachersAvailability(day).contains(tj.teacher) ||
+        (tj.classHour.firstSecond && (hour == 0 || hour > 5)) ||
+        (tj.classHour.third && (hour > 5))) false
       else {
         val free = tj.classHour.classes.forall(cls => schoolSchedule.schoolSchedule(cls).classSchedule(day)(hour)==null)
         val nonExcluded = (FIRST_GRADE to LAST_GRADE).forall(gr => {
@@ -539,7 +545,7 @@ object X extends App {
     }
 
     def scheduleForHours(hours:Seq[Int]) = {
-      (hours.toList ++ List(0)).exists(h => {
+      hours.exists(h => {
         if(!(day == MONDAY || day == THURSDAY) && h>5) false
         else {
           val ok = checkAssgnOk(tj,day,h)

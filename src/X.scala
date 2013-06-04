@@ -19,7 +19,7 @@ object X extends App {
   case class ClassHour(val subject:String, val classes:Set[Int]) {
     val arts = subject.contains("Vv")
     val mainSubject = Set("Čj","Aj","M").exists(subject.contains(_))
-    val twoHour = Set("Vl", "Př", "D", "Z", "F", "Ch").exists(subject.contains(_))
+    val twoHour = Set("Vl", "Př", "D", "Z", "F", "Ch", "Inf 8", "Inf 9").exists(subject.contains(_))
     val combinedClasses = classes.size>1
     val pe = subject.contains("Tv")
   }
@@ -73,7 +73,8 @@ object X extends App {
 
   class VolnaHodina(val schoolSchedule:SchoolSchedule) extends NecessaryConstraint {
     def valid = {
-      schoolSchedule.schoolSchedule forall(x => x.classSchedule forall (y => (y(5)==null || y(6)==null)))
+      def free(tj:TeachersJob) = tj == null || tj.classHour.pe
+      schoolSchedule.schoolSchedule forall(x => x.classSchedule forall (y => (free(y(5)) || free(y(6)))))
     }
   }
 
@@ -403,16 +404,19 @@ object X extends App {
         lengths.zip(dayLengths).map(x => math.max(x._1,x._2))
       })
 
-      colLengths.foreach(cl => print("--"+"".padTo(cl,"-").mkString+"--"))
+      print("--")
+      colLengths.foreach(cl => print("-"+"".padTo(cl,"-").mkString+"--"))
       print("\n")
 
       cs.classSchedule.foreach(ds => {
+        print("| ")
         ds.zip(colLengths).foreach(x => {
           val tj: String = if (x._1==null) "" else x._1.toString
-          print("| "+tj.padTo(x._2," ").mkString+" |")
+          print(tj.padTo(x._2," ").mkString+" | ")
         })
         print("\n")
-        colLengths.foreach(cl => print("--"+"".padTo(cl,"-").mkString+"--"))
+        print("--")
+        colLengths.foreach(cl => print("-"+"".padTo(cl,"-").mkString+"--"))
         print("\n")
       })
     }
@@ -424,22 +428,48 @@ object X extends App {
 
   }
 
-  println("odpol = "+(odpol.valid))
-  println("volna = "+(volna.valid))
-  println("prvniDruha = "+(prvniDruha.valid))
-  println("neprerusene = "+(neprerusene.valid))
-  println("exklusivitaUcitele = "+(exklusivitaUcitele.valid))
-  println("vvVzdyPoSobe = "+(vvVzdyPoSobe.valid))
-  println("dvojHodinoveNePoSobe = "+(dvojHodinoveNePoSobe.valid))
-  println("stejnyNeVeStejnyDen = "+(stejnyNeVeStejnyDen.h))
-  println("hlavniPredmety = "+(hlavniPredmety.h))
-  println("spojenePredmety = "+(spojenePredmety.h))
-  println("spravnePrirazene = "+(spravnePrirazene.valid))
 
-  println("reditelUciJenVPoAPa = "+(reditelUciJenVPoAPa.valid))
-  println("evaVolnoVUtAPa = "+(evaVolnoVUtAPa.valid))
-  println("luckaVolnoVPa = "+(luckaVolnoVPa.valid))
-  println("druzinarkaHana = "+(druzinarkaHana.valid))
+  val hlavniPredmetyTJ = teachersJobs.filter(tj => tj.classHour.mainSubject)
+  val peTJ = teachersJobs.filter(tj => tj.classHour.pe)
+  val dvojhodinoveTJ = teachersJobs.filter(tj => tj.classHour.twoHour) diff hlavniPredmetyTJ
+  val vvTJ = teachersJobs.filter(tj => tj.classHour.arts)
+  val ostatni: List[TeachersJob] = teachersJobs diff hlavniPredmetyTJ diff peTJ diff dvojhodinoveTJ diff vvTJ
 
-  printSchedule(schoolSchedule)
+  val subjectGroups: List[List[TeachersJob]] = List(hlavniPredmetyTJ, peTJ, dvojhodinoveTJ, vvTJ)
+
+  println(teachersJobs.size)
+  println(subjectGroups.foldLeft(0)((total,l) => total + l.size))
+  println(ostatni.size)
+  println(ostatni)
+  subjectGroups.combinations(2).foreach(c => {
+    def cdiff(i:Int,j:Int) {
+      val s1: Int = c(i).size
+      val d1: List[TeachersJob] = c(i) diff c(j)
+      val sd1: Int = d1.size
+      if(s1!=sd1) {
+        println(c(i) diff d1)
+      }
+    }
+    cdiff(0,1)
+    cdiff(1,0)
+  })
+
+//  printSchedule(schoolSchedule)
+//
+//  println("odpol = "+(odpol.valid))
+//  println("volna = "+(volna.valid))
+//  println("prvniDruha = "+(prvniDruha.valid))
+//  println("neprerusene = "+(neprerusene.valid))
+//  println("exklusivitaUcitele = "+(exklusivitaUcitele.valid))
+//  println("vvVzdyPoSobe = "+(vvVzdyPoSobe.valid))
+//  println("dvojHodinoveNePoSobe = "+(dvojHodinoveNePoSobe.valid))
+//  println("stejnyNeVeStejnyDen = "+(stejnyNeVeStejnyDen.h))
+//  println("hlavniPredmety = "+(hlavniPredmety.h))
+//  println("spojenePredmety = "+(spojenePredmety.h))
+//  println("spravnePrirazene = "+(spravnePrirazene.valid))
+//
+//  println("reditelUciJenVPoAPa = "+(reditelUciJenVPoAPa.valid))
+//  println("evaVolnoVUtAPa = "+(evaVolnoVUtAPa.valid))
+//  println("luckaVolnoVPa = "+(luckaVolnoVPa.valid))
+//  println("druzinarkaHana = "+(druzinarkaHana.valid))
 }

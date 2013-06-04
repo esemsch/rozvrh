@@ -1,7 +1,10 @@
+import scala.collection.mutable.ListBuffer
+
 object Y extends App {
 
-  val l = List(1,1,2,2,2,3)
+  val l = new ListBuffer[Int] ++ List(1,1,2,2,2,3)
 
-  println(l contains 2)
+  l remove 3
+  println(l)
 
 }

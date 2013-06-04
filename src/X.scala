@@ -468,6 +468,7 @@ object X extends App {
 
   // <subject groups>
   val combinedComparator: (TeachersJob, TeachersJob) => Boolean = (tj1, tj2) => (tj1.classHour.combinedClasses && !tj2.classHour.combinedClasses)
+
   val hlavniPredmetyTJ = teachersJobs.filter(tj => tj.classHour.mainSubject).sortWith(combinedComparator)
   val peTJ = teachersJobs.filter(tj => tj.classHour.pe).sortWith(combinedComparator)
   val dvojhodinoveTJ = (teachersJobs.filter(tj => tj.classHour.twoHour) diff hlavniPredmetyTJ).sortWith(combinedComparator)
@@ -561,31 +562,63 @@ object X extends App {
     scheduleForHours(hoursToSch)
   }
 
-  def scheduleSubjectGroup(subjGr:Seq[X.TeachersJob],prefHours:Seq[Int]) {
-    subjGr.zipWithIndex.foreach(tji => {
+  def scheduleSubjectGroup(subjGr:Seq[X.TeachersJob],prefHours:Seq[Int]) = {
+    subjGr.zipWithIndex.filter(tji => {
       val day = tji._2 % 5
-      val ok = (day to (day+5)).exists(d => {
+      !((day to (day+5)).exists(d => {
         val daux = d % 5
         schedule(tji._1,prefHours,daux)
-      })
-      if(!ok) {
-        val canSch = (MONDAY to FRIDAY).exists(d => {
-          schedule(tji._1,(0 to 7),d)
-        })
-        if(!canSch) println("Cannot schedule: "+tji._1)
-      }
-    })
+      }))
+    }).map(tji => tji._1)
   }
 
-  scheduleSubjectGroup(hlavniPredmetyTJ,(1 to 5))
-  scheduleSubjectGroup(peTJ,(5 to 5))
-  scheduleSubjectGroup(dvojhodinoveTJ,(0 to 7))
-  scheduleSubjectGroup(vvTJ,(5 to 7))
-  scheduleSubjectGroup(ostatniTJ,(0 to 7))
+  val rest1 = scheduleSubjectGroup(hlavniPredmetyTJ,(1 to 5))
+  val rest2 = scheduleSubjectGroup(peTJ,(5 to 5))
+  val rest3 = scheduleSubjectGroup(dvojhodinoveTJ,(0 to 7))
+  val rest4 = scheduleSubjectGroup(vvTJ,(5 to 7))
+  val rest5 = scheduleSubjectGroup(ostatniTJ,(0 to 7))
+
+  val rests: Seq[TeachersJob] = rest1 ++ rest2 ++ rest3 ++ rest4 ++ rest5
+  scheduleSubjectGroup(rests,(0 to 7))
+  println(rests)
+
+//  def scheduleOneDay(day:Int) {
+//    def checkAssgnOk(tj:TeachersJob,day:Int,hour:Int) = {
+//      if(!teachersAvailability(day).contains(tj.teacher) ||
+//        (tj.classHour.firstSecond && (hour == 0 || hour > 5)) ||
+//        (tj.classHour.third && (hour > 5))) false
+//      else {
+//        val free = tj.classHour.classes.forall(cls => schoolSchedule.schoolSchedule(cls).classSchedule(day)(hour)==null)
+//        val nonExcluded = (FIRST_GRADE to LAST_GRADE).forall(gr => {
+//          val aux = schoolSchedule.schoolSchedule(gr).classSchedule(day)(hour)
+//          aux == null || aux.teacher != tj.teacher
+//        })
+//        free && nonExcluded
+//      }
+//    }
+//    def isComplete(day:Int, hour:Int) {
+//      schoolSchedule.schoolSchedule.forall(cs => cs.classSchedule(day)(hour)!=null)
+//    }
+//    def assign(tj:TeachersJob,day:Int,hour:Int) {
+//      tj.classHour.classes.foreach(gr => {
+//        schoolSchedule.schoolSchedule(gr).classSchedule(day)(hour) = tj
+//      })
+//    }
+//    def unassign(tj:TeachersJob,day:Int,hour:Int) {
+//      tj.classHour.classes.foreach(gr => {
+//        schoolSchedule.schoolSchedule(gr).classSchedule(day)(hour) = null
+//      })
+//    }
+//    def scheduleHour(tjs:ListBuffer[TeachersJob],day:Int,hour:Int) = {
+//      if(!isComplete(day,hour)) {
+//
+//      }
+//    }
+//  }
 
   // </schedule>
 
-  printSchedule(schoolSchedule)
+//  printSchedule(schoolSchedule)
 
   val scheduledJobs: List[TeachersJob] = schoolSchedule.schoolSchedule.foldLeft(List[TeachersJob]())((coll, cs) => coll ++ cs.classSchedule.foldLeft(List[TeachersJob]())((ccoll, ds) => {
     ccoll ++ ds.filter(_ != null)

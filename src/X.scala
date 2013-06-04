@@ -412,18 +412,20 @@ object X extends App {
   def printSchedule(s:SchoolSchedule) {
 
     def printTable(cs:Array[Array[TeachersJob]],leftAxisDays:Boolean) {
+      val leftAxisPad = if(leftAxisDays) 10 else 3
+
       val colLengths = cs.map(ds => ds.map(tj => if(tj==null) 1 else tj.toString.length)).foldLeft((FIRST_HOUR to LAST_HOUR).map(x=>0))((lengths,dayLengths) => {
         lengths.zip(dayLengths).map(x => math.max(x._1,x._2))
       }).toList
 
       def divide {
-        print("------")
+        print("".padTo(leftAxisPad+4,"-").mkString)
         colLengths.foreach(cl => print("-"+"".padTo(cl,"-").mkString+"--"))
         print("\n")
       }
 
       def printLine(ds:Seq[AnyRef],leftAxis:String) {
-        print("| "+leftAxis.padTo(3," ").mkString+" | ")
+        print("| "+leftAxis.padTo(leftAxisPad," ").mkString+" | ")
         ds.zip(colLengths).foreach(x => {
           val tj: String = if (x._1==null) "" else x._1.toString
           print(tj.padTo(x._2," ").mkString+" | ")
@@ -433,12 +435,12 @@ object X extends App {
 
       divide
 
-      printLine((FIRST_HOUR to LAST_HOUR).map(_.toString).toList,"A")
+      printLine((FIRST_HOUR to LAST_HOUR).map(_.toString).toList,"")
 
       divide
 
-      cs.foreach(ds => {
-        printLine(ds,"A")
+      cs.zipWithIndex.foreach(ds => {
+        printLine(ds._1,if(leftAxisDays) DAY_NAME(ds._2) else (ds._2+1).toString+".")
         divide
       })
     }
@@ -455,7 +457,7 @@ object X extends App {
     val byDays = (MONDAY to FRIDAY).map(d => (FIRST_GRADE to LAST_GRADE).map(gr => schoolSchedule.schoolSchedule(gr).classSchedule(d)).toArray)
     byDays.zipWithIndex.foreach(daySch => {
       println(DAY_NAME(daySch._2))
-      printTable(daySch._1,true)
+      printTable(daySch._1,false)
     })
 
   }

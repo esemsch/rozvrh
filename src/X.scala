@@ -2,6 +2,15 @@ import scala.collection.immutable.IndexedSeq
 
 object X extends App {
 
+  private def DAY_NAME(d:Int) = {
+    d match {
+      case `MONDAY` => "Pondělí"
+      case `TUESDAY` => "Úterý"
+      case `WEDNESDAY` => "Středa"
+      case `THURSDAY` => "Čtvrtek"
+      case `FRIDAY` => "Pátek"
+    }
+  }
   private val MONDAY = 0
   private val TUESDAY = 1
   private val WEDNESDAY = 2
@@ -358,6 +367,8 @@ object X extends App {
     "Rj 7" ->	2
   ).flatMap(e => createTeachersJobs(e._1,e._2,"Iva")).toList
 
+  val teachers = Set("Tereza","Alena","Hana","Gita","Martina","Bohunka","Lucka","Eva","Iva").map(n => Teacher(n))
+
   var teachersJobs = (TerezaJobs ++ AlenaJobs ++ HanaJobs ++ GitaJobs ++ MartinaJobs ++ BohunkaJobs ++ LuckaJobs ++ EvaJobs ++ IvaJobs)
 
   val schoolSchedule: SchoolSchedule = new SchoolSchedule()
@@ -396,11 +407,9 @@ object X extends App {
   preassign(TeachersJob(Teacher("Lucka"),ClassHour("Tv_Dív 6/7/8/9",secondary)),secondary,THURSDAY,6)
   preassign(TeachersJob(Teacher("Lucka"),ClassHour("Tv_Chl 6/7/8/9",secondary)),secondary,MONDAY,6)
   preassign(TeachersJob(Teacher("Lucka"),ClassHour("Tv_Chl 6/7/8/9",secondary)),secondary,THURSDAY,5)
-  // </preassignment>
-
   def printSchedule(s:SchoolSchedule) {
-    def printClassSchedule(cs:ClassSchedule) {
-      val colLengths = cs.classSchedule.map(ds => ds.map(tj => if(tj==null) 0 else tj.toString.length)).foldLeft((FIRST_HOUR to LAST_HOUR).map(x=>0))((lengths,dayLengths) => {
+    def printTable(cs:Array[Array[TeachersJob]]) {
+      val colLengths = cs.map(ds => ds.map(tj => if(tj==null) 0 else tj.toString.length)).foldLeft((FIRST_HOUR to LAST_HOUR).map(x=>0))((lengths,dayLengths) => {
         lengths.zip(dayLengths).map(x => math.max(x._1,x._2))
       })
 
@@ -408,7 +417,7 @@ object X extends App {
       colLengths.foreach(cl => print("-"+"".padTo(cl,"-").mkString+"--"))
       print("\n")
 
-      cs.classSchedule.foreach(ds => {
+      cs.foreach(ds => {
         print("| ")
         ds.zip(colLengths).foreach(x => {
           val tj: String = if (x._1==null) "" else x._1.toString
@@ -421,26 +430,38 @@ object X extends App {
       })
     }
 
+    def printClassSchedule(cs:ClassSchedule) {
+      printTable(cs.classSchedule)
+    }
+
     (FIRST_GRADE to LAST_GRADE).foreach(gr => {
       println((gr+1)+". Třída")
       printClassSchedule(schoolSchedule.schoolSchedule(gr))
     })
 
+    val byDays = (MONDAY to FRIDAY).map(d => (FIRST_GRADE to LAST_GRADE).map(gr => schoolSchedule.schoolSchedule(gr).classSchedule(d)).toArray)
+    byDays.zipWithIndex.foreach(daySch => {
+      println(DAY_NAME(daySch._2))
+      printTable(daySch._1)
+    })
+
   }
+  // </preassignment>
 
-
+  // <subject groups>
   val hlavniPredmetyTJ = teachersJobs.filter(tj => tj.classHour.mainSubject)
   val peTJ = teachersJobs.filter(tj => tj.classHour.pe)
   val dvojhodinoveTJ = teachersJobs.filter(tj => tj.classHour.twoHour) diff hlavniPredmetyTJ
   val vvTJ = teachersJobs.filter(tj => tj.classHour.arts)
-  val ostatni: List[TeachersJob] = teachersJobs diff hlavniPredmetyTJ diff peTJ diff dvojhodinoveTJ diff vvTJ
+  val ostatniTJ: List[TeachersJob] = teachersJobs diff hlavniPredmetyTJ diff peTJ diff dvojhodinoveTJ diff vvTJ
+
 
   val subjectGroups: List[List[TeachersJob]] = List(hlavniPredmetyTJ, peTJ, dvojhodinoveTJ, vvTJ)
-
   println(teachersJobs.size)
   println(subjectGroups.foldLeft(0)((total,l) => total + l.size))
-  println(ostatni.size)
-  println(ostatni)
+  println(ostatniTJ.size)
+  println(ostatniTJ)
+
   subjectGroups.combinations(2).foreach(c => {
     def cdiff(i:Int,j:Int) {
       val s1: Int = c(i).size
@@ -453,23 +474,67 @@ object X extends App {
     cdiff(0,1)
     cdiff(1,0)
   })
+  // <subject groups>
 
-//  printSchedule(schoolSchedule)
-//
-//  println("odpol = "+(odpol.valid))
-//  println("volna = "+(volna.valid))
-//  println("prvniDruha = "+(prvniDruha.valid))
-//  println("neprerusene = "+(neprerusene.valid))
-//  println("exklusivitaUcitele = "+(exklusivitaUcitele.valid))
-//  println("vvVzdyPoSobe = "+(vvVzdyPoSobe.valid))
-//  println("dvojHodinoveNePoSobe = "+(dvojHodinoveNePoSobe.valid))
-//  println("stejnyNeVeStejnyDen = "+(stejnyNeVeStejnyDen.h))
-//  println("hlavniPredmety = "+(hlavniPredmety.h))
-//  println("spojenePredmety = "+(spojenePredmety.h))
-//  println("spravnePrirazene = "+(spravnePrirazene.valid))
-//
-//  println("reditelUciJenVPoAPa = "+(reditelUciJenVPoAPa.valid))
-//  println("evaVolnoVUtAPa = "+(evaVolnoVUtAPa.valid))
-//  println("luckaVolnoVPa = "+(luckaVolnoVPa.valid))
-//  println("druzinarkaHana = "+(druzinarkaHana.valid))
+  // <teacher availability>
+  val teachersAvailability = (MONDAY to FRIDAY).map(i => teachers.filter(t => {
+    if(t == Teacher("Bohunka") && !Set(MONDAY,FRIDAY).contains(i)) false
+    else if(t == Teacher("Eva") && !Set(MONDAY,WEDNESDAY,THURSDAY).contains(i)) false
+    else if(t == Teacher("Lucka") && !Set(MONDAY,TUESDAY,WEDNESDAY,THURSDAY).contains(i)) false
+    else true
+  }))
+
+  (MONDAY to FRIDAY).foreach(d => println(d+": "+teachersAvailability(d).size))
+  // <teacher availability>
+  
+  // <subject groups by classes>
+  def byClasses(tjs:Seq[TeachersJob]) = {
+    (FIRST_GRADE to LAST_GRADE).map(cls => tjs.filter(tj => tj.classHour.classes.contains(cls)))
+  }
+
+  val hlavniPredmetyTJByClasses = byClasses(hlavniPredmetyTJ)
+  val peTJByClasses = byClasses(peTJ)
+  val dvojhodinoveTJByClasses = byClasses(dvojhodinoveTJ)
+  val vvTJByClasses = byClasses(vvTJ)
+  val ostatniTJByClasses = byClasses(ostatniTJ)
+
+  def printPredmetyByClasses(a:Seq[Seq[TeachersJob]]) {
+    a.zipWithIndex.foreach(x => println((x._2+1)+". Trida: "+x._1))
+    println("")
+  }
+  printPredmetyByClasses(hlavniPredmetyTJByClasses)
+  printPredmetyByClasses(peTJByClasses)
+  printPredmetyByClasses(dvojhodinoveTJByClasses)
+  printPredmetyByClasses(vvTJByClasses)
+  printPredmetyByClasses(ostatniTJByClasses)
+  // </subject groups by classes>
+
+  hlavniPredmetyTJByClasses.zipWithIndex.foreach(clstjs => {
+    val cls = clstjs._2
+    val tjs = clstjs._1
+    tjs.zipWithIndex.foreach(tji => {
+      val d = (tji._2 / 3) % 5
+      val h = tji._2 % 3 + (tji._2 / 15)*3 +1
+      schoolSchedule.schoolSchedule(cls).classSchedule(d)(h) = tji._1
+    })
+  })
+
+  printSchedule(schoolSchedule)
+
+  println("odpol = "+(odpol.valid))
+  println("volna = "+(volna.valid))
+  println("prvniDruha = "+(prvniDruha.valid))
+  println("neprerusene = "+(neprerusene.valid))
+  println("exklusivitaUcitele = "+(exklusivitaUcitele.valid))
+  println("vvVzdyPoSobe = "+(vvVzdyPoSobe.valid))
+  println("dvojHodinoveNePoSobe = "+(dvojHodinoveNePoSobe.valid))
+  println("stejnyNeVeStejnyDen = "+(stejnyNeVeStejnyDen.h))
+  println("hlavniPredmety = "+(hlavniPredmety.h))
+  println("spojenePredmety = "+(spojenePredmety.h))
+  println("spravnePrirazene = "+(spravnePrirazene.valid))
+
+  println("reditelUciJenVPoAPa = "+(reditelUciJenVPoAPa.valid))
+  println("evaVolnoVUtAPa = "+(evaVolnoVUtAPa.valid))
+  println("luckaVolnoVPa = "+(luckaVolnoVPa.valid))
+  println("druzinarkaHana = "+(druzinarkaHana.valid))
 }

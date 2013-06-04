@@ -407,31 +407,44 @@ object X extends App {
   preassign(TeachersJob(Teacher("Lucka"),ClassHour("Tv_Dív 6/7/8/9",secondary)),secondary,THURSDAY,6)
   preassign(TeachersJob(Teacher("Lucka"),ClassHour("Tv_Chl 6/7/8/9",secondary)),secondary,MONDAY,6)
   preassign(TeachersJob(Teacher("Lucka"),ClassHour("Tv_Chl 6/7/8/9",secondary)),secondary,THURSDAY,5)
+  // </preassignment>
+
   def printSchedule(s:SchoolSchedule) {
-    def printTable(cs:Array[Array[TeachersJob]]) {
-      val colLengths = cs.map(ds => ds.map(tj => if(tj==null) 0 else tj.toString.length)).foldLeft((FIRST_HOUR to LAST_HOUR).map(x=>0))((lengths,dayLengths) => {
+
+    def printTable(cs:Array[Array[TeachersJob]],leftAxisDays:Boolean) {
+      val colLengths = cs.map(ds => ds.map(tj => if(tj==null) 1 else tj.toString.length)).foldLeft((FIRST_HOUR to LAST_HOUR).map(x=>0))((lengths,dayLengths) => {
         lengths.zip(dayLengths).map(x => math.max(x._1,x._2))
-      })
+      }).toList
 
-      print("--")
-      colLengths.foreach(cl => print("-"+"".padTo(cl,"-").mkString+"--"))
-      print("\n")
+      def divide {
+        print("------")
+        colLengths.foreach(cl => print("-"+"".padTo(cl,"-").mkString+"--"))
+        print("\n")
+      }
 
-      cs.foreach(ds => {
-        print("| ")
+      def printLine(ds:Seq[AnyRef],leftAxis:String) {
+        print("| "+leftAxis.padTo(3," ").mkString+" | ")
         ds.zip(colLengths).foreach(x => {
           val tj: String = if (x._1==null) "" else x._1.toString
           print(tj.padTo(x._2," ").mkString+" | ")
         })
         print("\n")
-        print("--")
-        colLengths.foreach(cl => print("-"+"".padTo(cl,"-").mkString+"--"))
-        print("\n")
+      }
+
+      divide
+
+      printLine((FIRST_HOUR to LAST_HOUR).map(_.toString).toList,"A")
+
+      divide
+
+      cs.foreach(ds => {
+        printLine(ds,"A")
+        divide
       })
     }
 
     def printClassSchedule(cs:ClassSchedule) {
-      printTable(cs.classSchedule)
+      printTable(cs.classSchedule,true)
     }
 
     (FIRST_GRADE to LAST_GRADE).foreach(gr => {
@@ -442,11 +455,10 @@ object X extends App {
     val byDays = (MONDAY to FRIDAY).map(d => (FIRST_GRADE to LAST_GRADE).map(gr => schoolSchedule.schoolSchedule(gr).classSchedule(d)).toArray)
     byDays.zipWithIndex.foreach(daySch => {
       println(DAY_NAME(daySch._2))
-      printTable(daySch._1)
+      printTable(daySch._1,true)
     })
 
   }
-  // </preassignment>
 
   // <subject groups>
   val hlavniPredmetyTJ = teachersJobs.filter(tj => tj.classHour.mainSubject)

@@ -92,7 +92,7 @@ object X extends App {
   // </subject groups by classes>
 
   // <schedule>
-  def schedule(tj:TeachersJob,hoursToSch:Seq[Int],day:Int) = {
+  def schedule(tj:TeachersJob,hoursToSch:Seq[Int],day:Int,withReschedule:Boolean = false) = {
 
     def checkAssgnOk(tj:TeachersJob,day:Int,hour:Int) = {
       if(!teachersAvailability(day).contains(tj.teacher) ||
@@ -155,12 +155,12 @@ object X extends App {
       }
     }
 
-    if (!scheduleForHours(hoursToSch)) {
+    if (!scheduleForHours(hoursToSch) && withReschedule) {
       reSchedule
     } else true
   }
 
-  def scheduleSubjectGroup(subjGr:Seq[TeachersJob],prefHours:Seq[Int]) = {
+  def scheduleMainSubjects(subjGr:Seq[TeachersJob],prefHours:Seq[Int]) = {
     subjGr.zipWithIndex.filter(tji => {
       val day = tji._2 % 5
       !((day to (day+5)).exists(d => {
@@ -170,31 +170,61 @@ object X extends App {
     }).map(tji => tji._1)
   }
 
-  def teachersComparator(tj1:TeachersJob,tj2:TeachersJob) = {
-    val teachersSorted: List[Teacher] = teachers.toList.sortWith((t1,t2)=>t1.name.compareTo(t2.name)<=0)
-    val retval = teachersSorted.foldLeft(tj1)((tj, tjt) => if (tjt == tj1.teacher) tj1 else if (tjt == tj2.teacher) tj2 else tj) == tj2
-    retval
+  def scheduleTwoHoursSubjects(twoHours:Seq[TeachersJob],prefHours:Seq[Int]) = {
+    def isConsequent(tj1:TeachersJob,tj2:TeachersJob) = {
+      ((tj1.classHour.classes diff tj2.classHour.classes).size < tj1.classHour.classes.size) &&
+      ((tj1.classHour.subjects diff tj2.classHour.subjects).size < tj1.classHour.subjects.size)
+    }
+    val precedence = twoHours.foldLeft(List[(TeachersJob,Seq[TeachersJob])]())((l,tj) => l.find(precJobs => isConsequent(precJobs._1,tj)) match {
+      case None => l ++ List((tj,List()))
+      case Some(tj1) => {
+        val newTj1 = (tj1._1,tj1._2 ++ Set(tj))
+        (l diff List(tj1)) ++ List(newTj1)
+      }
+    })
+    def scheduleTwo(prec:(TeachersJob,Seq[TeachersJob]),d:Int) = {
+      val mainOk = schedule(prec._1,prefHours,d)
+      if(mainOk) {
+        prec._2.filter(tj => schedule(tj,prefHours,(d+2)%5,false))
+      } else List(prec._1) ++ prec._2
+    }
+    precedence.zipWithIndex.flatMap(tji => {
+      val day = tji._2 % 5
+      val rests: (List[TeachersJob], Boolean) = (day to (day + 5)).foldLeft((List[TeachersJob](), false))((result, d) => {
+        if (!result._2) {
+          val daux = d % 5
+          val rest = scheduleTwo(tji._1, daux)
+          if (rest.size < 1 + tji._1._2.size) (rest.toList, true) else result
+        } else result
+      })
+      rests._1
+    })
   }
 
-  val rest1 = scheduleSubjectGroup(hlavniPredmetyTJ.filter(_.classHour.combinedClasses).sortWith(teachersComparator(_,_)),(1 to 4))
-//  val rest2 = scheduleSubjectGroup(peTJ.filter(_.classHour.combinedClasses),(5 to 7))
-  val rest3 = scheduleSubjectGroup(dvojhodinoveTJ.filter(_.classHour.combinedClasses).sortWith(teachersComparator(_,_)),(1 to 4))
-//  val rest4 = scheduleSubjectGroup(vvTJ.filter(_.classHour.combinedClasses),(5 to 7))
-  val rest5 = scheduleSubjectGroup(ostatniTJ.filter(_.classHour.combinedClasses).sortWith(teachersComparator(_,_)),(1 to 4))
+  def teachersComparator(tj1:TeachersJob,tj2:TeachersJob) = {
+    val teachersSorted: List[Teacher] = teachers.toList.sortWith((t1,t2)=>t1.name.compareTo(t2.name)<=0)
+    teachersSorted.foldLeft(tj1)((tj, tjt) => if (tjt == tj1.teacher) tj1 else if (tjt == tj2.teacher) tj2 else tj) == tj2
+  }
 
-  val rest12 = scheduleSubjectGroup(hlavniPredmetyTJ.filter(!_.classHour.combinedClasses).sortWith(teachersComparator(_,_)),(1 to 4))
-//  val rest22 = scheduleSubjectGroup(peTJ.filter(!_.classHour.combinedClasses),(5 to 7))
-  val rest32 = scheduleSubjectGroup(dvojhodinoveTJ.filter(!_.classHour.combinedClasses).sortWith(teachersComparator(_,_)),(1 to 4))
-//  val rest42 = scheduleSubjectGroup(vvTJ.filter(!_.classHour.combinedClasses),(5 to 7))
-  val rest52 = scheduleSubjectGroup(ostatniTJ.filter(!_.classHour.combinedClasses).sortWith(teachersComparator(_,_)),(1 to 4))
+  val rest1 = scheduleMainSubjects(hlavniPredmetyTJ.filter(_.classHour.combinedClasses).sortWith(teachersComparator(_,_)),(1 to 4))
+//  val rest2 = scheduleMainSubjects(peTJ.filter(_.classHour.combinedClasses),(5 to 7))
+  val rest3 = scheduleTwoHoursSubjects(dvojhodinoveTJ.sortWith(teachersComparator(_,_)),(0 to 5))
+//  val rest4 = scheduleMainSubjects(vvTJ.filter(_.classHour.combinedClasses),(5 to 7))
+//  val rest5 = scheduleMainSubjects(ostatniTJ.filter(_.classHour.combinedClasses).sortWith(teachersComparator(_,_)),(1 to 4))
+
+  val rest12 = scheduleMainSubjects(hlavniPredmetyTJ.filter(!_.classHour.combinedClasses).sortWith(teachersComparator(_,_)),(1 to 4))
+//  val rest22 = scheduleMainSubjects(peTJ.filter(!_.classHour.combinedClasses),(5 to 7))
+//  val rest42 = scheduleMainSubjects(vvTJ.filter(!_.classHour.combinedClasses),(5 to 7))
+//  val rest52 = scheduleMainSubjects(ostatniTJ.filter(!_.classHour.combinedClasses).sortWith(teachersComparator(_,_)),(1 to 4))
 
 //  val rests: Seq[TeachersJob] = rest1 ++ rest3 ++ rest5 ++ rest12 ++ rest32 ++ rest52 ++ rest2 ++ rest4 ++ rest22 ++ rest42
-//  scheduleSubjectGroup(rests,(0 to 7))
+//  scheduleMainSubjects(rests,(0 to 7))
 //  println(rests)
 
   Output.printSchedule(schoolSchedule)
 
-  println(rest1++rest3++rest5++rest12++rest32++rest52)
+  println(rest1++rest12++rest3)
+//  println(rest1++rest3++rest5++rest12++rest32++rest52)
 
 //  val auxJobsByTeachers = (teachers.map(t => List(t.name) ++ teachersJobs.filter(tj => tj.teacher == t).map(_.toString).toList).toList)
 //  val maxSize = auxJobsByTeachers.foldLeft(0)((max,l) => if(max > l.size) max else l.size )

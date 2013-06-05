@@ -194,5 +194,9 @@ object X extends App {
 
   Output.printSchedule(schoolSchedule)
 
+  val auxJobsByTeachers = (teachers.map(t => List(t.name) ++ teachersJobs.filter(tj => tj.teacher == t).map(_.toString).toList).toList)
+  val maxSize = auxJobsByTeachers.foldLeft(0)((max,l) => if(max > l.size) max else l.size )
+  Output.printTable(auxJobsByTeachers.map(l => l.padTo(maxSize,null)),false)
+
   Checker.check(schoolSchedule,teachersJobs)
 }

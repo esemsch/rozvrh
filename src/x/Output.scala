@@ -5,7 +5,7 @@ object Output {
   def printTable(cs:Seq[Seq[Any]],leftAxisDays:Boolean) {
     val leftAxisPad = if(leftAxisDays) 10 else 3
 
-    val colLengths = cs.map(ds => ds.map(tj => if(tj==null) 1 else tj.toString.length)).foldLeft((FIRST_HOUR to LAST_HOUR).map(x=>0))((lengths,dayLengths) => {
+    val colLengths = cs.map(ds => ds.map(tj => if(tj==null) 1 else tj.toString.length)).foldLeft((0 to cs(0).size).map(x=>0))((lengths,dayLengths) => {
       lengths.zip(dayLengths).map(x => math.max(x._1,x._2))
     }).toList
 
@@ -26,7 +26,7 @@ object Output {
 
     divide
 
-    printLine((FIRST_HOUR to LAST_HOUR).map(_.toString).toList,"")
+    printLine((0 to cs(0).size).map(_.toString).toList,"")
 
     divide
 

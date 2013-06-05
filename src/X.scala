@@ -566,7 +566,9 @@ object X extends App {
       if(tj.classHour.combinedClasses) false
       else {
         val gr = tj.classHour.classes.head
-        val freeHours = schoolSchedule.schoolSchedule(gr).classSchedule.zipWithIndex.flatMap(ds => ds._1.zipWithIndex.filter(x => x._1==null).map(x => (ds._2,x._2)))
+        val freeHours = schoolSchedule.schoolSchedule(gr).classSchedule.zipWithIndex.flatMap(ds => ds._1.zipWithIndex.filter({
+          x => (x._1==null && ((ds._2 == MONDAY || ds._2 == THURSDAY) || x._2<=5))
+        }).map(x => (ds._2,x._2)))
         val toSwapCandidates = schoolSchedule.schoolSchedule(gr).classSchedule.zipWithIndex.flatMap(ds => ds._1.zipWithIndex.filter({
           x => x._1!=null && !x._1.classHour.combinedClasses
         }).map(x => (ds._2,x._2)))
@@ -610,19 +612,18 @@ object X extends App {
   }
 
   val rest1 = scheduleSubjectGroup(hlavniPredmetyTJ.filter(_.classHour.combinedClasses),(1 to 5))
-//  val rest2 = scheduleSubjectGroup(peTJ,(5 to 5))
+  val rest2 = scheduleSubjectGroup(peTJ.filter(_.classHour.combinedClasses),(5 to 5))
   val rest3 = scheduleSubjectGroup(dvojhodinoveTJ.filter(_.classHour.combinedClasses),(0 to 7))
-//  val rest4 = scheduleSubjectGroup(vvTJ,(5 to 7))
+  val rest4 = scheduleSubjectGroup(vvTJ.filter(_.classHour.combinedClasses),(5 to 7))
   val rest5 = scheduleSubjectGroup(ostatniTJ.filter(_.classHour.combinedClasses),(0 to 7))
 
   val rest12 = scheduleSubjectGroup(hlavniPredmetyTJ.filter(!_.classHour.combinedClasses),(1 to 5))
-//  val rest2 = scheduleSubjectGroup(peTJ,(5 to 5))
+  val rest22 = scheduleSubjectGroup(peTJ.filter(!_.classHour.combinedClasses),(5 to 5))
   val rest32 = scheduleSubjectGroup(dvojhodinoveTJ.filter(!_.classHour.combinedClasses),(0 to 7))
-//  val rest4 = scheduleSubjectGroup(vvTJ,(5 to 7))
+  val rest42 = scheduleSubjectGroup(vvTJ.filter(!_.classHour.combinedClasses),(5 to 7))
   val rest52 = scheduleSubjectGroup(ostatniTJ.filter(!_.classHour.combinedClasses),(0 to 7))
 
-  val rests: Seq[TeachersJob] = rest1 ++ rest3 ++ rest5 ++ rest12 ++ rest32 ++ rest52
-//  val rests: Seq[TeachersJob] = rest1 ++ rest2 ++ rest3 ++ rest4 ++ rest5
+  val rests: Seq[TeachersJob] = rest1 ++ rest3 ++ rest5 ++ rest12 ++ rest32 ++ rest52 ++ rest2 ++ rest4 ++ rest22 ++ rest42
   scheduleSubjectGroup(rests,(0 to 7))
   println(rests)
 
@@ -668,7 +669,7 @@ object X extends App {
     ccoll ++ ds.filter(_ != null)
   }))
 
-  println("Total jobs = "+(teachersJobs.foldLeft(0)((total,tj) => total + tj.classHour.classes.size)+18))
+  println("Total jobs = "+(teachersJobs.foldLeft(0)((total,tj) => total + tj.classHour.classes.size)+22))
   println("Scheduled jobs = "+scheduledJobs.size)
   println(teachersJobs diff scheduledJobs)
 

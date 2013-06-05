@@ -10,7 +10,7 @@ object X extends App {
   def preassign(tj:TeachersJob,day:Int,hour:Int):Unit = {
     if(!(teachersJobs.contains(tj))) throw new RuntimeException("Preassigning non-existent TJ")
     teachersJobs = teachersJobs diff List(tj)
-    tj.classHour.classes.foreach(c => schoolSchedule.schoolSchedule(c).classSchedule(day)(hour) = tj)
+//    tj.classHour.classes.foreach(c => schoolSchedule.schoolSchedule(c).classSchedule(day)(hour) = tj)
   }
 
   preassign(TeachersJob(Teacher("Iva"),ClassHour("Rj 7",Set(6))),FRIDAY,2)
@@ -126,7 +126,7 @@ object X extends App {
       else {
         val gr = tj.classHour.classes.head
         val freeHours = schoolSchedule.schoolSchedule(gr).classSchedule.zipWithIndex.flatMap(ds => ds._1.zipWithIndex.filter({
-          x => (x._1==null && ((ds._2 == MONDAY || ds._2 == THURSDAY) || x._2<=5))
+          x => (x._1==null && hoursToSch.contains(x._2) && ((ds._2 == MONDAY || ds._2 == THURSDAY) || x._2<=5))
         }).map(x => (ds._2,x._2)))
         val toSwapCandidates = schoolSchedule.schoolSchedule(gr).classSchedule.zipWithIndex.flatMap(ds => ds._1.zipWithIndex.filter({
           x => x._1!=null && !x._1.classHour.combinedClasses
@@ -171,32 +171,34 @@ object X extends App {
   }
 
   def teachersComparator(tj1:TeachersJob,tj2:TeachersJob) = {
-    val teachersSorted: List[Teacher] = teachers.toList.sortWith((t1,t2)=>t1.name.compareTo(t2.name)>0)
+    val teachersSorted: List[Teacher] = teachers.toList.sortWith((t1,t2)=>t1.name.compareTo(t2.name)<=0)
     val retval = teachersSorted.foldLeft(tj1)((tj, tjt) => if (tjt == tj1.teacher) tj1 else if (tjt == tj2.teacher) tj2 else tj) == tj2
     retval
   }
 
-  val rest1 = scheduleSubjectGroup(hlavniPredmetyTJ.filter(_.classHour.combinedClasses).sortWith(teachersComparator(_,_)),(1 to 5))
-  val rest2 = scheduleSubjectGroup(peTJ.filter(_.classHour.combinedClasses),(5 to 7))
-  val rest3 = scheduleSubjectGroup(dvojhodinoveTJ.filter(_.classHour.combinedClasses).sortWith(teachersComparator(_,_)),(0 to 7))
-  val rest4 = scheduleSubjectGroup(vvTJ.filter(_.classHour.combinedClasses),(5 to 7))
-  val rest5 = scheduleSubjectGroup(ostatniTJ.filter(_.classHour.combinedClasses).sortWith(teachersComparator(_,_)),(0 to 7))
+  val rest1 = scheduleSubjectGroup(hlavniPredmetyTJ.filter(_.classHour.combinedClasses).sortWith(teachersComparator(_,_)),(1 to 4))
+//  val rest2 = scheduleSubjectGroup(peTJ.filter(_.classHour.combinedClasses),(5 to 7))
+  val rest3 = scheduleSubjectGroup(dvojhodinoveTJ.filter(_.classHour.combinedClasses).sortWith(teachersComparator(_,_)),(1 to 4))
+//  val rest4 = scheduleSubjectGroup(vvTJ.filter(_.classHour.combinedClasses),(5 to 7))
+  val rest5 = scheduleSubjectGroup(ostatniTJ.filter(_.classHour.combinedClasses).sortWith(teachersComparator(_,_)),(1 to 4))
 
-  val rest12 = scheduleSubjectGroup(hlavniPredmetyTJ.filter(!_.classHour.combinedClasses).sortWith(teachersComparator(_,_)),(1 to 5))
-  val rest22 = scheduleSubjectGroup(peTJ.filter(!_.classHour.combinedClasses),(5 to 7))
-  val rest32 = scheduleSubjectGroup(dvojhodinoveTJ.filter(!_.classHour.combinedClasses).sortWith(teachersComparator(_,_)),(0 to 7))
-  val rest42 = scheduleSubjectGroup(vvTJ.filter(!_.classHour.combinedClasses),(5 to 7))
-  val rest52 = scheduleSubjectGroup(ostatniTJ.filter(!_.classHour.combinedClasses).sortWith(teachersComparator(_,_)),(0 to 7))
+  val rest12 = scheduleSubjectGroup(hlavniPredmetyTJ.filter(!_.classHour.combinedClasses).sortWith(teachersComparator(_,_)),(1 to 4))
+//  val rest22 = scheduleSubjectGroup(peTJ.filter(!_.classHour.combinedClasses),(5 to 7))
+  val rest32 = scheduleSubjectGroup(dvojhodinoveTJ.filter(!_.classHour.combinedClasses).sortWith(teachersComparator(_,_)),(1 to 4))
+//  val rest42 = scheduleSubjectGroup(vvTJ.filter(!_.classHour.combinedClasses),(5 to 7))
+  val rest52 = scheduleSubjectGroup(ostatniTJ.filter(!_.classHour.combinedClasses).sortWith(teachersComparator(_,_)),(1 to 4))
 
-  val rests: Seq[TeachersJob] = rest1 ++ rest3 ++ rest5 ++ rest12 ++ rest32 ++ rest52 ++ rest2 ++ rest4 ++ rest22 ++ rest42
-  scheduleSubjectGroup(rests,(0 to 7))
-  println(rests)
+//  val rests: Seq[TeachersJob] = rest1 ++ rest3 ++ rest5 ++ rest12 ++ rest32 ++ rest52 ++ rest2 ++ rest4 ++ rest22 ++ rest42
+//  scheduleSubjectGroup(rests,(0 to 7))
+//  println(rests)
 
   Output.printSchedule(schoolSchedule)
 
-  val auxJobsByTeachers = (teachers.map(t => List(t.name) ++ teachersJobs.filter(tj => tj.teacher == t).map(_.toString).toList).toList)
-  val maxSize = auxJobsByTeachers.foldLeft(0)((max,l) => if(max > l.size) max else l.size )
-  Output.printTable(auxJobsByTeachers.map(l => l.padTo(maxSize,null)),false)
+  println(rest1++rest3++rest5++rest12++rest32++rest52)
+
+//  val auxJobsByTeachers = (teachers.map(t => List(t.name) ++ teachersJobs.filter(tj => tj.teacher == t).map(_.toString).toList).toList)
+//  val maxSize = auxJobsByTeachers.foldLeft(0)((max,l) => if(max > l.size) max else l.size )
+//  Output.printTable(auxJobsByTeachers.map(l => l.padTo(maxSize,null)),false)
 
   Checker.check(schoolSchedule,teachersJobs)
 }

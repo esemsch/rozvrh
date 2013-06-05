@@ -559,7 +559,41 @@ object X extends App {
       })
     }
 
-    scheduleForHours(hoursToSch)
+    def reSchedule = {
+      if(tj.classHour.combinedClasses) false
+      else {
+        val gr = tj.classHour.classes.head
+        val freeHours = schoolSchedule.schoolSchedule(gr).classSchedule.zipWithIndex.flatMap(ds => ds._1.zipWithIndex.filter(x => x._1==null).map(x => (ds._2,x._2)))
+        val toSwapCandidates = schoolSchedule.schoolSchedule(gr).classSchedule.zipWithIndex.flatMap(ds => ds._1.zipWithIndex.filter({
+          x => x._1!=null && !x._1.classHour.combinedClasses
+        }).map(x => (ds._2,x._2)))
+
+        def trySwap(candidate:(Int,Int),freeHour:(Int,Int)) = {
+          val ctj = schoolSchedule.schoolSchedule(gr).classSchedule(candidate._1)(candidate._2)
+          if(checkAssgnOk(ctj,freeHour._1,freeHour._2)) {
+            schoolSchedule.schoolSchedule(gr).classSchedule(candidate._1)(candidate._2) = null
+            if (checkAssgnOk(tj,candidate._1,candidate._2)) {
+              schoolSchedule.schoolSchedule(gr).classSchedule(freeHour._1)(freeHour._2) = ctj
+              schoolSchedule.schoolSchedule(gr).classSchedule(candidate._1)(candidate._2) = tj
+              true
+            } else {
+              schoolSchedule.schoolSchedule(gr).classSchedule(candidate._1)(candidate._2) = ctj
+              false
+            }
+          } else false
+        }
+
+        toSwapCandidates.exists(cand => {
+          freeHours.exists(fh => {
+            trySwap(cand,fh)
+          })
+        })
+      }
+    }
+
+    if (!scheduleForHours(hoursToSch)) {
+      reSchedule
+    } else true
   }
 
   def scheduleSubjectGroup(subjGr:Seq[X.TeachersJob],prefHours:Seq[Int]) = {
@@ -572,13 +606,20 @@ object X extends App {
     }).map(tji => tji._1)
   }
 
-  val rest1 = scheduleSubjectGroup(hlavniPredmetyTJ,(1 to 5))
-  val rest2 = scheduleSubjectGroup(peTJ,(5 to 5))
-  val rest3 = scheduleSubjectGroup(dvojhodinoveTJ,(0 to 7))
-  val rest4 = scheduleSubjectGroup(vvTJ,(5 to 7))
-  val rest5 = scheduleSubjectGroup(ostatniTJ,(0 to 7))
+  val rest1 = scheduleSubjectGroup(hlavniPredmetyTJ.filter(_.classHour.combinedClasses),(1 to 5))
+//  val rest2 = scheduleSubjectGroup(peTJ,(5 to 5))
+  val rest3 = scheduleSubjectGroup(dvojhodinoveTJ.filter(_.classHour.combinedClasses),(0 to 7))
+//  val rest4 = scheduleSubjectGroup(vvTJ,(5 to 7))
+  val rest5 = scheduleSubjectGroup(ostatniTJ.filter(_.classHour.combinedClasses),(0 to 7))
 
-  val rests: Seq[TeachersJob] = rest1 ++ rest2 ++ rest3 ++ rest4 ++ rest5
+  val rest12 = scheduleSubjectGroup(hlavniPredmetyTJ.filter(!_.classHour.combinedClasses),(1 to 5))
+//  val rest2 = scheduleSubjectGroup(peTJ,(5 to 5))
+  val rest32 = scheduleSubjectGroup(dvojhodinoveTJ.filter(!_.classHour.combinedClasses),(0 to 7))
+//  val rest4 = scheduleSubjectGroup(vvTJ,(5 to 7))
+  val rest52 = scheduleSubjectGroup(ostatniTJ.filter(!_.classHour.combinedClasses),(0 to 7))
+
+  val rests: Seq[TeachersJob] = rest1 ++ rest3 ++ rest5 ++ rest12 ++ rest32 ++ rest52
+//  val rests: Seq[TeachersJob] = rest1 ++ rest2 ++ rest3 ++ rest4 ++ rest5
   scheduleSubjectGroup(rests,(0 to 7))
   println(rests)
 
@@ -618,7 +659,7 @@ object X extends App {
 
   // </schedule>
 
-//  printSchedule(schoolSchedule)
+  printSchedule(schoolSchedule)
 
   val scheduledJobs: List[TeachersJob] = schoolSchedule.schoolSchedule.foldLeft(List[TeachersJob]())((coll, cs) => coll ++ cs.classSchedule.foldLeft(List[TeachersJob]())((ccoll, ds) => {
     ccoll ++ ds.filter(_ != null)

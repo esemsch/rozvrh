@@ -96,6 +96,7 @@ object Y extends App {
   class SimpleGroup(val job:Job, val schoolSchedule:SchoolSchedule) extends Group {
     private val availability = getAvailability(job,schoolSchedule)
     private var left = if(job!=null) job.count else 0
+    def getLeft = left
     private var posCache:Seq[Possibility] = if(job!=null) availability.getPossibilities else null
 
     def getM = posCache.size-left
@@ -165,5 +166,6 @@ object Y extends App {
 
   if(simpleGroups.exists(_.isImpossible)) {
     println("!!!SCHEDULING FAILED!!!")
+    println("Reason: "+simpleGroups.filter(_.isImpossible).map(sg => sg.job.toString+" left = "+sg.getLeft))
   }
 }

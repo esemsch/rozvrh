@@ -19,6 +19,11 @@ case class TeachersJob(val teacher:Teacher, val classHour:ClassHour) {
   override def toString = classHour.subject + " ("+teacher.name+")"
 }
 
+case class Job(val teacher:Teacher, val classHour:ClassHour, val count:Int) {
+  def toTeachersJobs = (1 to count).map(i => toTeachersJob).toList
+  def toTeachersJob = TeachersJob(teacher,classHour)
+}
+
 class ClassSchedule {
   val classSchedule = {
     val aux = new Array[Array[TeachersJob]](FRIDAY - MONDAY + 1)

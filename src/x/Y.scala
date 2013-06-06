@@ -31,16 +31,42 @@ object Y extends App {
 
   trait Group {
     def getM:Int
-    def update(j:Job,p:Possibility)
+    def update(j:Job,p:Possibility,noRevert:Boolean)
+    def unUpdate
     def isScheduled:Boolean
     def isImpossible:Boolean
   }
 
   trait Availability {
-    def getPossibilities:Seq[Possibility]
+    def getPossibilities:Set[Possibility]
+
+    var plainPossibilities:Set[Possibility] = null
 
     val hoursByGrades = Map(1 -> (1 to 5), 2 -> (1 to 5), 3 -> (0 to 5), 4 -> (0 to 7),
       5 -> (0 to 7), 6 -> (0 to 7), 7 -> (0 to 7), 8 -> (0 to 7), 9 -> (0 to 7))
+
+    var updated:Possibility = null
+
+    def update(thisJob:Job,scheduledJob:Job,p:Possibility,noRevert:Boolean) {
+      val exclusive = thisJob.classHour.isMutuallyExclusive(scheduledJob.classHour) || thisJob.teacher==scheduledJob.teacher
+      if (exclusive) {
+        val aux = plainPossibilities - p
+        if (aux.size < plainPossibilities.size) {
+          plainPossibilities = aux
+          if(!noRevert) updated = p
+        }
+      }
+      if (noRevert) {
+        updated = null
+      }
+    }
+
+    def unUpdate {
+      if (updated!=null) {
+        plainPossibilities = plainPossibilities + updated
+        updated = null
+      }
+    }
 
     protected def checkSchedulable(job:Job,p:Possibility) = {
       val hourSch = schoolSchedule.schoolSchedule.map(cs => cs.classSchedule(p.day)(p.hour))
@@ -48,10 +74,14 @@ object Y extends App {
       val teacherOk = hourSch.forall(tj => tj==null || tj.teacher!=job.teacher)
       free && teacherOk
     }
+
     protected def getPlainPossibilities(job:Job,prefHours:Seq[Int]) = {
       cnt = cnt + 1
       if(cnt%100000==0)println(cnt)
-      (MONDAY to FRIDAY).flatMap(d => prefHours.map(h => Possibility(d,h)).filter(p => checkSchedulable(job,p)))
+      if (plainPossibilities==null) {
+        plainPossibilities = (MONDAY to FRIDAY).flatMap(d => prefHours.map(h => Possibility(d,h)).filter(p => checkSchedulable(job,p))).toSet
+      }
+      plainPossibilities
     }
   }
 
@@ -97,13 +127,17 @@ object Y extends App {
     private val availability = getAvailability(job,schoolSchedule)
     private var left = if(job!=null) job.count else 0
     def getLeft = left
-    private var posCache:Seq[Possibility] = if(job!=null) availability.getPossibilities else null
+    private var posCache:Set[Possibility] = if(job!=null) availability.getPossibilities else null
 
     def getM = posCache.size-left
-    def update(j:Job,p:Possibility) {posCache = availability.getPossibilities}
+    def update(j:Job,p:Possibility,noRevert:Boolean) {
+      availability.update(job,j,p,noRevert)
+      posCache = availability.getPossibilities
+    }
+    def unUpdate {availability.unUpdate}
     def isScheduled = left == 0
     def isImpossible = left>0 && posCache.size==0
-    def getPossibilities:Seq[Possibility] = posCache
+    def getPossibilities:Set[Possibility] = posCache
 
     def schedule(p:Possibility) {
       left = left-1
@@ -127,9 +161,13 @@ object Y extends App {
 
   def getM(j:Job,p:Possibility) = {
     groups.filter(!_.isScheduled).foldLeft(0)((total,sg)=>{
-      sg.update(j,p)
+      sg.update(j,p,false)
       (total + sg.getM)
     })
+//    groups.filter(!_.isScheduled).foldLeft(0)((total,sg)=>{
+//      sg.update(j,p,false)
+//      (total + sg.getM)
+//    })
   }
 
   def getBestPossibility(sg:SimpleGroup) = {
@@ -138,6 +176,7 @@ object Y extends App {
       sg.schedule(pos)
       val m = getM(sg.job,pos)
       sg.unschedule(pos)
+      groups.foreach(_.unUpdate)
       if(m>best._2) (pos,m)
       else best
     })
@@ -157,7 +196,7 @@ object Y extends App {
     total = total - 1
     println(total+": "+best)
     best._1.schedule(best._2)
-    groups.foreach(_.update(best._1.job,best._2))
+    groups.foreach(_.update(best._1.job,best._2,true))
   }
 
   Output.printSchedule(schoolSchedule)

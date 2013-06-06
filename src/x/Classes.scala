@@ -12,6 +12,7 @@ case class ClassHour(val subject:String, val classes:Set[Int]) {
   val fourthFifth = classes.contains(FIRST_GRADE+3) || classes.contains(FIRST_GRADE+4)
   val secondary = classes.contains(FIRST_GRADE+5) || classes.contains(FIRST_GRADE+6) || classes.contains(FIRST_GRADE+7) || classes.contains(FIRST_GRADE+8)
   val lowestClass = classes.foldLeft(Integer.MAX_VALUE)((min,cls) => if(cls<min) cls else min)
+  def isMutuallyExclusive(otherClassHour:ClassHour) = classes.exists(cls => otherClassHour.classes.exists(otherCls => cls==otherCls))
 }
 
 case class Teacher(val name:String)

@@ -174,9 +174,13 @@ class DvojhodinnovePredmetyNeVeDnechPoSobe(val schoolSchedule:SchoolSchedule) ex
         val currentDay: Int = oneDay._2
 
         val twoInTheSameDay = currentDaysTwoHourSubjects.distinct.size != currentDaysTwoHourSubjects.size
+        if(twoInTheSameDay) {
+          println("Violating subjects: "+(currentDaysTwoHourSubjects diff currentDaysTwoHourSubjects.distinct).mkString(","))
+        }
 
         val ok = currentDaysTwoHourSubjects.forall(subj => {
           if(twoHoursSubjectsWithDays._1.get(subj).exists(day => currentDay-day <= 1)) {
+            println("Violating subject: subj")
             false
           } else {
             true

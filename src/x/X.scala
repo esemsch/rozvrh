@@ -172,7 +172,7 @@ object X extends App {
 
   def scheduleTwoHoursSubjects(twoHours:Seq[TeachersJob],prefHours:Seq[Int]) = {
     def isConsequent(tj1:TeachersJob,tj2:TeachersJob) = {
-      ((tj1.classHour.classes diff tj2.classHour.classes).size < tj1.classHour.classes.size) &&
+      ((tj1.classHour.classes diff tj2.classHour.classes).size == 0 || (tj2.classHour.classes diff tj1.classHour.classes).size == 0) &&
       ((tj1.classHour.subjects diff tj2.classHour.subjects).size < tj1.classHour.subjects.size)
     }
     val precedence = twoHours.foldLeft(List[(TeachersJob,Seq[TeachersJob])]())((l,tj) => l.find(precJobs => isConsequent(precJobs._1,tj)) match {

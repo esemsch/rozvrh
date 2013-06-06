@@ -160,9 +160,9 @@ object Y extends App {
   val groups = simpleGroups
 
   def getM(j:Job,p:Possibility) = {
-    groups.filter(!_.isScheduled).foldLeft(0)((total,sg)=>{
+    groups.filter(!_.isScheduled).foldLeft(Integer.MAX_VALUE)((min,sg)=>{
       sg.update(j,p,false)
-      (total + sg.getM)
+      math.min(min,sg.getM)
     })
 //    groups.filter(!_.isScheduled).foldLeft(0)((total,sg)=>{
 //      sg.update(j,p,false)
@@ -190,7 +190,7 @@ object Y extends App {
     })
   }
 
-  var total = jobs.foldLeft(0)((total,j) => total + j.classHour.classes.size)
+  var total = jobs.foldLeft(0)((total,j) => total + j.count)
   while(simpleGroups.exists(!_.isScheduled) && simpleGroups.forall(!_.isImpossible)) {
     val best = getBestGroupAndPossibility
     total = total - 1

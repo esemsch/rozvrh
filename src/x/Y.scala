@@ -7,6 +7,13 @@ object Y extends App {
   val schoolSchedule = new SchoolSchedule
 
   // <preassignment>
+  def checkSchedulable(job:Job,p:Possibility) = {
+    val hourSch = schoolSchedule.schoolSchedule.map(cs => cs.classSchedule(p.day)(p.hour))
+    val free = job.classHour.classes.forall(cls => hourSch(cls)==null)
+    val teacherOk = hourSch.forall(tj => tj==null || tj.teacher!=job.teacher)
+    free && teacherOk
+  }
+
   def preassign(subject:String,teacher:String,day:Int,hour:Int) {
     jobs.find(job => job.classHour.subject==subject && job.teacher == Teacher(teacher)) match {
       case None => throw new RuntimeException("Job: Subject = "+subject+" Teacher = "+teacher+" does not exist")
@@ -20,8 +27,44 @@ object Y extends App {
   }
   def preassign(job:Job,day:Int,hour:Int):Unit = {
     jobs = jobs diff List(job)
-    job.classHour.classes.foreach(c => schoolSchedule.schoolSchedule(c).classSchedule(day)(hour) = job.toTeachersJob)
+    if(checkSchedulable(job,Possibility(day,hour))) {
+      job.classHour.classes.foreach(c =>  {
+          schoolSchedule.schoolSchedule(c).classSchedule(day)(hour) = job.toTeachersJob
+      })
+    } else throw new RuntimeException("Cannot schedule: "+job+" for day = "+DAY_NAME(day)+" hour = "+hour)
   }
+
+
+  preassign("Čj 2/4","Gita",MONDAY,1)
+  preassign("Čj 2/4","Gita",TUESDAY,1)
+  preassign("Čj 2/4","Gita",WEDNESDAY,1)
+  preassign("Čj 2/4","Gita",THURSDAY,1)
+  preassign("Čj 2/4","Gita",FRIDAY,1)
+
+  preassign("Čj 2/4","Gita",MONDAY,3)
+  preassign("Čj 2/4","Gita",TUESDAY,3)
+  preassign("Čj 2/4","Gita",WEDNESDAY,3)
+
+  preassign("M 2/4","Gita",MONDAY,2)
+  preassign("M 2/4","Gita",TUESDAY,2)
+  preassign("M 2/4","Gita",WEDNESDAY,2)
+  preassign("M 2/4","Gita",THURSDAY,2)
+  preassign("M 2/4","Gita",FRIDAY,2)
+
+  preassign("Čj 3/5","Martina",MONDAY,1)
+  preassign("Čj 3/5","Martina",TUESDAY,1)
+  preassign("Čj 3/5","Martina",WEDNESDAY,1)
+  preassign("Čj 3/5","Martina",THURSDAY,1)
+  preassign("Čj 3/5","Martina",FRIDAY,1)
+
+  preassign("Čj 3/5","Martina",MONDAY,3)
+  preassign("Čj 3/5","Martina",TUESDAY,3)
+
+  preassign("M 3/5","Martina",MONDAY,2)
+  preassign("M 3/5","Martina",TUESDAY,2)
+  preassign("M 3/5","Martina",WEDNESDAY,2)
+  preassign("M 3/5","Martina",THURSDAY,2)
+  preassign("M 3/5","Martina",FRIDAY,2)
 
   preassign("Rj 7","Iva",FRIDAY,2)
   preassign("Rj 7","Iva",FRIDAY,3)
@@ -31,9 +74,6 @@ object Y extends App {
   preassign("Tv_Chl 6/7/8/9","Lucka",MONDAY,6)
   preassign("Tv_Chl 6/7/8/9","Lucka",THURSDAY,5)
 
-  preassign("Vv 6/7","Tereza",MONDAY,4)
-  preassign("Vv 6/7","Tereza",MONDAY,7)
-//  preassign("Vv 8/9","Tereza",THURSDAY,7)
   // </preassignment>
 
   case class Possibility(day:Int,hour:Int)
@@ -68,7 +108,14 @@ object Y extends App {
       Teacher("Gita") -> Set[Int](),
       Teacher("Martina") -> Set[Int](),
       Teacher("Iva") -> Set[Int](),
-      Teacher("Alena") -> Set[Int]()
+      Teacher("Alena") -> Set[Int](),
+      Teacher("Volna3") -> Set[Int](),
+      Teacher("Volna4") -> Set[Int](),
+      Teacher("Volna5") -> Set[Int](),
+      Teacher("Volna6") -> Set[Int](),
+      Teacher("Volna7") -> Set[Int](),
+      Teacher("Volna8") -> Set[Int](),
+      Teacher("Volna9") -> Set[Int]()
     )
 
     var updated:Possibility = null
@@ -98,19 +145,12 @@ object Y extends App {
       plainPossibilities = null
     }
 
-    protected def checkSchedulable(job:Job,p:Possibility) = {
-      val hourSch = schoolSchedule.schoolSchedule.map(cs => cs.classSchedule(p.day)(p.hour))
-      val free = job.classHour.classes.forall(cls => hourSch(cls)==null)
-      val teacherOk = hourSch.forall(tj => tj==null || tj.teacher!=job.teacher)
-      free && teacherOk
-    }
-
     protected def getPlainPossibilities(job:Job,prefHours:Seq[Int]) = {
       cnt = cnt + 1
       if(cnt%100000==0)println(cnt)
       if (plainPossibilities==null) {
         plainPossibilities = (MONDAY to FRIDAY).toSet.diff(excludedDaysByTeacher(job.teacher)).flatMap(d => {
-          val redPrefHours = if(d!=MONDAY && d!=THURSDAY) prefHours.filter(h => h<=5) else prefHours
+          val redPrefHours = if(d!=MONDAY && d!=THURSDAY && !job.classHour.free) prefHours.filter(h => h<=5) else prefHours
 //          val redPrefHours = prefHours
           redPrefHours.map(h => Possibility(d,h)).filter(p => checkSchedulable(job,p))
         }).toSet
@@ -129,13 +169,37 @@ object Y extends App {
     override def getPossibilities = getPlainPossibilities(job,hoursByGrades(job.classHour.lowestClass))
   }
 
+  class FreeHoursAvailability(job:Job,schoolSchedule:SchoolSchedule) extends Availability {
+    var daysTaken = Set[Int]()
+    var dayTaken = -1
+
+    override def getPossibilities = getPlainPossibilities(job,5 to 6).filter(p => !daysTaken.contains(p.day))
+
+    override def update(thisJob:Job,scheduledJob:Job,p:Possibility,noRevert:Boolean) {
+      if(!daysTaken.contains(p.day)) {
+        daysTaken = daysTaken + p.day
+        dayTaken = p.day
+      }
+      super.update(thisJob,scheduledJob,p,noRevert)
+    }
+
+    override def unUpdate {
+      super.unUpdate
+      if (dayTaken != -1) {
+        daysTaken = daysTaken - dayTaken
+      }
+      dayTaken = -1
+    }
+
+  }
+
   class TwoHourSubjectAvailability(job:Job,schoolSchedule:SchoolSchedule) extends Availability {
     private var consequents = Set[Possibility]()
     private var lastConsequent:Possibility = null
     val tj = job.toTeachersJob
 
     private def isConsequent(tj1:TeachersJob,tj2:TeachersJob) = {
-      ((tj1.classHour.classes diff tj2.classHour.classes).size == 0 || (tj2.classHour.classes diff tj1.classHour.classes).size == 0) &&
+      ((tj1.classHour.classes diff tj2.classHour.classes).isEmpty || (tj2.classHour.classes diff tj1.classHour.classes).isEmpty) &&
         ((tj1.classHour.subjects diff tj2.classHour.subjects).size < tj1.classHour.subjects.size)
     }
     override def update(thisJob:Job,scheduledJob:Job,p:Possibility,noRevert:Boolean) {
@@ -166,6 +230,7 @@ object Y extends App {
     if(job==null || schoolSchedule==null) null
     else if(job.classHour.mainSubject) new MainSubjectAvailability(job,schoolSchedule)
     else if(job.classHour.twoHour) new TwoHourSubjectAvailability(job,schoolSchedule)
+    else if(job.classHour.free) new FreeHoursAvailability(job,schoolSchedule)
     else new RestOfSubjectsAvailability(job,schoolSchedule)
   }
 
@@ -300,14 +365,18 @@ object Y extends App {
     val teachersGroups = jobs.foldLeft(Set[Teacher]())((allTeachers, job) => allTeachers ++ Set(job.teacher)).map(t => {
       new CombinedGroup(simpleGroups.filter(sg => sg.job.teacher == t))
     })
-    val classGroupsCombined = (FIRST_GRADE to LAST_GRADE).map(cls => {
-      new CombinedGroup(simpleGroups.filter(sg => sg.job.classHour.classes.contains(cls) && sg.job.classHour.combinedClasses))
+    val classGroupsMS = (FIRST_GRADE to LAST_GRADE).map(cls => {
+      new CombinedGroup(simpleGroups.filter(sg => sg.job.classHour.classes.contains(cls) && sg.job.classHour.mainSubject))
     })
-    val classGroupsNotCombined = (FIRST_GRADE to LAST_GRADE).map(cls => {
-      new CombinedGroup(simpleGroups.filter(sg => sg.job.classHour.classes.contains(cls) && !sg.job.classHour.combinedClasses))
+    val classGroupsTH = (FIRST_GRADE to LAST_GRADE).map(cls => {
+      new CombinedGroup(simpleGroups.filter(sg => sg.job.classHour.classes.contains(cls) && sg.job.classHour.twoHour))
     })
-    simpleGroups ++ teachersGroups ++ classGroupsCombined ++ classGroupsNotCombined
+    val classGroupsR = (FIRST_GRADE to LAST_GRADE).map(cls => {
+      new CombinedGroup(simpleGroups.filter(sg => sg.job.classHour.classes.contains(cls) && (!sg.job.classHour.mainSubject && !sg.job.classHour.twoHour)))
+    })
+    simpleGroups ++ teachersGroups ++ classGroupsMS ++ classGroupsTH ++ classGroupsR
   }
+  println(groups.mkString("\n"))
 
   def getM(j:Job,p:Possibility,changingGroup:SimpleGroup) = {
     groups.filter(!_.isScheduled).foldLeft(0.0)((total,group)=>{
@@ -326,7 +395,7 @@ object Y extends App {
     val pos = sg.getPossibilities
     pos.foldLeft((Possibility(1000,1000),Double.MaxValue))((best,pos) => {
       val m = getM(sg.job,pos,sg)
-      if(m<best._2 && (pos.hour<best._1.hour || best._1.hour==0)) (pos,m)
+      if(m<best._2 ||(m==best._2 && (pos.hour<best._1.hour || best._1.hour==0))) (pos,m)
       else best
     })
   }
@@ -368,12 +437,12 @@ object Y extends App {
     if(simpleGroups.forall(_.isScheduled)) true
     else if(simpleGroups.exists(_.isImpossible)) false
     else {
-      val best = getBestGroupsAndPossibilities.sortWith((b1,b2) => b1._2._2<=b2._2._2).take(2)
+      val best = getBestGroupsAndPossibilities.filter(b => b._1.job.classHour.classes.contains(5)).sortWith((b1,b2) => b1._2._2<=b2._2._2)
       if(best.isEmpty) {
         println("!!!SCHEDULING FAILED!!!")
-        println("Breaking groups = "+findBreakingGroups)
+//        println("Breaking groups = "+findBreakingGroups)
         println("Backtracking")
-        false
+        simpleGroups.filter(sg => sg.job.classHour.classes.contains(5)).forall(_.isScheduled)
       } else {
         best.exists(b => {
           total = total - 1

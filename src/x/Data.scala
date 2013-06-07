@@ -125,8 +125,7 @@ object Data {
       "Rj 7" ->	2
     ).map(e => createJob(e._1,e._2,"Iva")).toList
 
-    val freeTeacher = Teacher("Volna")
-    val freeHours = (FIRST_GRADE to LAST_GRADE).map(gr => Job(freeTeacher,ClassHour("Volna "+gr,Set(gr)),5))
+//    val freeHours = (FIRST_GRADE+5 to LAST_GRADE).map(gr => Job(Teacher("Volna"+(gr+1)),ClassHour("Volna "+(gr+1),Set(gr)),if(gr>4) 3 else 5))
 
     TerezaJobs ++ AlenaJobs ++ HanaJobs ++ GitaJobs ++ MartinaJobs ++ BohunkaJobs ++ LuckaJobs ++ EvaJobs ++ IvaJobs
 //    TerezaJobs ++ AlenaJobs ++ HanaJobs ++ GitaJobs ++ MartinaJobs ++ BohunkaJobs ++ LuckaJobs ++ EvaJobs ++ IvaJobs ++ freeHours

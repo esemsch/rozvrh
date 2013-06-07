@@ -30,7 +30,8 @@ object Y extends App {
   case class Possibility(day:Int,hour:Int)
 
   trait Group {
-    def getM:Int
+    def getN:Int
+    def getP:Int
     def update(j:Job,p:Possibility,noRevert:Boolean)
     def unUpdate
     def isScheduled:Boolean
@@ -126,10 +127,10 @@ object Y extends App {
   class SimpleGroup(val job:Job, val schoolSchedule:SchoolSchedule) extends Group {
     private val availability = getAvailability(job,schoolSchedule)
     private var left = if(job!=null) job.count else 0
-    def getLeft = left
     private var posCache:Set[Possibility] = if(job!=null) availability.getPossibilities else null
 
-    def getM = posCache.size-left
+    override def getN = left
+    override def getP = posCache.size
     def update(j:Job,p:Possibility,noRevert:Boolean) {
       availability.update(job,j,p,noRevert)
       posCache = availability.getPossibilities
@@ -156,36 +157,78 @@ object Y extends App {
 
   }
 
-  val simpleGroups = jobs.map(j => new SimpleGroup(j,schoolSchedule))
-  val groups = simpleGroups
+  class TeachersGroup(simpleGroups:Seq[SimpleGroup]) extends Group {
 
-  def getM(j:Job,p:Possibility) = {
-    groups.filter(!_.isScheduled).foldLeft(Integer.MAX_VALUE)((min,sg)=>{
-      sg.update(j,p,false)
-      math.min(min,sg.getM)
+    val NOT_CACHED = Integer.MIN_VALUE
+    var pCache:Int = NOT_CACHED
+    var nCache:Int = NOT_CACHED
+
+    def getN = {
+      if(nCache==NOT_CACHED) {
+        nCache = simpleGroups.foldLeft(0)((totalLeft,sg) => totalLeft + sg.getN)
+      }
+      nCache
+    }
+    def getP = {
+      if(pCache==NOT_CACHED) {
+        pCache = simpleGroups.foldLeft(Set[Possibility]())((totalSet,sg) => totalSet ++ sg.getPossibilities).size
+      }
+      pCache
+    }
+
+    def update(j: Job, p: Possibility, noRevert: Boolean) {
+      nCache = NOT_CACHED
+      pCache = NOT_CACHED
+      simpleGroups.foreach(_.update(j,p,noRevert))
+    }
+
+    def unUpdate {
+      nCache = NOT_CACHED
+      pCache = NOT_CACHED
+      simpleGroups.foreach(_.unUpdate)
+    }
+
+    def isScheduled = simpleGroups.forall(_.isScheduled)
+
+    def isImpossible = simpleGroups.exists(_.isImpossible)
+  }
+
+  val simpleGroups = jobs.map(j => new SimpleGroup(j,schoolSchedule))
+  val groups = {
+    val teachersGroups = jobs.foldLeft(Set[Teacher]())((allTeachers, job) => allTeachers ++ Set(job.teacher)).map(t => {
+      new TeachersGroup(simpleGroups.filter(sg => sg.job.teacher == t))
     })
-//    groups.filter(!_.isScheduled).foldLeft(0)((total,sg)=>{
-//      sg.update(j,p,false)
-//      (total + sg.getM)
-//    })
+    simpleGroups ++ teachersGroups
+  }
+
+  def getM(j:Job,p:Possibility,changingGroup:SimpleGroup) = {
+    groups.filter(!_.isScheduled).foldLeft(0.0)((total,group)=>{
+      val pBefore = group.getP.toDouble
+      group.update(j,p,false)
+      val nAfter = group.getN.toDouble
+      val pAfter = group.getP.toDouble
+      group.unUpdate
+      val m: Double = ((pBefore - pAfter) * nAfter) / (pAfter - nAfter)
+      if(m<0) {
+        println("")
+      }
+      (total + m)
+    })
   }
 
   def getBestPossibility(sg:SimpleGroup) = {
     val pos = sg.getPossibilities
-    pos.foldLeft((Possibility(0,0),Integer.MIN_VALUE))((best,pos) => {
-      sg.schedule(pos)
-      val m = getM(sg.job,pos)
-      sg.unschedule(pos)
-      groups.foreach(_.unUpdate)
-      if(m>best._2) (pos,m)
+    pos.foldLeft((Possibility(0,0),Double.MaxValue))((best,pos) => {
+      val m = getM(sg.job,pos,sg)
+      if(m<best._2) (pos,m)
       else best
     })
   }
 
   def getBestGroupAndPossibility = {
-    simpleGroups.filter(!_.isScheduled).foldLeft((new SimpleGroup(null,null),Possibility(0,0),Integer.MIN_VALUE))((best,sg) => {
+    simpleGroups.filter(!_.isScheduled).foldLeft((new SimpleGroup(null,null),Possibility(0,0),Double.MaxValue))((best,sg) => {
       val curr = getBestPossibility(sg)
-      if(curr._2>best._3) (sg,curr._1,curr._2)
+      if(curr._2<best._3) (sg,curr._1,curr._2)
       else best
     })
   }
@@ -205,6 +248,6 @@ object Y extends App {
 
   if(simpleGroups.exists(_.isImpossible)) {
     println("!!!SCHEDULING FAILED!!!")
-    println("Reason: "+simpleGroups.filter(_.isImpossible).map(sg => sg.job.toString+" left = "+sg.getLeft))
+    println("Reason: "+simpleGroups.filter(_.isImpossible).map(sg => sg.job.toString+" left = "+sg.getN))
   }
 }

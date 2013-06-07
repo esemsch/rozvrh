@@ -58,6 +58,18 @@ object Y extends App {
     val mainHoursByGrades = Map(1 -> (1 to 5), 2 -> (1 to 5), 3 -> (0 to 5), 4 -> (0 to 5),
       5 -> (0 to 7), 6 -> (0 to 7), 7 -> (0 to 7), 8 -> (0 to 7), 9 -> (0 to 7))
 
+    val excludedDaysByTeacher = Map(
+      Teacher("Bohunka") -> Set(TUESDAY,WEDNESDAY,THURSDAY),
+      Teacher("Eva") -> Set(TUESDAY,FRIDAY),
+      Teacher("Lucka") -> Set(FRIDAY),
+      Teacher("Tereza") -> Set[Int](),
+      Teacher("Hana") -> Set[Int](),
+      Teacher("Gita") -> Set[Int](),
+      Teacher("Martina") -> Set[Int](),
+      Teacher("Iva") -> Set[Int](),
+      Teacher("Alena") -> Set[Int]()
+    )
+
     var updated:Possibility = null
 
     def update(thisJob:Job,scheduledJob:Job,p:Possibility,noRevert:Boolean) {
@@ -92,9 +104,9 @@ object Y extends App {
       cnt = cnt + 1
       if(cnt%100000==0)println(cnt)
       if (plainPossibilities==null) {
-        plainPossibilities = (MONDAY to FRIDAY).flatMap(d => {
-//          val redPrefHours = if(d!=MONDAY && d!=THURSDAY) prefHours.filter(h => h<=5) else prefHours
-          val redPrefHours = prefHours
+        plainPossibilities = (MONDAY to FRIDAY).toSet.diff(excludedDaysByTeacher(job.teacher)).flatMap(d => {
+          val redPrefHours = if(d!=MONDAY && d!=THURSDAY) prefHours.filter(h => h<=5) else prefHours
+//          val redPrefHours = prefHours
           redPrefHours.map(h => Possibility(d,h)).filter(p => checkSchedulable(job,p))
         }).toSet
       }
@@ -292,7 +304,7 @@ object Y extends App {
     val pos = sg.getPossibilities
     pos.foldLeft((Possibility(1000,1000),Double.MaxValue))((best,pos) => {
       val m = getM(sg.job,pos,sg)
-      if(m<best._2 && pos.hour<best._1.hour) (pos,m)
+      if(m<best._2 && (pos.hour<best._1.hour || best._1.hour==0)) (pos,m)
       else best
     })
   }
@@ -301,7 +313,7 @@ object Y extends App {
     simpleGroups.filter(!_.isScheduled).foldLeft((new SimpleGroup(null,null),Possibility(1000,1000),Double.MaxValue))((best,sg) => {
       val curr = getBestPossibility(sg)
 //      println(curr+" ---> "+sg)
-      if(curr._2<best._3 && curr._1.day<best._2.day) (sg,curr._1,curr._2)
+      if(curr._2<best._3 && (curr._1.hour<best._2.hour || best._2.hour==0)) (sg,curr._1,curr._2)
       else best
     })
   }

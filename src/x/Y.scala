@@ -43,6 +43,7 @@ object Y extends App {
     def getP:Int
     def update(j:Job,p:Possibility,noRevert:Boolean)
     def unUpdate
+    def unUpdate(j:Job,p:Possibility)
     def isScheduled:Boolean
     def isImpossible:Boolean
   }
@@ -91,6 +92,10 @@ object Y extends App {
         plainPossibilities = plainPossibilities + updated
         updated = null
       }
+    }
+
+    def unUpdate(j:Job,p:Possibility) {
+      plainPossibilities = null
     }
 
     protected def checkSchedulable(job:Job,p:Possibility) = {
@@ -159,8 +164,8 @@ object Y extends App {
 
   def getAvailability(job:Job,schoolSchedule:SchoolSchedule):Availability = {
     if(job==null || schoolSchedule==null) null
-//    else if(job.classHour.mainSubject) new MainSubjectAvailability(job,schoolSchedule)
-//    else if(job.classHour.twoHour) new TwoHourSubjectAvailability(job,schoolSchedule)
+    else if(job.classHour.mainSubject) new MainSubjectAvailability(job,schoolSchedule)
+    else if(job.classHour.twoHour) new TwoHourSubjectAvailability(job,schoolSchedule)
     else new RestOfSubjectsAvailability(job,schoolSchedule)
   }
 
@@ -171,6 +176,7 @@ object Y extends App {
     private var scheduled:Boolean = false
 
     private def ensureCache {
+      isScheduled
       if(posCache==null) {
         if(!scheduled) posCache = availability.getPossibilities
         else posCache = Set[Possibility]()
@@ -184,6 +190,7 @@ object Y extends App {
     }
     override def update(j:Job,p:Possibility,noRevert:Boolean) {
       if(!scheduled) {
+        ensureCache
         availability.update(job,j,p,noRevert)
         posCache = null
       }
@@ -193,6 +200,10 @@ object Y extends App {
         availability.unUpdate
         posCache = null
       }
+    }
+    override def unUpdate(j:Job,p:Possibility) {
+      availability.unUpdate(j,p)
+      posCache = null
     }
     override def isScheduled = {
       scheduled = left == 0
@@ -214,6 +225,13 @@ object Y extends App {
       })
     }
 
+    def unschedule(p:Possibility) {
+      left = left+1
+      job.classHour.classes.foreach(cls => {
+        schoolSchedule.schoolSchedule(cls).classSchedule(p.day)(p.hour) = null
+      })
+    }
+
     override def toString = "SimpleGroup: "+job.toTeachersJob.toString+" P = "+getP+" ["+getN+"/"+job.count+"]"
 
     override def hashCode(): Int = job.hashCode()
@@ -232,34 +250,38 @@ object Y extends App {
     var pCache:Int = NOT_CACHED
     var nCache:Int = NOT_CACHED
 
-    def getN = {
+    override def getN = {
       if(nCache==NOT_CACHED) {
         nCache = simpleGroups.foldLeft(0)((totalLeft,sg) => totalLeft + sg.getN)
       }
       nCache
     }
-    def getP = {
+    override def getP = {
       if(pCache==NOT_CACHED) {
         pCache = simpleGroups.foldLeft(Set[Possibility]())((totalSet,sg) => totalSet ++ sg.getPossibilities).size
       }
       pCache
     }
 
-    def update(j: Job, p: Possibility, noRevert: Boolean) {
+    override def update(j: Job, p: Possibility, noRevert: Boolean) {
       nCache = NOT_CACHED
       pCache = NOT_CACHED
       simpleGroups.foreach(_.update(j,p,noRevert))
     }
 
-    def unUpdate {
+    override def unUpdate {
       nCache = NOT_CACHED
       pCache = NOT_CACHED
       simpleGroups.foreach(_.unUpdate)
     }
 
-    def isScheduled = simpleGroups.forall(_.isScheduled)
+    override def unUpdate(j:Job,p:Possibility) {
+      simpleGroups.foreach(_.unUpdate(j,p))
+    }
 
-    def isImpossible = simpleGroups.exists(_.isImpossible)
+    override def isScheduled = simpleGroups.forall(_.isScheduled)
+
+    override def isImpossible = simpleGroups.exists(_.isImpossible)
 
     override def toString = "CombinedGroup: <"+simpleGroups.mkString(",")+"> P = "+getP+" [[["+getN+"/"+(simpleGroups.foldLeft(0)((total,sg)=>total+sg.job.count))+"]]]"
 
@@ -318,6 +340,14 @@ object Y extends App {
     })
   }
 
+  def getBestGroupsAndPossibilities = {
+    simpleGroups.filter(!_.isScheduled).flatMap(sg => {
+      val curr = getBestPossibility(sg)
+      if(curr._2<Double.MaxValue) List((sg,curr))
+      else List[(SimpleGroup,(Possibility,Double))]()
+    })
+  }
+
   def findBreakingGroups = {
     val allPoss = simpleGroups.filter(!_.isScheduled).map(sg => (sg.job,sg.getPossibilities)).flatMap(jobPoss => jobPoss._2.map(pos => (jobPoss._1,pos)))
     val fg = groups.filter(!_.isScheduled)
@@ -333,20 +363,52 @@ object Y extends App {
 
   var total = jobs.foldLeft(0)((total,j) => total + j.count)
   var continue = true
-  while(continue && simpleGroups.exists(!_.isScheduled) && simpleGroups.forall(!_.isImpossible)) {
-    val best = getBestGroupAndPossibility
-    continue = if(best._3==Double.MaxValue) {
-      println("!!!SCHEDULING FAILED!!!")
-      println("Breaking groups = "+findBreakingGroups)
-      false
-    } else {
-      total = total - 1
-      println(total+": "+best)
-      best._1.schedule(best._2)
-      groups.foreach(_.update(best._1.job,best._2,true))
-      true
+
+  def search:Boolean = {
+    if(simpleGroups.forall(_.isScheduled)) true
+    else if(simpleGroups.exists(_.isImpossible)) false
+    else {
+      val best = getBestGroupsAndPossibilities.sortWith((b1,b2) => b1._2._2<=b2._2._2).take(2)
+      if(best.isEmpty) {
+        println("!!!SCHEDULING FAILED!!!")
+        println("Breaking groups = "+findBreakingGroups)
+        println("Backtracking")
+        false
+      } else {
+        best.exists(b => {
+          total = total - 1
+          println(total+": "+b)
+          val pos = b._2._1
+          b._1.schedule(pos)
+          groups.foreach(_.update(b._1.job,pos,true))
+          val ok = search
+          if(!ok) {
+            b._1.unschedule(pos)
+            groups.foreach(_.unUpdate(b._1.job,pos))
+            total = total + 1
+          }
+          ok
+        })
+      }
     }
   }
+
+//  while(continue && simpleGroups.exists(!_.isScheduled) && simpleGroups.forall(!_.isImpossible)) {
+//    val best = getBestGroupAndPossibility
+//    continue = if(best._3==Double.MaxValue) {
+//      println("!!!SCHEDULING FAILED!!!")
+//      println("Breaking groups = "+findBreakingGroups)
+//      false
+//    } else {
+//      total = total - 1
+//      println(total+": "+best)
+//      best._1.schedule(best._2)
+//      groups.foreach(_.update(best._1.job,best._2,true))
+//      true
+//    }
+//  }
+
+  search
 
   Output.printSchedule(schoolSchedule)
 

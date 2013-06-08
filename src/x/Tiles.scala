@@ -6,7 +6,7 @@ case class Tile(classes:Int,teacher:Int,id:Int,job:Job)
 
 object Tiles extends App {
   val teachers = Data.data._2.toList
-  val tiles = Data.data2.flatMap(j => {
+  val tiles = Data.data2.filter(j => !j.classHour.pe).flatMap(j => {
     def setBit(int:Int,index:Int) = {
       int | math.pow(2,index).toInt
     }
@@ -57,6 +57,10 @@ object Tiles extends App {
     }
 
     def isEmpty = open.isEmpty
+
+    override def toString = {
+      open.map(o => o.job.toTeachersJob.toString).mkString("\n")
+    }
   }
 
   var open = new Open()
@@ -68,14 +72,15 @@ object Tiles extends App {
     }
     if(cnt%1000000==0) {
       Output.printTiles(places,tiles,placed)
+      println(open)
     }
-    if(open.isEmpty) {
+    if(open.isEmpty || day == FRIDAY && hour == 5) {
       true
     }
     else {
       if(hourComplete(day,hour)) {
-        if (hour==7) {
-          search(day+1,0)
+        if (hour==5) {
+          search(day+1,1)
         } else {
           search(day,hour+1)
         }
@@ -95,7 +100,7 @@ object Tiles extends App {
     }
   }
 
-  search(0,0)
+  search(0,1)
 
   Output.printTiles(places,tiles,placed)
 

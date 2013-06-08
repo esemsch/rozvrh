@@ -4,7 +4,7 @@ case class ClassHour(val subject:String, val classes:Set[Int]) {
   val subjects = """([A-záéěíóúýÁÉÍÓÚÝčďřšťžňČĎŘŠŤŽŇ]+)""".r.findAllIn(subject).matchData.map(_.group(1)).toSet
   val arts = subject.contains("Vv")
   val mainSubject = Set("Čj","Aj","M").exists(subject.contains(_))
-  val twoHour = Set("Vl", "Př", "D", "Z", "F", "Ch", "Inf 8", "Inf 9").exists(subject.contains(_))
+  val twoHour = Set("Vl", "Př", "D ", "Z", "F", "Ch ", "Inf 8", "Inf 9").exists(subject.contains(_))
   val combinedClasses = classes.size>1
   val pe = subject.contains("Tv")
   val firstSecond = classes.contains(FIRST_GRADE) || classes.contains(FIRST_GRADE+1)

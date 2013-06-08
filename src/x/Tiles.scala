@@ -6,33 +6,54 @@ case class Tile(classes:Int,teacher:Int,id:Int,job:Job)
 
 object Tiles extends App {
   val teachers = Data.data._2.toList
-  val tiles = Data.data2.filter(j => !j.classHour.pe).flatMap(j => {
+  val tiles = Data.data2.filter(j => j.classHour.mainSubject || j.classHour.twoHour).map(j => {
     def setBit(int:Int,index:Int) = {
       int | math.pow(2,index).toInt
     }
     val clss = j.classHour.classes.foldLeft(0)((result,cls) => setBit(result,cls-1))
     val teacher = setBit(0,teachers.indexOf(j.teacher))
-    List[Tile]().padTo(j.count,Tile(clss,teacher,-1,j))
+    Tile(clss,teacher,-1,j)
   }).zipWithIndex.map(ti => Tile(ti._1.classes,ti._1.teacher,ti._2,ti._1.job))
+//  val tiles = Data.data2.filter(j => !j.classHour.pe).flatMap(j => {
+//    def setBit(int:Int,index:Int) = {
+//      int | math.pow(2,index).toInt
+//    }
+//    val clss = j.classHour.classes.foldLeft(0)((result,cls) => setBit(result,cls-1))
+//    val teacher = setBit(0,teachers.indexOf(j.teacher))
+//    List[Tile]().padTo(j.count,Tile(clss,teacher,-1,j))
+//  }).zipWithIndex.map(ti => Tile(ti._1.classes,ti._1.teacher,ti._2,ti._1.job))
   val places = (MONDAY to FRIDAY).map(d => (FIRST_HOUR to LAST_HOUR).map(h => Array(0,0)).toArray).toArray
-  val placed = tiles.map(t => Array(-1,-1))
+  val counts = tiles.map(t => t.job.count).toArray
+  val placed = tiles.flatMap(t => List[Array[Int]]().padTo(t.job.count,Array(-1,-1))).toArray
+  val mapToPlaced  = tiles.foldLeft(new Array[Int](tiles.size))((arr,t) => {
+    arr(t.id) = if (t.id==0) 0 else (arr(t.id-1)+counts(t.id-1))
+    arr
+  })
 
   def applicable(t:Tile,d:Int,h:Int) = {
     ((places(d)(h)(0) & t.classes) | (places(d)(h)(1) & t.teacher)) == 0
   }
 
+  def placedInd(t:Tile) = {
+    mapToPlaced(t.id)+(counts(t.id)-1)
+  }
+
   def applyTile(t:Tile,d:Int,h:Int) {
     places(d)(h)(0) = places(d)(h)(0) | t.classes
     places(d)(h)(1) = places(d)(h)(1) | t.teacher
-    placed(t.id)(0) = d
-    placed(t.id)(1) = h
+    val pid = placedInd(t)
+    placed(pid)(0) = d
+    placed(pid)(1) = h
+    counts(t.id) = counts(t.id) - 1
   }
 
   def revertTile(t:Tile,d:Int,h:Int) {
     places(d)(h)(0) = places(d)(h)(0) ^ t.classes
     places(d)(h)(1) = places(d)(h)(1) ^ t.teacher
-    placed(t.id)(0) = -1
-    placed(t.id)(1) = -1
+    val pid = placedInd(t)
+    placed(pid)(0) = -1
+    placed(pid)(1) = -1
+    counts(t.id) = counts(t.id) + 1
   }
 
   def hourComplete(day:Int,hour:Int) = (places(day)(hour)(0) & 255) == 255
@@ -40,20 +61,26 @@ object Tiles extends App {
   var cnt = 0
 
   class Open {
+    val hOrder = new HOrder(tiles,H.order)
+
     var open = new mutable.HashSet[Tile]() {
       tiles.foreach(t => add(t))
     }
 
-    def popFromOpen(t:Tile) = {
-      open.remove(t)
+    def popFromOpen(t:Tile) {
+      if(counts(t.id)==0) {
+        open.remove(t)
+      }
     }
 
     def pushToOpen(t:Tile) = {
-      open.add(t)
+      if (counts(t.id)==1) {
+        open.add(t)
+      }
     }
 
-    def options(day:Int,hour:Int):mutable.HashSet[Tile] = {
-      open.filter(t => applicable(t,day,hour))
+    def options(day:Int,hour:Int):Iterable[Tile] = {
+      open.filter(t => applicable(t,day,hour)).toList.sortWith(hOrder.precedes(_,_))
     }
 
     def isEmpty = open.isEmpty
@@ -100,7 +127,45 @@ object Tiles extends App {
     }
   }
 
-  search(0,1)
+  var lineCount = 0
+  var currLC = 0
+
+  def searchForLines(depth:Int):Boolean = {
+    if(hourComplete(0,0)) {
+      lineCount = lineCount + 1
+      if(lineCount%100000==0) {
+        print(".")
+      }
+      false
+    } else {
+      open.options(0,0).exists(t => {
+        if(depth==0) {
+//          println("Count started for: "+t.job)
+          currLC = lineCount
+        }
+//        if(depth == 1) {
+//          println(t.job+" D = "+depth)
+//        }
+        applyTile(t,0,0)
+        open.popFromOpen(t)
+        val ok = if(searchForLines((depth+1))) {
+          true
+        } else {
+          revertTile(t,0,0)
+          open.pushToOpen(t)
+          false
+        }
+        if(depth==0) {
+          print("\n"+t.job+" ----> "+(lineCount-currLC))
+//          open.popFromOpen(t)
+        }
+        ok
+      })
+    }
+  }
+
+//  searchForLines(0)
+  search(0,0)
 
   Output.printTiles(places,tiles,placed)
 

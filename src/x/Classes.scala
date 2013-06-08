@@ -25,6 +25,7 @@ case class TeachersJob(val teacher:Teacher, val classHour:ClassHour) {
 case class Job(val teacher:Teacher, val classHour:ClassHour, val count:Int) {
   def toTeachersJobs = (1 to count).map(i => toTeachersJob).toList
   def toTeachersJob = TeachersJob(teacher,classHour)
+  override def toString = toTeachersJob.toString
 }
 
 class ClassSchedule {

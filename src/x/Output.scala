@@ -1,5 +1,8 @@
 package x
 
+import collection.immutable.BitSet
+import collection.immutable
+
 object Output {
 
   def printTable(cs:Seq[Seq[Any]],leftAxisDays:Boolean) {
@@ -53,6 +56,43 @@ object Output {
       printTable(daySch._1.map(x=>x.toSeq),false)
     })
 
+  }
+
+  def printTiles(places:Array[Array[Array[Int]]],tiles:Seq[Tile],placed:Seq[Array[Int]]) {
+    def findJob(grade:Int, day:Int, hour:Int) = {
+      val allThatDayAndHour = placed.zipWithIndex.filter(pi => {
+        (pi._1(0) == day) && (pi._1(1) == hour)
+      })
+      val find: Option[(Array[Int], Int)] = allThatDayAndHour.find(pi => {
+        val id = pi._2
+        val tile = tiles(id)
+        tile.job.classHour.classes.contains(grade+1)
+      })
+      find match {
+        case None => null
+        case Some(x) => tiles(x._2).job
+      }
+    }
+    def tileToLine(tile:Array[Int],day:Int,hour:Int) = {
+      def isBitThere(pos:Int,int:Int) = {
+        val aux = math.pow(2,pos).toInt
+        (int & aux) > 0
+      }
+      (FIRST_GRADE+1 to LAST_GRADE).map(gr => if(isBitThere(gr-1,tile(0))) {
+        findJob(gr-1,day,hour).toString
+      } else "-")
+    }
+    (MONDAY to FRIDAY).foreach(d => {
+      println(DAY_NAME(d))
+      val dayTable = (FIRST_HOUR to LAST_HOUR).map(h => {
+        tileToLine(places(d)(h),d,h)
+      })
+      val rotatedDayTable = (FIRST_GRADE+1 to LAST_GRADE).map(gr => {
+        val ngr = gr - 1
+        dayTable.map(allGrs => allGrs(ngr))
+      })
+      printTable(rotatedDayTable,false)
+    })
   }
 
 }

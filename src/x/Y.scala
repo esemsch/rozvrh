@@ -35,37 +35,6 @@ object Y extends App {
   }
 
 
-  preassign("Čj 2/4","Gita",MONDAY,1)
-  preassign("Čj 2/4","Gita",TUESDAY,1)
-  preassign("Čj 2/4","Gita",WEDNESDAY,1)
-  preassign("Čj 2/4","Gita",THURSDAY,1)
-  preassign("Čj 2/4","Gita",FRIDAY,1)
-
-  preassign("Čj 2/4","Gita",MONDAY,3)
-  preassign("Čj 2/4","Gita",TUESDAY,3)
-  preassign("Čj 2/4","Gita",WEDNESDAY,3)
-
-  preassign("M 2/4","Gita",MONDAY,2)
-  preassign("M 2/4","Gita",TUESDAY,2)
-  preassign("M 2/4","Gita",WEDNESDAY,2)
-  preassign("M 2/4","Gita",THURSDAY,2)
-  preassign("M 2/4","Gita",FRIDAY,2)
-
-  preassign("Čj 3/5","Martina",MONDAY,1)
-  preassign("Čj 3/5","Martina",TUESDAY,1)
-  preassign("Čj 3/5","Martina",WEDNESDAY,1)
-  preassign("Čj 3/5","Martina",THURSDAY,1)
-  preassign("Čj 3/5","Martina",FRIDAY,1)
-
-  preassign("Čj 3/5","Martina",MONDAY,3)
-  preassign("Čj 3/5","Martina",TUESDAY,3)
-
-  preassign("M 3/5","Martina",MONDAY,2)
-  preassign("M 3/5","Martina",TUESDAY,2)
-  preassign("M 3/5","Martina",WEDNESDAY,2)
-  preassign("M 3/5","Martina",THURSDAY,2)
-  preassign("M 3/5","Martina",FRIDAY,2)
-
   preassign("Rj 7","Iva",FRIDAY,2)
   preassign("Rj 7","Iva",FRIDAY,3)
 

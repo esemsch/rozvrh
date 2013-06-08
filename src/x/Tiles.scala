@@ -24,11 +24,12 @@ object Tiles extends App {
 //  }).zipWithIndex.map(ti => Tile(ti._1.classes,ti._1.teacher,ti._2,ti._1.job))
   val places = (MONDAY to FRIDAY).map(d => (FIRST_HOUR to LAST_HOUR).map(h => Array(0,0)).toArray).toArray
   val counts = tiles.map(t => t.job.count).toArray
-  val placed = tiles.flatMap(t => List[Array[Int]]().padTo(t.job.count,Array(-1,-1))).toArray
+  val placed = tiles.flatMap(t => List[Array[Int]]().padTo(t.job.count,Array(-1,-1,-1))).toArray
   val mapToPlaced  = tiles.foldLeft(new Array[Int](tiles.size))((arr,t) => {
     arr(t.id) = if (t.id==0) 0 else (arr(t.id-1)+counts(t.id-1))
     arr
   })
+  println("")
 
   def applicable(t:Tile,d:Int,h:Int) = {
     ((places(d)(h)(0) & t.classes) | (places(d)(h)(1) & t.teacher)) == 0
@@ -41,19 +42,25 @@ object Tiles extends App {
   def applyTile(t:Tile,d:Int,h:Int) {
     places(d)(h)(0) = places(d)(h)(0) | t.classes
     places(d)(h)(1) = places(d)(h)(1) | t.teacher
+
     val pid = placedInd(t)
     placed(pid)(0) = d
     placed(pid)(1) = h
+    placed(pid)(2) = t.id
     counts(t.id) = counts(t.id) - 1
+    println("Applying: "+t.job+" PID = "+pid+" D = "+d+" H = "+h+" Count = "+counts(t.id))
   }
 
   def revertTile(t:Tile,d:Int,h:Int) {
     places(d)(h)(0) = places(d)(h)(0) ^ t.classes
     places(d)(h)(1) = places(d)(h)(1) ^ t.teacher
+
+    counts(t.id) = counts(t.id) + 1
     val pid = placedInd(t)
     placed(pid)(0) = -1
     placed(pid)(1) = -1
-    counts(t.id) = counts(t.id) + 1
+    placed(pid)(2) = -1
+    println("Reverting: "+t.job+" PID = "+pid+" D = "+d+" H = "+h+" Count = "+counts(t.id))
   }
 
   def hourComplete(day:Int,hour:Int) = (places(day)(hour)(0) & 255) == 255
@@ -69,17 +76,19 @@ object Tiles extends App {
 
     def popFromOpen(t:Tile) {
       if(counts(t.id)==0) {
+        println("Removing "+t.job+" from Open")
         open.remove(t)
       }
     }
 
     def pushToOpen(t:Tile) = {
       if (counts(t.id)==1) {
+        println("Putting "+t.job+" back to Open")
         open.add(t)
       }
     }
 
-    def options(day:Int,hour:Int):Iterable[Tile] = {
+    def options(day:Int,hour:Int) = {
       open.filter(t => applicable(t,day,hour)).toList.sortWith(hOrder.precedes(_,_))
     }
 
@@ -97,7 +106,7 @@ object Tiles extends App {
     if(cnt%100000==0) {
       println(cnt)
     }
-    if(cnt%1000000==0) {
+    if(cnt%1000==0) {
       Output.printTiles(places,tiles,placed)
       println(open)
     }

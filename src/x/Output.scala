@@ -58,17 +58,19 @@ object Output {
 
   def printTiles(places:Array[Array[Array[Int]]],tiles:Seq[Tile],placed:Seq[Array[Int]]) {
     def findJob(grade:Int, day:Int, hour:Int) = {
-      val allThatDayAndHour = placed.zipWithIndex.filter(pi => {
-        (pi._1(0) == day) && (pi._1(1) == hour)
+      val allThatDayAndHour = placed.filter(pi => {
+        (pi(0) == day) && (pi(1) == hour)
       })
-      val find: Option[(Array[Int], Int)] = allThatDayAndHour.find(pi => {
-        val id = pi._2
-        val tile = tiles(id)
+      val find = allThatDayAndHour.find(pi => {
+        val tile = tiles(pi(2))
         tile.job.classHour.classes.contains(grade+1)
       })
       find match {
-        case None => null
-        case Some(x) => tiles(x._2).job
+        case None => {
+          println("")
+          null
+        }
+        case Some(x) => tiles(x(2)).job
       }
     }
     def tileToLine(tile:Array[Int],day:Int,hour:Int) = {

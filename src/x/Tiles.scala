@@ -6,7 +6,7 @@ case class Tile(classes:Int,teacher:Int,id:Int,job:Job)
 
 object Tiles extends App {
   val teachers = Data.data._2.toList
-  val tiles = Data.data2.filter(j => !j.classHour.pe).map(j => {
+  val tiles = Data.data2.filter(j => true).map(j => {
     def setBit(int:Int,index:Int) = {
       int | math.pow(2,index).toInt
     }
@@ -168,9 +168,10 @@ object Tiles extends App {
     }
   }
 
-  searchForLines(0)
-//  search(0,0,0,0)
+//  searchForLines(0)
+  search(0,1,0,0)
 
   Output.printTiles(places,tiles,placed)
 
+  println(placed.size==Data.data2.foldLeft(0)((total,j) => total + j.count))
 }

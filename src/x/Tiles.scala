@@ -6,7 +6,7 @@ case class Tile(classes:Int,teacher:Int,id:Int,job:Job)
 
 object Tiles extends App {
   val teachers = Data.data._2.toList
-  val tiles = Data.data2.filter(j => true).map(j => {
+  val tiles = Data.data3.filter(j => true).map(j => {
     def setBit(int:Int,index:Int) = {
       int | math.pow(2,index).toInt
     }
@@ -54,7 +54,7 @@ object Tiles extends App {
   }
 
   class Open {
-    val hOrder = new HOrder(tiles,H.order)
+    val hOrder = new HOrder(tiles,H.order2)
 
     var open = new mutable.HashSet[Tile]() {
       tiles.foreach(t => add(t))

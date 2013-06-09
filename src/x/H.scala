@@ -2,6 +2,11 @@ package x
 
 object H extends App {
 
+  def parseOrder(h:String) = {"""(.*) ----> (\d+).*""".r.findAllIn(h).matchData.map(mch => {
+      (mch.group(1), mch.group(2).toInt)
+    }).toList.sortWith((f, s) => f._2 <= s._2)
+  }
+
   def order = {
 
     val h = """Prv 3/Př 4 (Tereza) ----> 1174272.........................................
@@ -91,11 +96,58 @@ object H extends App {
               |Vl 5 (Tereza) ----> 5641440
     """.stripMargin
 
-    val order: List[(String, Int)] = """(.*) ----> (\d+).*""".r.findAllIn(h).matchData.map(mch => {
-      (mch.group(1), mch.group(2).toInt)
-    }).toList.sortWith((f, s) => f._2 <= s._2)
+    parseOrder(h)
+  }
 
-    order
+  def order2 = {
+    parseOrder("""F,M 6 (Alena) 4x ----> 129648.
+                 |Aj,Čj 3 (Martina) 5x ----> 158916
+                 |Aj,Vv 6/7 (Tereza) 3x ----> 1134
+                 |Př,Vo 6/7 (Lucka) 2x ----> 10080...
+                 |Čj,Prv 2 (Gita) 3x ----> 249528
+                 |M,F 6/7 (Alena) 3x ----> 11346.
+                 |F,M 8 (Alena) 4x ----> 68520
+                 |Př,Ch 9 (Lucka) 2x ----> 64848..
+                 |Čj,SPV 9 (Bohunka) 4x ----> 129960
+                 |M,F 7 (Alena) 4x ----> 72240.
+                 |Tv 3/5 (Lucka) 2x ----> 28350.
+                 |Čj,Vv,M 3/5 (Martina) 13x ----> 103264
+                 |Z,Hv 8/9 (Hana) 2x ----> 5016.
+                 |D,Z 8 (Hana) 3x ----> 68520.
+                 |D,Čj,Z 6 (Hana) 5x ----> 129648
+                 |Rv,Pč,Vo 8/9 (Eva) 3x ----> 7506.
+                 |Inf,Spv 8 (Eva) 3x ----> 101448..
+                 |Prv,Př,Hv,Tv,M,Pč,Čj 2/4 (Gita) 18x ----> 204936.
+                 |Z,Čj,D 7 (Hana) 5x ----> 72240
+                 |Z,D 9 (Hana) 3x ----> 68520
+                 |Prv,Př,Hv 3/5 (Tereza) 3x ----> 10610..
+                 |Vv,Vl 4 (Tereza) 2x ----> 126348
+                 |Př,Ch 8/9 (Lucka) 2x ----> 4698
+                 |Čj,D,Z,Hv 6/7 (Hana) 4x ----> 11346.
+                 |M,F 9 (Alena) 4x ----> 68520
+                 |Vv,Aj 8/9 (Tereza) 2x ----> 684
+                 |F,M 8/9 (Alena) 3x ----> 5016
+                 |Rv,Př 7 (Lucka) 2x ----> 68688.
+                 |Ch,Př 8 (Lucka) 2x ----> 64848
+                 |Tv_Dív,Tv_Chl 6/7/8/9 (Lucka) 4x ----> 46
+                 |Čj 8/9 (Bohunka) 1x ----> 10266
+                 |Pč 6/7 (Eva) 1x ----> 10080
+                 |Vv 2/4 (Tereza) 1x ----> 21760
+                 |Aj 9 (Tereza) 2x ----> 9696.
+                 |Aj 8 (Tereza) 2x ----> 9696
+                 |Aj 7 (Tereza) 2x ----> 10104
+                 |Aj 6 (Tereza) 2x ----> 14160
+                 |Aj 4/5 (Martina) 3x ----> 61590.
+                 |Pč 3/5 (Eva) 1x ----> 47992
+                 |Inf 5/6 (Eva) 1x ----> 39648.
+                 |Vl 4/5 (Tereza) 1x ----> 61590.
+                 |Inf 9 (Eva) 2x ----> 101448.
+                 |Vv 5 (Martina) 1x ----> 61590.
+                 |Př 6 (Lucka) 1x ----> 119088.
+                 |Prv 3 (Tereza) 1x ----> 127092.
+                 |Čj 8 (Bohunka) 3x ----> 129960.
+                 |Vl 5 (Tereza) 1x ----> 61590..
+                 |Rj 7 (Iva) 2x ----> 208920""".stripMargin)
   }
 
   println(order.mkString("\n"))
@@ -115,6 +167,6 @@ class HOrder(tiles:Seq[Tile],h:List[(String,Int)]) {
   }
 
   def precedes(t1:Tile,t2:Tile) = {
-    order(t1.id) < order(t2.id)
+    order(t1.id) >= order(t2.id)
   }
 }

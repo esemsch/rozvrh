@@ -5,11 +5,11 @@ import collection.mutable
 case class Tile(classes:Int,teacher:Int,id:Int,job:Job)
 
 object Tiles extends App {
+  def setBit(int:Int,index:Int) = {
+    int | math.pow(2,index).toInt
+  }
   val teachers = Data.data._2.toList
   val tiles = Data.data3.filter(j => true).map(j => {
-    def setBit(int:Int,index:Int) = {
-      int | math.pow(2,index).toInt
-    }
     val clss = j.classHour.classes.foldLeft(0)((result,cls) => setBit(result,cls-1))
     val teacher = setBit(0,teachers.indexOf(j.teacher))
     Tile(clss,teacher,-1,j)
@@ -21,7 +21,12 @@ object Tiles extends App {
     arr(t.id) = if (t.id==0) 0 else (arr(t.id-1)+counts(t.id-1))
     arr
   })
-  println("")
+  Map(Teacher("Bohunka") -> Set(TUESDAY,WEDNESDAY,THURSDAY),Teacher("Eva") -> Set(TUESDAY,FRIDAY),Teacher("Lucka") -> Set(FRIDAY)).foreach(ta => {
+    val index = teachers.indexOf(ta._1)
+    ta._2.foreach(d => {
+      (FIRST_HOUR to LAST_HOUR).foreach(h => places(d)(h)(1) = setBit(places(d)(h)(1),index))
+    })
+  })
 
   def applicable(t:Tile,d:Int,h:Int) = {
     ((places(d)(h)(0) & t.classes) | (places(d)(h)(1) & t.teacher)) == 0

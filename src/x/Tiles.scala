@@ -6,7 +6,7 @@ case class Tile(classes:Int,teacher:Int,id:Int,job:Job)
 
 object Tiles extends App {
   val teachers = Data.data._2.toList
-  val tiles = Data.data2.filter(j => j.classHour.mainSubject || j.classHour.twoHour).map(j => {
+  val tiles = Data.data2.filter(j => !j.classHour.pe).map(j => {
     def setBit(int:Int,index:Int) = {
       int | math.pow(2,index).toInt
     }
@@ -14,17 +14,9 @@ object Tiles extends App {
     val teacher = setBit(0,teachers.indexOf(j.teacher))
     Tile(clss,teacher,-1,j)
   }).zipWithIndex.map(ti => Tile(ti._1.classes,ti._1.teacher,ti._2,ti._1.job))
-//  val tiles = Data.data2.filter(j => !j.classHour.pe).flatMap(j => {
-//    def setBit(int:Int,index:Int) = {
-//      int | math.pow(2,index).toInt
-//    }
-//    val clss = j.classHour.classes.foldLeft(0)((result,cls) => setBit(result,cls-1))
-//    val teacher = setBit(0,teachers.indexOf(j.teacher))
-//    List[Tile]().padTo(j.count,Tile(clss,teacher,-1,j))
-//  }).zipWithIndex.map(ti => Tile(ti._1.classes,ti._1.teacher,ti._2,ti._1.job))
   val places = (MONDAY to FRIDAY).map(d => (FIRST_HOUR to LAST_HOUR).map(h => Array(0,0)).toArray).toArray
   val counts = tiles.map(t => t.job.count).toArray
-  val placed = tiles.flatMap(t => List[Array[Int]]().padTo(t.job.count,Array(-1,-1,-1))).toArray
+  val placed = tiles.flatMap(t => (1 to t.job.count).map(x => Array(-1, -1, -1))).toArray
   val mapToPlaced  = tiles.foldLeft(new Array[Int](tiles.size))((arr,t) => {
     arr(t.id) = if (t.id==0) 0 else (arr(t.id-1)+counts(t.id-1))
     arr
@@ -48,7 +40,6 @@ object Tiles extends App {
     placed(pid)(1) = h
     placed(pid)(2) = t.id
     counts(t.id) = counts(t.id) - 1
-    println("Applying: "+t.job+" PID = "+pid+" D = "+d+" H = "+h+" Count = "+counts(t.id))
   }
 
   def revertTile(t:Tile,d:Int,h:Int) {
@@ -60,12 +51,7 @@ object Tiles extends App {
     placed(pid)(0) = -1
     placed(pid)(1) = -1
     placed(pid)(2) = -1
-    println("Reverting: "+t.job+" PID = "+pid+" D = "+d+" H = "+h+" Count = "+counts(t.id))
   }
-
-  def hourComplete(day:Int,hour:Int) = (places(day)(hour)(0) & 255) == 255
-
-  var cnt = 0
 
   class Open {
     val hOrder = new HOrder(tiles,H.order)
@@ -76,14 +62,12 @@ object Tiles extends App {
 
     def popFromOpen(t:Tile) {
       if(counts(t.id)==0) {
-        println("Removing "+t.job+" from Open")
         open.remove(t)
       }
     }
 
     def pushToOpen(t:Tile) = {
       if (counts(t.id)==1) {
-        println("Putting "+t.job+" back to Open")
         open.add(t)
       }
     }
@@ -95,18 +79,26 @@ object Tiles extends App {
     def isEmpty = open.isEmpty
 
     override def toString = {
-      open.map(o => o.job.toTeachersJob.toString).mkString("\n")
+      open.map(o => o.job.toTeachersJob.toString + " - " + counts(o.id)).mkString("\n")
     }
   }
 
-  var open = new Open()
+  def hourComplete(day:Int,hour:Int) = (places(day)(hour)(0) & 255) == 255
 
-  def search(day:Int,hour:Int):Boolean = {
+  var open = new Open()
+  var cnt = 0
+  val depthCounter = new Array[Int](1000)
+
+  def search(day:Int,hour:Int,depth:Int,rowDepth:Int):Boolean = {
     cnt = cnt + 1
+    depthCounter(depth) = depthCounter(depth) + 1
+    if(cnt%10000==0) {
+      println(depth+" "+rowDepth+" "+depthCounter(depth))
+    }
     if(cnt%100000==0) {
       println(cnt)
     }
-    if(cnt%1000==0) {
+    if(cnt%1000000==0) {
       Output.printTiles(places,tiles,placed)
       println(open)
     }
@@ -114,17 +106,20 @@ object Tiles extends App {
       true
     }
     else {
-      if(hourComplete(day,hour)) {
+      if(hourComplete(day,hour) ||
+        (rowDepth>4 && depthCounter(depth)>10000) ||
+        (rowDepth>3 && depthCounter(depth)>50000) ||
+        (rowDepth>2 && depthCounter(depth)>200000)) {
         if (hour==5) {
-          search(day+1,1)
+          search(day+1,1,depth,0)
         } else {
-          search(day,hour+1)
+          search(day,hour+1,depth,0)
         }
       } else {
         open.options(day,hour).exists(t => {
           applyTile(t,day,hour)
           open.popFromOpen(t)
-          if(search(day,hour)) {
+          if(search(day,hour,(depth+1),(rowDepth+1))) {
             true
           } else {
             revertTile(t,day,hour)
@@ -173,8 +168,8 @@ object Tiles extends App {
     }
   }
 
-//  searchForLines(0)
-  search(0,0)
+  searchForLines(0)
+//  search(0,0,0,0)
 
   Output.printTiles(places,tiles,placed)
 

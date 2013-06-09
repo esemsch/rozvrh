@@ -90,6 +90,6 @@ class HOrder(tiles:Seq[Tile],h:List[(String,Int)]) {
   }
 
   def precedes(t1:Tile,t2:Tile) = {
-    order(t1.id) > order(t2.id)
+    order(t1.id) < order(t2.id)
   }
 }

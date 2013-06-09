@@ -65,13 +65,7 @@ object Output {
         val tile = tiles(pi(2))
         tile.job.classHour.classes.contains(grade+1)
       })
-      find match {
-        case None => {
-          println("")
-          null
-        }
-        case Some(x) => tiles(x(2)).job
-      }
+      find.map(x => tiles(x(2)).job)
     }
     def tileToLine(tile:Array[Int],day:Int,hour:Int) = {
       def isBitThere(pos:Int,int:Int) = {
@@ -79,7 +73,10 @@ object Output {
         (int & aux) > 0
       }
       (FIRST_GRADE+1 to LAST_GRADE).map(gr => if(isBitThere(gr-1,tile(0))) {
-        findJob(gr-1,day,hour).toString
+        findJob(gr-1,day,hour) match {
+          case None => "?"
+          case Some(job) => job.toString
+        }
       } else "-")
     }
     (MONDAY to FRIDAY).foreach(d => {

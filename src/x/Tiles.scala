@@ -39,17 +39,21 @@ object Tiles extends App {
       (FIRST_HOUR to LAST_HOUR).foreach(h => places(d)(h)(1) = setBit(places(d)(h)(1),index))
     })
   })
+  val daysOrder = Array(FRIDAY,MONDAY,TUESDAY,WEDNESDAY,THURSDAY,1000)
   def freeHours(days:Seq[Int],grades:Seq[Int],hours:Seq[Int]) {
     days.foreach(d => hours.foreach(h => {
       grades.foreach(gr => {
         places(d)(h)(0) = setBit(places(d)(h)(0),(gr-1))
       })
-      placedPerHour(d)(h) = placedPerHour(d)(h) + grades.size / 2
+      placedPerHour(d)(h) = placedPerHour(d)(h) + grades.size
     }))
   }
-  freeHours((MONDAY to FRIDAY),(FIRST_GRADE+1 to FIRST_GRADE+4),List(0))
-  freeHours((MONDAY to FRIDAY),(FIRST_GRADE+1 to FIRST_GRADE+4),(6 to 7))
-  freeHours(List(TUESDAY,WEDNESDAY,FRIDAY),(FIRST_GRADE+1 to LAST_GRADE),(6 to 7))
+  freeHours(TUESDAY to FRIDAY,FIRST_GRADE+1 to FIRST_GRADE+4,List(0))
+  freeHours(List(MONDAY),List(FIRST_GRADE+1),List(0))
+  freeHours(MONDAY to FRIDAY,FIRST_GRADE+1 to FIRST_GRADE+2,6 to 7)
+  freeHours(MONDAY to FRIDAY,FIRST_GRADE+3 to FIRST_GRADE+4,List(6))
+  freeHours(TUESDAY to FRIDAY,FIRST_GRADE+3 to FIRST_GRADE+4,6 to 7)
+  freeHours(List(TUESDAY,WEDNESDAY,FRIDAY),FIRST_GRADE+1 to LAST_GRADE,6 to 7)
 
   applyTile(tilesLookup("Lucka")(Set(5,6,7,8)),MONDAY,5)
   applyTile(tilesLookup("Lucka")(Set(5,6,7,8)),MONDAY,6)
@@ -76,14 +80,14 @@ object Tiles extends App {
     placed(pid)(2) = t.id
     counts(t.id) = counts(t.id) - 1
     countsPerDay(t.id)(d) = countsPerDay(t.id)(d) + 1
-    placedPerHour(d)(h) = placedPerHour(d)(h) + 1
+    placedPerHour(d)(h) = placedPerHour(d)(h) + t.job.classHour.classes.size
   }
 
   def revertTile(t:Tile,d:Int,h:Int) {
     places(d)(h)(0) = places(d)(h)(0) ^ t.classes
     places(d)(h)(1) = places(d)(h)(1) ^ t.teacher
 
-    placedPerHour(d)(h) = placedPerHour(d)(h) - 1
+    placedPerHour(d)(h) = placedPerHour(d)(h) - t.job.classHour.classes.size
     countsPerDay(t.id)(d) = countsPerDay(t.id)(d)-1
     counts(t.id) = counts(t.id) + 1
     val pid = placedInd(t)
@@ -128,7 +132,8 @@ object Tiles extends App {
   var cnt = 0
   val depthCounter = new Array[Int](1000)
 
-  def search(day:Int,hour:Int,depth:Int,rowDepth:Int):Boolean = {
+  def search(dayNumber:Int,hour:Int,depth:Int,rowDepth:Int):Boolean = {
+    val day = daysOrder(dayNumber)
     cnt = cnt + 1
     depthCounter(depth) = depthCounter(depth) + 1
     if(cnt%100000==0) {
@@ -143,20 +148,23 @@ object Tiles extends App {
     }
     else {
       if(hourComplete(day,hour)
-        || (placedPerHour(day)(hour)>4 && depthCounter(depth)>100000)
-      || (placedPerHour(day)(hour)>3 && depthCounter(depth)>500000)
-      || (placedPerHour(day)(hour)>2 && depthCounter(depth)>2000000)
+        || (
+        (hour==0 || hour>4) &&
+        ((placedPerHour(day)(hour)>7 && depthCounter(depth)>100000)
+          || (placedPerHour(day)(hour)>6 && depthCounter(depth)>500000)
+          || (placedPerHour(day)(hour)>5 && depthCounter(depth)>2000000))
+        )
       ) {
         if (hour==7) {
-          search(day+1,0,depth,0)
+          search(dayNumber+1,0,depth,0)
         } else {
-          search(day,hour+1,depth,0)
+          search(dayNumber,hour+1,depth,0)
         }
       } else {
         open.options(day,hour).exists(t => {
           applyTile(t,day,hour)
           open.popFromOpen(t)
-          if(search(day,hour,(depth+1),(rowDepth+1))) {
+          if(search(dayNumber,hour,(depth+1),(rowDepth+1))) {
             true
           } else {
             revertTile(t,day,hour)

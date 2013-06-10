@@ -125,18 +125,6 @@ object Tiles extends App {
     }
   }
 
-  class RowOpen {
-    def popFromOpen(ind:Int) {
-
-    }
-    def pushToOpen(ind:Int) {
-
-    }
-    def options(day:Int,hour:Int) = {
-
-    }
-  }
-
   def hourComplete(day:Int,hour:Int) = (places(day)(hour)(0) & 255) == 255
 
   var open = new Open()

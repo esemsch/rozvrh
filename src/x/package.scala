@@ -39,5 +39,9 @@ package object x {
       })
     })
   }
-  
+
+  def setBit(int:Int,index:Int) = {
+    int | math.pow(2,index).toInt
+  }
+
 }

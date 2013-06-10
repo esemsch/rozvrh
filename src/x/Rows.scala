@@ -3,9 +3,6 @@ package x
 import collection.mutable
 
 object Rows extends App {
-  def setBit(int:Int,index:Int) = {
-    int | math.pow(2,index).toInt
-  }
   val teachers = Data.data._2.toList
   val tiles = Data.data3.filter(j => true).map(j => {
     val clss = j.classHour.classes.foldLeft(0)((result,cls) => setBit(result,cls-1))
@@ -24,7 +21,6 @@ object Rows extends App {
   })
   val places = (MONDAY to FRIDAY).map(d => (FIRST_HOUR to LAST_HOUR).map(h => Array(0,0)).toArray).toArray
   val counts = tiles.map(t => t.job.count).toArray
-  val countsPerDay = tiles.map(t => Array(0,0,0,0,0)).toArray
   val placed = tiles.flatMap(t => (1 to t.job.count).map(x => Array(-1, -1, -1))).toArray
   val mapToPlaced  = tiles.foldLeft(new Array[Int](tiles.size))((arr,t) => {
     arr(t.id) = if (t.id==0) 0 else (arr(t.id-1)+counts(t.id-1))
@@ -49,23 +45,24 @@ object Rows extends App {
       })
     }))
   }
-    freeHours(TUESDAY to FRIDAY,FIRST_GRADE+1 to FIRST_GRADE+4,List(0))
-    freeHours(List(MONDAY),List(FIRST_GRADE+1),List(0))
-    freeHours(MONDAY to FRIDAY,FIRST_GRADE+1 to FIRST_GRADE+2,6 to 7)
-    freeHours(MONDAY to FRIDAY,FIRST_GRADE+3 to FIRST_GRADE+4,List(6))
-    freeHours(TUESDAY to FRIDAY,FIRST_GRADE+3 to FIRST_GRADE+4,6 to 7)
-    freeHours(List(TUESDAY,WEDNESDAY,FRIDAY),FIRST_GRADE+1 to LAST_GRADE,6 to 7)
 
-    val tilesSolver = new TilesSolver(tiles,places,counts,placed,mapToPlaced)
+//  freeHours(TUESDAY to FRIDAY,FIRST_GRADE+1 to FIRST_GRADE+4,List(0))
+//  freeHours(List(MONDAY),List(FIRST_GRADE+1),List(0))
+//  freeHours(MONDAY to FRIDAY,FIRST_GRADE+1 to FIRST_GRADE+2,6 to 7)
+//  freeHours(MONDAY to FRIDAY,FIRST_GRADE+3 to FIRST_GRADE+4,List(6))
+//  freeHours(TUESDAY to FRIDAY,FIRST_GRADE+3 to FIRST_GRADE+4,6 to 7)
+//  freeHours(List(TUESDAY,WEDNESDAY,FRIDAY),FIRST_GRADE+1 to LAST_GRADE,6 to 7)
 
-    tilesSolver.applyTile(tilesLookup("Lucka")(Set(5,6,7,8)),MONDAY,5)
-    tilesSolver.applyTile(tilesLookup("Lucka")(Set(5,6,7,8)),MONDAY,6)
-    tilesSolver.applyTile(tilesLookup("Lucka")(Set(5,6,7,8)),THURSDAY,5)
-    tilesSolver.applyTile(tilesLookup("Lucka")(Set(5,6,7,8)),THURSDAY,6)
+  val tilesSolver = new TilesSolver(tiles,places,counts,placed,mapToPlaced)
+
+  tilesSolver.applyTile(tilesLookup("Lucka")(Set(5,6,7,8)),MONDAY,5)
+  tilesSolver.applyTile(tilesLookup("Lucka")(Set(5,6,7,8)),MONDAY,6)
+  tilesSolver.applyTile(tilesLookup("Lucka")(Set(5,6,7,8)),THURSDAY,5)
+  tilesSolver.applyTile(tilesLookup("Lucka")(Set(5,6,7,8)),THURSDAY,6)
 //    tilesSolver.applyTile(tilesLookup("Iva")(Set(6)),FRIDAY,2)
 //    tilesSolver.applyTile(tilesLookup("Iva")(Set(6)),FRIDAY,3)
 
-  val teachersOrder = List("Iva","Bohunka","Eva","Lucka","Alena","Martina","Tereza","Gita","Hana")
+  val teachersOrder = List("Iva","Bohunka","Eva","Alena","Martina","Tereza","Gita","Hana","Lucka")
 
   val rows = H.tileIndexRows.sortBy(r => {
     r.map(ti => {
@@ -157,5 +154,17 @@ object Rows extends App {
   println(Data.data2.foldLeft(0)((total,j) => total + j.count)-placed.filter(pl => (pl(2) != -1)).size)
   tiles.filter(t => counts(t.id)>0).foreach(t => println(t.job+" --- "+counts(t.id)))
 
-  tilesSolver.solve
+  tilesSolver.calcRows(0,0,Set(2,3,4,5,6,7,8)).foreach(r => {
+    println(r.map(ri => tiles(ri).job).mkString(","))
+  })
+  println("--------------------------")
+  tilesSolver.calcRows(0,7,Set(5,6,7,8)).foreach(r => {
+    println(r.map(ri => tiles(ri).job).mkString(","))
+  })
+  println("--------------------------")
+  tilesSolver.calcRows(4,5,Set(1,2,3,4,5,6,7,8)).foreach(r => {
+    println(r.map(ri => tiles(ri).job).mkString(","))
+  })
+
+//  tilesSolver.solve
 }

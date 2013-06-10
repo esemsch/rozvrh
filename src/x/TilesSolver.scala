@@ -37,42 +37,44 @@ class TilesSolver(tiles:List[Tile],places:Array[Array[Array[Int]]],counts:Array[
     placed(pid)(2) = -1
   }
 
-  def solve = {
-    val daysOrder = Array(FRIDAY,MONDAY,TUESDAY,WEDNESDAY,THURSDAY,1000)
+  def hourComplete(day:Int,hour:Int,grades:Int = 255) = {
+    (places(day)(hour)(0) & grades) == grades
+  }
 
-    class Open {
-      val hOrder = new HOrder(tiles,H.order2)
+  class Open(grades:Set[Int] = Set(1,2,3,4,5,6,7,8)) {
+    val hOrder = new HOrder(tiles,H.order2)
 
-      var open = new mutable.HashSet[Tile]() {
-        tiles.filter(t => counts(t.id)>0).foreach(t => add(t))
-      }
+    var open = new mutable.HashSet[Tile]() {
+      tiles.filter(t => t.job.classHour.classes.exists(cls => grades.contains(cls))).filter(t => counts(t.id)>0).foreach(t => add(t))
+    }
 
-      def popFromOpen(t:Tile) {
-        if(counts(t.id)==0) {
-          open.remove(t)
-        }
-      }
-
-      def pushToOpen(t:Tile) = {
-        if (counts(t.id)==1) {
-          open.add(t)
-        }
-      }
-
-      def options(day:Int,hour:Int) = {
-        open.filter(t => applicable(t,day,hour)).toList.sortWith(hOrder.precedes(_,_))
-      }
-
-      def isEmpty = open.isEmpty
-
-      override def toString = {
-        open.map(o => o.job.toTeachersJob.toString + " - " + counts(o.id)).mkString("\n")
+    def popFromOpen(t:Tile) {
+      if(counts(t.id)==0) {
+        open.remove(t)
       }
     }
 
-    def hourComplete(day:Int,hour:Int) = (places(day)(hour)(0) & 255) == 255
+    def pushToOpen(t:Tile) = {
+      if (counts(t.id)==1) {
+        open.add(t)
+      }
+    }
 
-    var open = new Open()
+    def options(day:Int,hour:Int) = {
+      open.filter(t => applicable(t,day,hour)).toList.sortBy(t => t.job.classHour.lowestClass)
+    }
+
+    def isEmpty = open.isEmpty
+
+    override def toString = {
+      open.map(o => o.job.toTeachersJob.toString + " - " + counts(o.id)).mkString("\n")
+    }
+  }
+
+  def solve = {
+    val daysOrder = Array(FRIDAY,MONDAY,TUESDAY,WEDNESDAY,THURSDAY,1000)
+
+    val open = new Open()
     var cnt = 0
     val depthCounter = new Array[Int](1000)
 
@@ -124,5 +126,51 @@ class TilesSolver(tiles:List[Tile],places:Array[Array[Array[Int]]],counts:Array[
     //  println(open.open.map(t => t.job + " ---- "+counts(t.id)).mkString("\n"))
 
     println(Data.data2.foldLeft(0)((total,j) => total + j.count)-placed.filter(pl => (pl(2) != -1)).size)
+  }
+
+  def calcRows(day:Int,hour:Int,completeForGrades:Set[Int]) = {
+
+    val open = new Open(completeForGrades)
+
+    var lineCount = 0
+    var currLC = 0
+
+    val lines:mutable.SetBuilder[Set[Int],Set[Set[Int]]] = new mutable.SetBuilder[Set[Int],Set[Set[Int]]](Set[Set[Int]]())
+
+    val grades = completeForGrades.foldLeft(0)((out,gr) => setBit(out,(gr-1)))
+
+    def searchForLines(depth:Int,line:Set[Int]):Boolean = {
+      if(hourComplete(day,hour,grades)) {
+        lineCount = lineCount + 1
+        if(lineCount%100000==0) {
+          print(".")
+        }
+        lines += line
+        false
+      } else {
+        open.options(day,hour).exists(t => {
+          if(depth==0) {
+            currLC = lineCount
+          }
+          applyTile(t,day,hour)
+          open.popFromOpen(t)
+          val ok = if(searchForLines((depth+1),(line + t.id))) {
+            true
+          } else {
+            revertTile(t,day,hour)
+            open.pushToOpen(t)
+            false
+          }
+          if(depth==0) {
+            print("\n"+t.job+" ----> "+(lineCount-currLC))
+          }
+          ok
+        })
+      }
+    }
+
+    searchForLines(0,Set[Int]())
+
+    lines.result()
   }
 }

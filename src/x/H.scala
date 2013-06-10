@@ -150,7 +150,10 @@ object H extends App {
                  |Rj 7 (Iva) 2x ----> 208920""".stripMargin)
   }
 
-  println(order.mkString("\n"))
+  def tileIndexRows = {
+    val rows =  scala.io.Source.fromFile("rows.txt").getLines().toArray
+    rows.map(line => line.split("\\s*\\|\\s*").map(_.toInt).toArray).toArray
+  }
 
 }
 
@@ -169,4 +172,6 @@ class HOrder(tiles:Seq[Tile],h:List[(String,Int)]) {
   def precedes(t1:Tile,t2:Tile) = {
     order(t1.id) >= order(t2.id)
   }
+
 }
+

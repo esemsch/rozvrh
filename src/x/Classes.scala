@@ -28,6 +28,8 @@ case class Job(val teacher:Teacher, val classHour:ClassHour, val count:Int) {
   override def toString = toTeachersJob.toString + " "+count+"x"
 }
 
+case class Tile(classes:Int,teacher:Int,id:Int,job:Job)
+
 class ClassSchedule {
   val classSchedule = {
     val aux = new Array[Array[TeachersJob]](FRIDAY - MONDAY + 1)

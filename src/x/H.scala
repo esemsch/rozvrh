@@ -155,6 +155,24 @@ object H extends App {
     rows.map(line => line.split("\\s*\\|\\s*").map(_.toInt).toArray).toArray
   }
 
+  def rowsExclusions = scala.io.Source.fromFile("rowsExclusions.txt").getLines().map(_.toInt).toArray
+
+  def calcRowsExclusions = {
+    val jobs = Data.data3.toArray
+
+    val jobRows = tileIndexRows.map(r => r.map(ji => jobs(ji)))
+    val excl = jobRows.map(jr => {
+      val excludedRows = jobRows.foldLeft(0.0)((tot,jr2) => {
+        if(jr != jr2) {
+          tot + jr.foldLeft(0.0)((tot,j) => tot + jr2.foldLeft(0.0)((tot2,j2)=>if(j==j2) tot2+1.0/j.count else tot2))
+        } else tot
+      })
+      (jr,excludedRows)
+    }).sortBy(x => x._2)
+    println(excl.map(x => x._1.mkString(", ")+" --- "+x._2).mkString("\n"))
+    println(excl.map(x => jobRows.indexOf(x._1)).mkString("\n"))
+  }
+
 }
 
 class HOrder(tiles:Seq[Tile],h:List[(String,Int)]) {

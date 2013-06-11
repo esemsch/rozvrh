@@ -2,7 +2,7 @@ package x
 
 import collection.mutable
 
-class TilesSolver(tiles:List[Tile],places:Array[Array[Array[Int]]],counts:Array[Int],placed:Array[Array[Int]],mapToPlaced:Array[Int]) {
+class TilesSolver(tiles:Array[Tile],places:Array[Array[Array[Int]]],counts:Array[Int],placed:Array[Array[Int]],mapToPlaced:Array[Int],tilesPerDay:Array[(Array[Int],Tile)]) {
   val placedPerHour = (MONDAY to FRIDAY).map(d => (FIRST_HOUR to LAST_HOUR).map(h => 0).toArray).toArray
 
   def applicable(t:Tile,d:Int,h:Int) = {
@@ -23,12 +23,14 @@ class TilesSolver(tiles:List[Tile],places:Array[Array[Array[Int]]],counts:Array[
     placed(pid)(2) = t.id
     counts(t.id) = counts(t.id) - 1
     placedPerHour(d)(h) = placedPerHour(d)(h) + t.job.classHour.classes.size
+    tilesPerDay(t.id)._1(d) = tilesPerDay(t.id)._1(d) + 1
   }
 
   def revertTile(t:Tile,d:Int,h:Int) {
     places(d)(h)(0) = places(d)(h)(0) ^ t.classes
     places(d)(h)(1) = places(d)(h)(1) ^ t.teacher
 
+    tilesPerDay(t.id)._1(d) = tilesPerDay(t.id)._1(d) - 1
     placedPerHour(d)(h) = placedPerHour(d)(h) - t.job.classHour.classes.size
     counts(t.id) = counts(t.id) + 1
     val pid = placedInd(t)
@@ -73,12 +75,13 @@ class TilesSolver(tiles:List[Tile],places:Array[Array[Array[Int]]],counts:Array[
 
   def solve = {
     val daysOrder = Array(FRIDAY,MONDAY,TUESDAY,WEDNESDAY,THURSDAY,1000)
+//    val daysOrder = Array(MONDAY,TUESDAY,WEDNESDAY,THURSDAY,FRIDAY,1000)
 
     val open = new Open()
     var cnt = 0
     val depthCounter = new Array[Int](1000)
 
-    def search(dayNumber:Int,hour:Int,depth:Int,rowDepth:Int):Boolean = {
+    def search(dayNumber:Int,hour:Int,depth:Int,rowDepth:Int,doTry:Boolean):Boolean = {
       val day = daysOrder(dayNumber)
       cnt = cnt + 1
       depthCounter(depth) = depthCounter(depth) + 1
@@ -93,33 +96,53 @@ class TilesSolver(tiles:List[Tile],places:Array[Array[Array[Int]]],counts:Array[
         true
       }
       else if(day>FRIDAY) {
-        search(0,0,0,0)
+        false
+//        search(0,0,0,0,true)
       }
       else {
-        if(hourComplete(day,hour) || rowDepth>0)
+        if(hourComplete(day,hour) || !doTry)
         {
           if (hour==7) {
-            search(dayNumber+1,0,depth,0)
+            search(dayNumber+1,0,depth,0,true)
           } else {
-            search(dayNumber,hour+1,depth,0)
+            search(dayNumber,hour+1,depth,0,true)
           }
         } else {
-          open.options(day,hour).exists(t => {
-            applyTile(t,day,hour)
-            open.popFromOpen(t)
-            if(search(dayNumber,hour,(depth+1),(rowDepth+1))) {
-              true
+          def searchFunc(doTryNow:Boolean) = {
+            val options: List[Tile] = open.options(day, hour)
+            if(options.isEmpty && rowDepth==0) {
+              search(dayNumber,hour,(depth+1),(rowDepth+1),doTryNow)
+//              Output.printTiles(places,tiles,placed)
+//              println("Options empty! Row depth = "+rowDepth+" open size = "+open.open.size+" day = "+day+" hour = "+hour)
             } else {
-              revertTile(t,day,hour)
-              open.pushToOpen(t)
-              false
+              options.exists(t => {
+                applyTile(t,day,hour)
+                open.popFromOpen(t)
+                if(search(dayNumber,hour,(depth+1),(rowDepth+1),doTryNow)) {
+                  true
+                } else {
+                  revertTile(t,day,hour)
+                  open.pushToOpen(t)
+                  false
+                }
+              })
             }
-          })
+          }
+          if(rowDepth==0) {
+            searchFunc(true)
+          } else {
+            if(!searchFunc(true)) {
+              val found = searchFunc(false)
+              if(!found) {
+                search(dayNumber,hour,(depth+1),(rowDepth+1),false)
+              } else false
+            } else true
+          }
         }
       }
     }
 
-    search(0,0,0,0)
+    search(0,0,0,0,true)
 
     Output.printTiles(places,tiles,placed)
 

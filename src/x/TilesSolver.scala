@@ -63,7 +63,7 @@ class TilesSolver(tiles:Array[Tile],places:Array[Array[Array[Int]]],counts:Array
     }
 
     def options(day:Int,hour:Int) = {
-      open.filter(t => applicable(t,day,hour)).toList.sortBy(t => t.job.teacher.name.charAt(0).toInt)
+      open.filter(t => applicable(t,day,hour)).toList.sortBy(t => t.job.teacher.name.charAt(0).toInt-t.job.classHour.lowestClass)
     }
 
     def isEmpty = open.isEmpty

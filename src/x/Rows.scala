@@ -4,6 +4,7 @@ import collection.mutable
 
 object Rows extends App {
   val teachers = Data.data._2.toList
+  val rowsExclusions = H.rowsExclusions
   val tiles = Data.data3.filter(j => true).map(j => {
     val clss = j.classHour.classes.foldLeft(0)((result,cls) => setBit(result,cls-1))
     val teacher = setBit(0,teachers.indexOf(j.teacher))
@@ -90,7 +91,8 @@ object Rows extends App {
     rows(rowInd).foreach(ti => tilesSolver.revertTile(tiles(ti),day,hour))
   }
 
-  def calcConstraints(day:Int,hour:Int,row:Array[Int]) = {
+  def calcConstraints(day:Int,hour:Int,rowInd:Int) = {
+    val row = rows(rowInd)
     val rowTiles = row.map(ti => tiles(ti))
     def teachers = {
       rowTiles.foldLeft(0)((tot,t) => {
@@ -119,8 +121,14 @@ object Rows extends App {
         rowTiles.foldLeft(0)((tot,t) => tot + (if(t.job.classHour.mainSubject) 1 else -1))
       }
     }
-//    println(rowTiles.map(t=>t.job).mkString(",")+" --- Teachers = "+teachers+" Spread = "+spread+" Combined = "+combined+" Main = "+main)
-    teachers + spread + combined + main
+    def exclusions = {
+      val re = rowsExclusions(rowInd)
+//      re/500
+//      -re
+      0
+    }
+//    println(rowTiles.map(t=>t.job).mkString(",")+" --- Teachers = "+teachers+" Spread = "+spread+" Combined = "+combined+" Main = "+main+" Exclusions = "+exclusions)
+    teachers + spread + combined + main + exclusions
   }
 
   class RowOpen {
@@ -139,7 +147,7 @@ object Rows extends App {
       open ++= stack.pop()
     }
     def options(day:Int,hour:Int):List[Int] = {
-      open.filter(ri => rowApplicable(ri,day,hour)).toList.sortBy(ri => calcConstraints(day,hour,rows(ri)))
+      open.filter(ri => rowApplicable(ri,day,hour)).toList.sortBy(ri => calcConstraints(day,hour,ri))
     }
     def isEmpty:Boolean = open.isEmpty
   }
@@ -147,7 +155,7 @@ object Rows extends App {
   val rowOpen = new RowOpen()
 
   def preassignRow(day:Int,hour:Int,teacher:String) {
-    val options = rowOpen.options(day,hour).map(ri => (rows(ri).map(ti => tiles(ti)),calcConstraints(day,hour,rows(ri))))
+    val options = rowOpen.options(day,hour).map(ri => (rows(ri).map(ti => tiles(ti)),calcConstraints(day,hour,ri)))
 //    println(options.map(o=>o._1.map(t=>t.job).mkString(",")+" --- "+o._2).mkString("\n"))
     val ri = rowOpen.options(day,hour).filter(ri => rows(ri).exists(ti => tiles(ti).job.teacher.name == teacher)).head
     applyRow(ri,day,hour)
@@ -205,17 +213,17 @@ object Rows extends App {
   println(Data.data2.foldLeft(0)((total,j) => total + j.count)-placed.filter(pl => (pl(2) != -1)).size)
   tiles.filter(t => counts(t.id)>0).foreach(t => println(t.job+" --- "+counts(t.id)))
 
-  tilesSolver.calcRows(0,0,Set(2,3,4,5,6,7,8)).foreach(r => {
-    println(r.map(ri => tiles(ri).job).mkString(","))
-  })
-  println("--------------------------")
-  tilesSolver.calcRows(0,7,Set(5,6,7,8)).foreach(r => {
-    println(r.map(ri => tiles(ri).job).mkString(","))
-  })
-  println("--------------------------")
-  tilesSolver.calcRows(4,5,Set(1,2,3,4,5,6,7,8)).foreach(r => {
-    println(r.map(ri => tiles(ri).job).mkString(","))
-  })
+//  tilesSolver.calcRows(0,0,Set(2,3,4,5,6,7,8)).foreach(r => {
+//    println(r.map(ri => tiles(ri).job).mkString(","))
+//  })
+//  println("--------------------------")
+//  tilesSolver.calcRows(0,7,Set(5,6,7,8)).foreach(r => {
+//    println(r.map(ri => tiles(ri).job).mkString(","))
+//  })
+//  println("--------------------------")
+//  tilesSolver.calcRows(4,5,Set(1,2,3,4,5,6,7,8)).foreach(r => {
+//    println(r.map(ri => tiles(ri).job).mkString(","))
+//  })
 
   tilesSolver.solve
 }

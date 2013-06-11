@@ -63,7 +63,7 @@ class TilesSolver(tiles:Array[Tile],places:Array[Array[Array[Int]]],counts:Array
     }
 
     def options(day:Int,hour:Int) = {
-      open.filter(t => applicable(t,day,hour)).toList.sortBy(t => t.job.classHour.lowestClass)
+      open.filter(t => applicable(t,day,hour)).toList.sortBy(t => t.job.teacher.name.charAt(0).toInt)
     }
 
     def isEmpty = open.isEmpty
@@ -81,6 +81,8 @@ class TilesSolver(tiles:Array[Tile],places:Array[Array[Array[Int]]],counts:Array
     var cnt = 0
     val depthCounter = new Array[Int](1000)
 
+    var best = 5
+
     def search(dayNumber:Int,hour:Int,depth:Int,rowDepth:Int,doTry:Boolean):Boolean = {
       val day = daysOrder(dayNumber)
       cnt = cnt + 1
@@ -88,9 +90,15 @@ class TilesSolver(tiles:Array[Tile],places:Array[Array[Array[Int]]],counts:Array
       if(cnt%1000000==0) {
         println(cnt)
       }
-      if(cnt%10000000==0) {
+//      if(cnt%10000000==0) {
+//        Output.printTiles(places,tiles,placed)
+//        println(open)
+//      }
+      val openSize = open.open.foldLeft(0)((tot,t) => tot + counts(t.id))
+      if(openSize<best) {
         Output.printTiles(places,tiles,placed)
         println(open)
+        best = openSize
       }
       if(open.isEmpty) {
         true

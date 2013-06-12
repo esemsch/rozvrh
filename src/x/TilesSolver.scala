@@ -229,12 +229,6 @@ class TilesSolver(tiles:Array[Tile],places:Array[Array[Array[Int]]],counts:Array
     search(0,0,0,0,true,100)
 //    (open.open.foldLeft(0)((tot,t) => tot + counts(t.id)) to 100).exists(maxDepth => search(0,0,0,0,true,maxDepth))
 //    search3
-
-    Output.printTiles(places,tiles,placed)
-
-    //  println(open.open.map(t => t.job + " ---- "+counts(t.id)).mkString("\n"))
-
-    println(Data.data2.foldLeft(0)((total,j) => total + j.count)-placed.filter(pl => (pl(2) != -1)).size)
   }
 
   class RowCalculator(day:Int,hour:Int,completeForGrades:Set[Int] = Set(1,2,3,4,5,6,7,8)) {

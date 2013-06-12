@@ -222,17 +222,43 @@ object Rows extends App {
 //    (MONDAY to FRIDAY).flatMap(d => (FIRST_HOUR to LAST_HOUR).map(h => (d,h))).foreach(x => {
 //      println("D = "+DAY_NAME(x._1)+" H = "+x._2+"\n MAX ROW = "+tilesSolver.findMaxRow(x._1,x._2).map(y => y.map(_.job).mkString(",")).mkString("\n"))
 //    })
-  val opts = (MONDAY to FRIDAY).flatMap(d => (FIRST_HOUR to LAST_HOUR).map(h => (d,h))).map(x => (tilesSolver.findMaxRow(x._1,x._2),x._1,x._2)).sortBy(x => {
-    if(x._1.isEmpty) 0 else -x._1.head.size
-  })
-
-  val firstOpt = opts.head
-  firstOpt._1.head.foreach(t => tilesSolver.applyTile(t,firstOpt._2,firstOpt._3))
 
   Output.printTiles(places,tiles,placed)
 
   println(Data.data2.foldLeft(0)((total,j) => total + j.count)-placed.filter(pl => (pl(2) != -1)).size)
   tiles.filter(t => counts(t.id)>0).foreach(t => println(t.job+" --- "+counts(t.id)))
 
-  tilesSolver.solve
+  def maxRowSearch(depth:Int,maxDepth:Int):Boolean = {
+    val opts = (MONDAY to FRIDAY).flatMap(d => (FIRST_HOUR to LAST_HOUR).map(h => (d,h))).map(x => (tilesSolver.findMaxRow(x._1,x._2),x._1,x._2))
+    .filter(x => !x._1.isEmpty).sortBy(x => {
+      if(x._1.isEmpty) 0 else -x._1.head.size
+    })
+
+    opts.exists(opt => {
+      opt._1.exists(o => {
+        o.foreach(t => tilesSolver.applyTile(t,opt._2,opt._3))
+        if(depth==maxDepth) {
+          if(tilesSolver.solve) true
+          else {
+            o.foreach(t => tilesSolver.revertTile(t,opt._2,opt._3))
+            false
+          }
+        } else {
+          if(maxRowSearch((depth+1),maxDepth)) true
+          else {
+            o.foreach(t => tilesSolver.revertTile(t,opt._2,opt._3))
+            false
+          }
+        }
+      })
+    })
+  }
+
+  maxRowSearch(0,1)
+
+  Output.printTiles(places,tiles,placed)
+
+  println(Data.data2.foldLeft(0)((total,j) => total + j.count)-placed.filter(pl => (pl(2) != -1)).size)
+  tiles.filter(t => counts(t.id)>0).foreach(t => println(t.job+" --- "+counts(t.id)))
+
 }

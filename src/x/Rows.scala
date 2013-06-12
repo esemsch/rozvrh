@@ -104,21 +104,21 @@ object Rows extends App {
     def spread = {
       val tilesPerThisDay = tilesPerDay.filter(td => td._1(day)>0)
       rowTiles.foldLeft(0)((tot,t) => {
-        tot + (if(tilesPerThisDay.exists(_._2==t)) 1 else -1)
+        tot + (if(tilesPerThisDay.exists(_._2==t)) 1 else 0)
       })
     }
     def combined = {
       if(hour>=1 && hour <=3) {
-        rowTiles.foldLeft(0)((tot,t) => tot + (if(t.job.classHour.combinedClasses) 1 else -1))
+        rowTiles.foldLeft(0)((tot,t) => tot + (if(t.job.classHour.combinedClasses) -1 else 0))
       } else {
-        rowTiles.foldLeft(0)((tot,t) => tot + (if(t.job.classHour.combinedClasses) 1 else -1))
+        rowTiles.foldLeft(0)((tot,t) => tot + (if(t.job.classHour.combinedClasses) 1 else 0))
       }
     }
     def main = {
       if(hour>=1 && hour <=4) {
-        rowTiles.foldLeft(0)((tot,t) => tot + (if(t.job.classHour.mainSubject) -1 else 1))
+        rowTiles.foldLeft(0)((tot,t) => tot + (if(t.job.classHour.mainSubject) -1 else 0))
       } else {
-        rowTiles.foldLeft(0)((tot,t) => tot + (if(t.job.classHour.mainSubject) 1 else -1))
+        rowTiles.foldLeft(0)((tot,t) => tot + (if(t.job.classHour.mainSubject) 1 else 0))
       }
     }
     def exclusions = {
@@ -128,7 +128,7 @@ object Rows extends App {
       0
     }
 //    println(rowTiles.map(t=>t.job).mkString(",")+" --- Teachers = "+teachers+" Spread = "+spread+" Combined = "+combined+" Main = "+main+" Exclusions = "+exclusions)
-    teachers + spread + combined + main + exclusions
+    (teachers + spread + combined + main + exclusions)
   }
 
   class RowOpen {
@@ -206,13 +206,6 @@ object Rows extends App {
 
   search(0,1)
 
-  Output.printTiles(places,tiles,placed)
-
-  //  println(open.open.map(t => t.job + " ---- "+counts(t.id)).mkString("\n"))
-
-  println(Data.data2.foldLeft(0)((total,j) => total + j.count)-placed.filter(pl => (pl(2) != -1)).size)
-  tiles.filter(t => counts(t.id)>0).foreach(t => println(t.job+" --- "+counts(t.id)))
-
 //  tilesSolver.calcRows(0,0,Set(2,3,4,5,6,7,8)).foreach(r => {
 //    println(r.map(ri => tiles(ri).job).mkString(","))
 //  })
@@ -224,6 +217,22 @@ object Rows extends App {
 //  tilesSolver.calcRows(4,5,Set(1,2,3,4,5,6,7,8)).foreach(r => {
 //    println(r.map(ri => tiles(ri).job).mkString(","))
 //  })
+
+//    println(i)
+//    (MONDAY to FRIDAY).flatMap(d => (FIRST_HOUR to LAST_HOUR).map(h => (d,h))).foreach(x => {
+//      println("D = "+DAY_NAME(x._1)+" H = "+x._2+"\n MAX ROW = "+tilesSolver.findMaxRow(x._1,x._2).map(y => y.map(_.job).mkString(",")).mkString("\n"))
+//    })
+  val opts = (MONDAY to FRIDAY).flatMap(d => (FIRST_HOUR to LAST_HOUR).map(h => (d,h))).map(x => (tilesSolver.findMaxRow(x._1,x._2),x._1,x._2)).sortBy(x => {
+    if(x._1.isEmpty) 0 else -x._1.head.size
+  })
+
+  val firstOpt = opts.head
+  firstOpt._1.head.foreach(t => tilesSolver.applyTile(t,firstOpt._2,firstOpt._3))
+
+  Output.printTiles(places,tiles,placed)
+
+  println(Data.data2.foldLeft(0)((total,j) => total + j.count)-placed.filter(pl => (pl(2) != -1)).size)
+  tiles.filter(t => counts(t.id)>0).foreach(t => println(t.job+" --- "+counts(t.id)))
 
   tilesSolver.solve
 }

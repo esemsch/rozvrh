@@ -150,7 +150,47 @@ class TilesSolver(tiles:Array[Tile],places:Array[Array[Array[Int]]],counts:Array
       }
     }
 
-    search(0,0,0,0,true)
+    def search2:Boolean = {
+      val openSize = open.open.foldLeft(0)((tot,t) => tot + counts(t.id))
+      if(openSize<best) {
+        Output.printTiles(places,tiles,placed)
+        println(open)
+        best = openSize
+      }
+      cnt = cnt + 1
+      if(cnt%1000000==0) {
+        println(cnt)
+      }
+      if (open.isEmpty) {
+        true
+      } else {
+        val jobsByTeacher = open.open.map(t => t.job.teacher).foldLeft(Map[Teacher,Int]())((tcnts,teacher) => {
+          tcnts.get(teacher) match {
+            case None => tcnts + (teacher -> 1)
+            case Some(tcnt) => tcnts + (teacher -> (1+tcnt))
+          }
+        })
+        val options = (MONDAY to FRIDAY).flatMap(d => (FIRST_HOUR to LAST_HOUR).map(h => (d,h))).flatMap(dh => {
+          open.options(dh._1,dh._2).map(t => (t,dh))
+        }).sortBy(x => -jobsByTeacher(x._1.job.teacher))
+        options.exists(opt => {
+          val t = opt._1
+          val day = opt._2._1
+          val hour = opt._2._2
+          applyTile(t,day,hour)
+          open.popFromOpen(t)
+          if (search2) true
+          else {
+            revertTile(t,day,hour)
+            open.pushToOpen(t)
+            false
+          }
+        })
+      }
+    }
+
+//    search(0,0,0,0,true)
+    search2
 
     Output.printTiles(places,tiles,placed)
 

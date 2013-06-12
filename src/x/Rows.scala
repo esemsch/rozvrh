@@ -121,14 +121,8 @@ object Rows extends App {
         rowTiles.foldLeft(0)((tot,t) => tot + (if(t.job.classHour.mainSubject) 1 else 0))
       }
     }
-    def exclusions = {
-      val re = rowsExclusions(rowInd)
-//      re/500
-//      -re
-      0
-    }
 //    println(rowTiles.map(t=>t.job).mkString(",")+" --- Teachers = "+teachers+" Spread = "+spread+" Combined = "+combined+" Main = "+main+" Exclusions = "+exclusions)
-    (teachers + spread + combined + main + exclusions)
+    (teachers + spread + combined + main)
   }
 
   class RowOpen {
@@ -231,11 +225,11 @@ object Rows extends App {
   def maxRowSearch(depth:Int,maxDepth:Int):Boolean = {
     val opts = (MONDAY to FRIDAY).flatMap(d => (FIRST_HOUR to LAST_HOUR).map(h => (d,h))).map(x => (tilesSolver.findMaxRow(x._1,x._2),x._1,x._2))
     .filter(x => !x._1.isEmpty).sortBy(x => {
-      if(x._1.isEmpty) 0 else -x._1.head.size
+      if(x._1.isEmpty) 0 else -x._1.foldLeft(0)((tot,ts) => tot + ts.foldLeft(0)((subTot,t) => subTot + t.job.classHour.classes.sum))
     })
 
     opts.exists(opt => {
-      opt._1.exists(o => {
+      opt._1.toList.sortBy(x => -x.foldLeft(0)((subTot,t) => subTot + t.job.classHour.classes.sum)).exists(o => {
         o.foreach(t => tilesSolver.applyTile(t,opt._2,opt._3))
         if(depth==maxDepth) {
           if(tilesSolver.solve) true

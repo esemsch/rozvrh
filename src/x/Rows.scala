@@ -122,7 +122,7 @@ object Rows extends App {
       }
     }
 //    println(rowTiles.map(t=>t.job).mkString(",")+" --- Teachers = "+teachers+" Spread = "+spread+" Combined = "+combined+" Main = "+main+" Exclusions = "+exclusions)
-    (teachers + spread + combined + main)
+    teachers + spread + combined + main
   }
 
   class RowOpen {

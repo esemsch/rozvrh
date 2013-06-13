@@ -48,6 +48,38 @@ object Output {
       printClassSchedule(schoolSchedule.schoolSchedule(gr))
     })
 
+    var byTeachers = Map[Teacher,SchoolSchedule]()
+    (FIRST_GRADE to LAST_GRADE).foreach(gr => {
+      (MONDAY to FRIDAY).foreach(d => {
+        (FIRST_HOUR to LAST_HOUR).foreach(h => {
+          Option(schoolSchedule.schoolSchedule(gr).classSchedule(d)(h)) match {
+            case None => {}
+            case Some(tj) => {
+              byTeachers.get(tj.teacher) match {
+                case None => {
+                  val ss = new SchoolSchedule
+                  tj.classHour.classes.foreach(rgr => ss.schoolSchedule(rgr).classSchedule(d)(h) = tj)
+                  byTeachers = byTeachers + (tj.teacher -> ss)
+                }
+                case Some(ss) => {
+                  tj.classHour.classes.foreach(rgr => ss.schoolSchedule(rgr).classSchedule(d)(h) = tj)
+                  byTeachers = byTeachers + (tj.teacher -> ss)
+                }
+              }
+            }
+          }
+        })
+      })
+    })
+    byTeachers.foreach(tss => {
+      println(tss._1.name)
+      val byDays = (MONDAY to FRIDAY).map(d => (FIRST_GRADE to LAST_GRADE).map(gr => byTeachers(tss._1).schoolSchedule(gr).classSchedule(d)).toArray)
+      byDays.zipWithIndex.foreach(daySch => {
+        println(DAY_NAME(daySch._2))
+        printTable(daySch._1.map(x=>x.toSeq),false)
+      })
+    })
+
     val byDays = (MONDAY to FRIDAY).map(d => (FIRST_GRADE to LAST_GRADE).map(gr => schoolSchedule.schoolSchedule(gr).classSchedule(d)).toArray)
     byDays.zipWithIndex.foreach(daySch => {
       println(DAY_NAME(daySch._2))

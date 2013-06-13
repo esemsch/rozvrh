@@ -1,30 +1,38 @@
 package x
 
+import scala.collection.mutable
+
 object Data {
 
   def data3 = {
     val jobs = data2
-    jobs.foldLeft(Map[Teacher,Map[Set[Int],(Int,String)]]())((map,job) => {
-      val newRecord: (Teacher, Map[Set[Int], (Int, String)]) = map.get(job.teacher) match {
+    val jobsMapping = new mutable.HashMap[Job,List[TeachersJob]]()
+    val mergedJobs = jobs.foldLeft(Map[Teacher,Map[Set[Int],(Int, String, List[TeachersJob])]]())((map,job) => {
+      val newRecord: (Teacher, Map[Set[Int], (Int, String, List[TeachersJob])]) = map.get(job.teacher) match {
         case None => {
-          job.teacher -> Map(job.classHour.classes ->(job.count, job.classHour.subjects.mkString(",")))
+          job.teacher -> Map(job.classHour.classes ->(job.count, job.classHour.subjects.mkString(","), job.toTeachersJobs))
         }
         case Some(clsToReduced) => {
           clsToReduced.get(job.classHour.classes) match {
             case None => {
-              job.teacher -> (clsToReduced + (job.classHour.classes ->(job.count, job.classHour.subjects.mkString(","))))
+              job.teacher -> (clsToReduced + (job.classHour.classes ->(job.count, job.classHour.subjects.mkString(","), job.toTeachersJobs)))
             }
             case Some(reduced) => {
               job.teacher -> (clsToReduced + (job.classHour.classes ->(reduced._1 + job.count, reduced._2 + {
                 val newSubjs = job.classHour.subjects.filter(sbj => !reduced._2.endsWith(sbj) && !reduced._2.contains(sbj+",")).mkString(",")
                 if (!newSubjs.isEmpty) "," + newSubjs else ""
-              })))
+              },job.toTeachersJobs ::: reduced._3)))
             }
           }
         }
       }
       map + newRecord
-    }).flatMap(tm => tm._2.map(cls => Job(tm._1,ClassHour(cls._2._2+" "+cls._1.map(c=>c+1).mkString("/"),cls._1),cls._2._1))).toList
+    }).flatMap(tm => tm._2.map(cls => {
+      val job = Job(tm._1,ClassHour(cls._2._2+" "+cls._1.map(c=>c+1).mkString("/"),cls._1),cls._2._1)
+      jobsMapping += (job -> cls._2._3)
+      job
+    })).toList
+    (mergedJobs,jobsMapping)
   }
 
   def data2 = {

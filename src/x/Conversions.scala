@@ -2,7 +2,7 @@ package x
 
 object Conversions {
 
-  def tilesToSchoolSchedule(places:Array[Array[Array[Int]]],tiles:Seq[Tile],placed:Seq[Array[Int]]) = {
+  def tilesToJobsArray(places:Array[Array[Array[Int]]],tiles:Seq[Tile],placed:Seq[Array[Int]]) = {
     def findJob(grade:Int, day:Int, hour:Int) = {
       val allThatDayAndHour = placed.filter(pi => {
         (pi(0) == day) && (pi(1) == hour)
@@ -13,26 +13,38 @@ object Conversions {
       })
       find.map(x => tiles(x(2)).job)
     }
-    def tilesToLine(tile:Array[Int],day:Int,hour:Int) = {
-      def isBitThere(pos:Int,int:Int) = {
-        val aux = math.pow(2,pos).toInt
-        (int & aux) > 0
-      }
-      (FIRST_GRADE+1 to LAST_GRADE).map(gr => if(isBitThere(gr-1,tile(0))) {
-        findJob(gr-1,day,hour) match {
-          case None => null
-          case Some(job) => job.toTeachersJob
-        }
-      } else null)
-    }
-    val schoolSchedule = new SchoolSchedule()
 
-    (MONDAY to FRIDAY).foreach(d => {
-      (FIRST_HOUR to LAST_HOUR).foreach(h => {
-        val line = tilesToLine(places(d)(h),d,h)
-        line.zipWithIndex.foreach(grLine => schoolSchedule.schoolSchedule(grLine._2+1).classSchedule(d)(h) = grLine._1)
+    val sch = new Array[Array[Array[Job]]](LAST_GRADE - FIRST_GRADE + 1)
+    (FIRST_GRADE to LAST_GRADE).foreach(gr => {
+      sch(gr) = new Array[Array[Job]](FRIDAY - MONDAY + 1)
+      (MONDAY to FRIDAY).foreach(d => {
+        sch(gr)(d) = new Array[Job](LAST_HOUR - FIRST_HOUR + 1)
+        (FIRST_HOUR to LAST_HOUR).foreach(h => {
+          sch(gr)(d)(h) = findJob(gr-1,d,h).getOrElse(null)
+        })
       })
     })
+
+    sch
+  }
+
+  def tilesToSchoolSchedule(places:Array[Array[Array[Int]]],tiles:Seq[Tile],placed:Seq[Array[Int]]) = {
+
+    val schoolSchedule = new SchoolSchedule()
+
+    tilesToJobsArray(places,tiles,placed).zipWithIndex.foreach(gr => gr._1.zipWithIndex.foreach(d => d._1.zipWithIndex.foreach(h => {
+      schoolSchedule.schoolSchedule(gr._2).classSchedule(d._2)(h._2) = Option(h._1).flatMap(j => Option(j.toTeachersJob)).getOrElse(null)
+    })))
+
+    schoolSchedule
+  }
+
+  def teachersJobsArrayToSchoolSchedule(tjs:Array[Array[Array[TeachersJob]]]) = {
+    val schoolSchedule = new SchoolSchedule()
+
+    tjs.zipWithIndex.foreach(gr => gr._1.zipWithIndex.foreach(d => d._1.zipWithIndex.foreach(h => {
+      schoolSchedule.schoolSchedule(gr._2).classSchedule(d._2)(h._2) = Option(h._1).getOrElse(null)
+    })))
 
     schoolSchedule
   }

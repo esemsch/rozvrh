@@ -24,14 +24,14 @@ object Checker {
       ccoll ++ ds.filter(_ != null)
     }))
 
-    println("Total jobs = "+(teachersJobs.foldLeft(0)((total,tj) => total + tj.classHour.classes.size)+24))
+    println("Total jobs = "+(teachersJobs.foldLeft(0)((total,tj) => total + tj.classHour.classes.size)))
     println("Scheduled jobs = "+scheduledJobs.size)
     println(teachersJobs diff scheduledJobs)
 
     println("odpol = "+(odpol.valid))
     println("volna = "+(volna.valid))
     println("prvniDruha = "+(prvniDruha.valid))
-    println("neprerusene = "+(neprerusene.valid))
+//    println("neprerusene = "+(neprerusene.valid))
     println("exklusivitaUcitele = "+(exklusivitaUcitele.valid))
     println("vvVzdyPoSobe = "+(vvVzdyPoSobe.valid))
     println("dvojHodinoveNePoSobe = "+(dvojHodinoveNePoSobe.valid))

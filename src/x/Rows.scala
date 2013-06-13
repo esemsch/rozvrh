@@ -4,8 +4,8 @@ import collection.mutable
 
 object Rows extends App {
   val teachers = Data.data._2.toList
-  val rowsExclusions = H.rowsExclusions
-  val tiles = Data.data3.filter(j => true).map(j => {
+  val jobs = Data.data3
+  val tiles = jobs._1.map(j => {
     val clss = j.classHour.classes.foldLeft(0)((result,cls) => setBit(result,cls-1))
     val teacher = setBit(0,teachers.indexOf(j.teacher))
     Tile(clss,teacher,-1,j)
@@ -121,7 +121,7 @@ object Rows extends App {
         rowTiles.foldLeft(0)((tot,t) => tot + (if(t.job.classHour.mainSubject) 1 else 0))
       }
     }
-//    println(rowTiles.map(t=>t.job).mkString(",")+" --- Teachers = "+teachers+" Spread = "+spread+" Combined = "+combined+" Main = "+main+" Exclusions = "+exclusions)
+//    println(rowTiles.map(t=>t.job).mkString(",")+" --- Teachers = "+teachers+" Spread = "+spread+" Combined = "+combined+" Main = "+main)
     teachers + spread + combined + main
   }
 
@@ -255,6 +255,9 @@ object Rows extends App {
 //  println(Data.data2.foldLeft(0)((total,j) => total + j.count)-placed.filter(pl => (pl(2) != -1)).size)
 //  tiles.filter(t => counts(t.id)>0).foreach(t => println(t.job+" --- "+counts(t.id)))
 
-  Output.printSchedule(Conversions.tilesToSchoolSchedule(places,tiles,placed))
+  val schoolSchedule = Straightener.straighten(Conversions.tilesToJobsArray(places,tiles,placed),jobs._2.toMap)
 
+  Output.printSchedule(schoolSchedule)
+
+  Checker.check(schoolSchedule,jobs._2.flatMap(x => x._2).toList)
 }

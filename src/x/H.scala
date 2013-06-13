@@ -158,7 +158,7 @@ object H extends App {
   def rowsExclusions = scala.io.Source.fromFile("rowsExclusions.txt").getLines().map(_.toInt).toArray
 
   def calcRowsExclusions = {
-    val jobs = Data.data3.toArray
+    val jobs = Data.data3._1.toArray
 
     val jobRows = tileIndexRows.map(r => r.map(ji => jobs(ji)))
     val excl = jobRows.map(jr => {

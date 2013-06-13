@@ -6,7 +6,7 @@ object Metadata extends App {
     int | math.pow(2,index).toInt
   }
   val teachers = Data.data._2.toList
-  val tiles = Data.data3.filter(j => true).map(j => {
+  val tiles = Data.data3._1.filter(j => true).map(j => {
     val clss = j.classHour.classes.foldLeft(0)((result,cls) => setBit(result,cls-1))
     val teacher = setBit(0,teachers.indexOf(j.teacher))
     Tile(clss,teacher,-1,j)

@@ -1,6 +1,7 @@
 package x
 
 import scala.collection.mutable
+import x.Y.Possibility
 
 object Straightener {
 
@@ -41,6 +42,60 @@ object Straightener {
       tj.classHour.classes.foreach(rgr => schoolSchedule.schoolSchedule(rgr).classSchedule(d)(h) = tj)
       stillAvailable += (j -> (available diff List(tj)))
       alreadyPlaced += (j -> ((tj,d,h) :: placed))
+    })
+
+    schoolSchedule
+  }
+
+  def straighten2(schedule:Array[Array[Array[Job]]],realJobs:Map[Job,List[TeachersJob]]) = {
+    val jobToTJAndPoss = new mutable.HashMap[Job,(List[TeachersJob],Set[Possibility])]()
+    schedule.zipWithIndex.foreach(gr =>
+      gr._1.zipWithIndex.foreach(d =>
+        d._1.zipWithIndex.foreach(h =>
+            Option(schedule(gr._2)(d._2)(h._2)) match {
+              case None => {}
+              case Some(j) => {
+                jobToTJAndPoss.get(j) match {
+                  case Some(e) => jobToTJAndPoss += (j -> (realJobs(j),e._2 + Possibility(d._2,h._2)))
+                  case None => jobToTJAndPoss += (j -> (realJobs(j),Set(Possibility(d._2,h._2))))
+                }
+              }
+            }
+        )
+      )
+    )
+
+    val schoolSchedule = new SchoolSchedule
+
+    jobToTJAndPoss.unzip._2.foreach(x => {
+      var tjs = x._1
+      val poss = x._2.toList.sortWith((p1,p2) => (p1.day<p2.day) || (p1.day==p2.day && p1.hour<p2.hour))
+      val tjsByDays = mutable.Map[Int,List[TeachersJob]]()
+      val hoursAvailPerDay = new Array[Int](FRIDAY - MONDAY + 1)
+      poss.foreach(p => hoursAvailPerDay(p.day)=hoursAvailPerDay(p.day)+1)
+      (MONDAY to FRIDAY).filter(x => hoursAvailPerDay(x)>0).sortBy(x => -hoursAvailPerDay(x)).foreach(d => {
+        val uniques = tjs.toSet.toList
+        if(uniques.isEmpty) {
+          println
+        }
+        (0 to hoursAvailPerDay(d)-1).foreach(h => {
+          val tj = uniques(h%uniques.size)
+          tjs = tjs diff List(tj)
+          tjsByDays.get(d) match {
+            case None => tjsByDays += (d -> (tj :: Nil))
+            case Some(l) => tjsByDays += (d -> (tj :: l))
+          }
+        })
+      })
+      tjsByDays.foreach(e => {
+        val d = e._1
+        val tjs = e._2
+        val possFilt = poss.filter(p => p.day == d)
+        tjs.zipWithIndex.foreach(tj => {
+          val p = possFilt(tj._2)
+          tj._1.classHour.classes.foreach(rgr => schoolSchedule.schoolSchedule(rgr).classSchedule(p.day)(p.hour) = tj._1)
+        })
+      })
     })
 
     schoolSchedule

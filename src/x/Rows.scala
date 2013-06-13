@@ -255,7 +255,9 @@ object Rows extends App {
 //  println(Data.data2.foldLeft(0)((total,j) => total + j.count)-placed.filter(pl => (pl(2) != -1)).size)
 //  tiles.filter(t => counts(t.id)>0).foreach(t => println(t.job+" --- "+counts(t.id)))
 
-  val schoolSchedule = Straightener.straighten(Conversions.tilesToJobsArray(places,tiles,placed),jobs._2.toMap)
+//  val schoolSchedule = Straightener.straighten(Conversions.tilesToJobsArray(places,tiles,placed),jobs._2.toMap)
+
+  val schoolSchedule = Straightener.straighten2(Conversions.tilesToJobsArray(places,tiles,placed),jobs._2.toMap)
 
   Output.printSchedule(schoolSchedule)
 

@@ -250,9 +250,11 @@ object Rows extends App {
 
   maxRowSearch(0,1)
 
-  Output.printTiles(places,tiles,placed)
+//  Output.printTiles(places,tiles,placed)
+//
+//  println(Data.data2.foldLeft(0)((total,j) => total + j.count)-placed.filter(pl => (pl(2) != -1)).size)
+//  tiles.filter(t => counts(t.id)>0).foreach(t => println(t.job+" --- "+counts(t.id)))
 
-  println(Data.data2.foldLeft(0)((total,j) => total + j.count)-placed.filter(pl => (pl(2) != -1)).size)
-  tiles.filter(t => counts(t.id)>0).foreach(t => println(t.job+" --- "+counts(t.id)))
+  Output.printSchedule(Conversions.tilesToSchoolSchedule(places,tiles,placed))
 
 }

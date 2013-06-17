@@ -74,11 +74,8 @@ object Straightener {
       val hoursAvailPerDay = new Array[Int](FRIDAY - MONDAY + 1)
       poss.foreach(p => hoursAvailPerDay(p.day)=hoursAvailPerDay(p.day)+1)
       (MONDAY to FRIDAY).filter(x => hoursAvailPerDay(x)>0).sortBy(x => -hoursAvailPerDay(x)).foreach(d => {
-        val uniques = tjs.toSet.toList
-        if(uniques.isEmpty) {
-          println
-        }
         (0 to hoursAvailPerDay(d)-1).foreach(h => {
+          val uniques = tjs.toSet.toList
           val tj = uniques(h%uniques.size)
           tjs = tjs diff List(tj)
           tjsByDays.get(d) match {

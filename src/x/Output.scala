@@ -55,17 +55,12 @@ object Output {
           Option(schoolSchedule.schoolSchedule(gr).classSchedule(d)(h)) match {
             case None => {}
             case Some(tj) => {
-              byTeachers.get(tj.teacher) match {
-                case None => {
-                  val ss = new SchoolSchedule
-                  tj.classHour.classes.foreach(rgr => ss.schoolSchedule(rgr).classSchedule(d)(h) = tj)
-                  byTeachers = byTeachers + (tj.teacher -> ss)
-                }
-                case Some(ss) => {
-                  tj.classHour.classes.foreach(rgr => ss.schoolSchedule(rgr).classSchedule(d)(h) = tj)
-                  byTeachers = byTeachers + (tj.teacher -> ss)
-                }
+              val ss = byTeachers.get(tj.teacher) match {
+                case None => new SchoolSchedule
+                case Some(ss) => ss
               }
+              tj.classHour.classes.foreach(rgr => ss.schoolSchedule(rgr).classSchedule(d)(h) = tj)
+              byTeachers = byTeachers + (tj.teacher -> ss)
             }
           }
         })

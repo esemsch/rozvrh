@@ -1,5 +1,7 @@
 package x
 
+import collection.mutable
+
 case class ClassHour(val subject:String, val classes:Set[Int]) {
   val subjects = """([A-záéěíóúýÁÉÍÓÚÝčďřšťžňČĎŘŠŤŽŇ]+)""".r.findAllIn(subject).matchData.map(_.group(1)).toSet
   val arts = subject.contains("Vv")
@@ -53,8 +55,11 @@ abstract class Constraint {
 }
 
 abstract class NecessaryConstraint extends Constraint {
+  val violators = new mutable.SetBuilder[(TeachersJob,String),Set[(TeachersJob,String)]](Set[(TeachersJob,String)]())
   def preferred:Boolean = {valid}
   def h:Int = {if(valid) 0 else VERY_HIGH_H}
+
+  def printViolations = println("Violating: "+violators.result.toList.sortBy(x => x._1.teacher.name).map(x => "["+x._1+" @ "+x._2+"]").mkString(","))
 }
 
 abstract class PreferenceConstraint extends Constraint {
@@ -154,54 +159,107 @@ class VvVzdyPoSobe(val schoolSchedule:SchoolSchedule) extends NecessaryConstrain
   private val found = 0
   private val not_found = 1
   private val success = 2
-  private val failure = 3
+  private val possible_failure = 3
+  private val failure = 4
 
-  def valid = {schoolSchedule.schoolSchedule.forall(cs => cs.classSchedule.forall(ds => {
-    val aux = ds.foldLeft(not_found)((art,tj) => art match {
-      case `not_found` => if(tj != null) {
-        if(tj.classHour.arts) found else not_found
-      } else not_found
-      case `found` => if(tj!=null) {
-        if(tj.classHour.arts) success
-        else if(tj.classHour.pe) found
-        else failure
-      } else found
-      case x:Int => x
-    })
-    (aux == not_found || aux == success)
-  }))
+  def valid = {
+    val format = (d:Int,h:Int) => DAY_NAME(d)+" "+h+"."
+
+    schoolSchedule.schoolSchedule.foreach(
+      cs => {
+        var tmpBuffer = Option[(TeachersJob,Int,Int)](null)
+        cs.classSchedule.zipWithIndex.foreach(
+        ds => {
+          val d = ds._2
+          ds._1.zipWithIndex.foreach(
+            tji => {
+              val h = tji._2
+              val tj = tji._1
+              if(tj!=null && tj.classHour.arts) {
+                if(tmpBuffer.exists(x => x._2 != d)) {
+                  val x = tmpBuffer.get
+                  violators += {(x._1,format(x._2,x._3))}
+                  violators += {(tj,format(d,h))}
+                }
+                else {
+                  tmpBuffer = Some((tj,d,h))
+                }
+              }
+            }
+        )}
+      )}
+    )
+    schoolSchedule.schoolSchedule.foreach(
+      cs => cs.classSchedule.zipWithIndex.foreach(d => {
+        val ds = d._1
+        var tmpBuffer:(TeachersJob,Int) = (null,-1)
+        ds.zipWithIndex.foldLeft(not_found)((art,tji) => {
+          val tj = tji._1
+          val h = tji._2
+          art match {
+          case `not_found` => if(tj != null) {
+            if(tj.classHour.arts) {
+              tmpBuffer = (tj,h)
+              found
+            } else not_found
+          } else not_found
+          case `found` => if(tj!=null) {
+            if(tj.classHour.arts) {
+              tmpBuffer = null
+              success
+            }
+            else if(tj.classHour.pe) found
+            else possible_failure
+          } else found
+          case `possible_failure` => if(tj!=null) {
+            if(tj.classHour.arts) {
+              violators += {(tmpBuffer._1,format(d._2,tmpBuffer._2))}
+              violators += {(tj,format(d._2,h))}
+              failure
+            } else possible_failure
+          } else possible_failure
+          case x:Int => x
+        }})
+      })
+    )
+    printViolations
+    violators.result.isEmpty
   }
 
 }
 
 class DvojhodinnovePredmetyNeVeDnechPoSobe(val schoolSchedule:SchoolSchedule) extends NecessaryConstraint {
   def valid = {
-    val twoHourSubjects: IndexedSeq[IndexedSeq[Array[String]]] = (FIRST_GRADE to LAST_GRADE).map(cls => (MONDAY to FRIDAY).map(day => {
-      schoolSchedule.schoolSchedule(cls).classSchedule(day).filter(tj => tj!=null && tj.classHour.twoHour).map(tj => tj.classHour.subject)
+    val twoHourSubjects: IndexedSeq[IndexedSeq[Array[TeachersJob]]] = (FIRST_GRADE to LAST_GRADE).map(cls => (MONDAY to FRIDAY).map(day => {
+      schoolSchedule.schoolSchedule(cls).classSchedule(day).filter(tj => tj!=null && tj.classHour.twoHour)
     }))
-    twoHourSubjects.forall(allDaysForClass => {
-      allDaysForClass.zipWithIndex.foldLeft((Map[String,Int](),true))((twoHoursSubjectsWithDays,oneDay) => {
-        val currentDaysTwoHourSubjects: Array[String] = oneDay._1
+    twoHourSubjects.foreach(allDaysForClass => {
+      allDaysForClass.zipWithIndex.foldLeft(Map[TeachersJob,Int]())((twoHoursSubjectsWithDays,oneDay) => {
+        val currentDaysTwoHourSubjects: Array[TeachersJob] = oneDay._1
         val currentDay: Int = oneDay._2
 
         val twoInTheSameDay = currentDaysTwoHourSubjects.distinct.size != currentDaysTwoHourSubjects.size
         if(twoInTheSameDay) {
-          println("Violating subjects: "+(currentDaysTwoHourSubjects diff currentDaysTwoHourSubjects.distinct).mkString(","))
+          (currentDaysTwoHourSubjects diff currentDaysTwoHourSubjects.distinct).foreach(v => {
+            val tuple: (TeachersJob, String) = (v, DAY_NAME(currentDay))
+            violators += tuple
+          })
         }
 
-        val ok = currentDaysTwoHourSubjects.forall(subj => {
-          if(twoHoursSubjectsWithDays._1.get(subj).exists(day => currentDay-day <= 1)) {
-            println("Violating subject: subj")
-            false
-          } else {
-            true
+        currentDaysTwoHourSubjects.foreach(subj => {
+          if(twoHoursSubjectsWithDays.get(subj).exists(day => currentDay-day <= 1)) {
+            val tuple1: (TeachersJob, String) = (subj, DAY_NAME(currentDay))
+            val tuple2: (TeachersJob, String) = (subj, DAY_NAME(twoHoursSubjectsWithDays(subj)))
+            violators += tuple1
+            violators += tuple2
           }
-        }) && !twoInTheSameDay
-        val outMap = currentDaysTwoHourSubjects.foldLeft(twoHoursSubjectsWithDays._1)((m,subj) => m + (subj -> currentDay))
+        })
 
-        (outMap,twoHoursSubjectsWithDays._2 && ok)
-      })._2
+        currentDaysTwoHourSubjects.foldLeft(twoHoursSubjectsWithDays)((m,subj) => m + (subj -> currentDay))
+      })
     })
+    printViolations
+    violators.result.isEmpty
   }
 }
 

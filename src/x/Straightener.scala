@@ -48,6 +48,8 @@ object Straightener {
   }
 
   def straighten2(schedule:Array[Array[Array[Job]]],realJobs:Map[Job,List[TeachersJob]]) = {
+    val possSort = (p1:Possibility,p2:Possibility) => (p1.day<p2.day) || (p1.day==p2.day && p1.hour<p2.hour)
+
     val jobToTJAndPoss = new mutable.HashMap[Job,(List[TeachersJob],Set[Possibility])]()
     schedule.zipWithIndex.foreach(gr =>
       gr._1.zipWithIndex.foreach(d =>
@@ -67,9 +69,50 @@ object Straightener {
 
     val schoolSchedule = new SchoolSchedule
 
+    jobToTJAndPoss.filter(x => x._1.classHour.arts && (2 <= x._2._1.foldLeft(0)((tot,y) => tot + (if(y.classHour.arts) 1 else 0)))).foreach(x => {
+      val artTjs = x._2._1.filter(y => y.classHour.arts)
+      var remPoss = List[Possibility]()
+      x._2._2.toList.sortWith(possSort).foldLeft(Possibility(-10,-10))((l,p) => {
+        if(l.day == p.day && l.hour == (p.hour-1) && remPoss.isEmpty) {
+          artTjs(0).classHour.classes.foreach(rgr => schoolSchedule.schoolSchedule(rgr).classSchedule(l.day)(l.hour) = artTjs(0))
+          artTjs(1).classHour.classes.foreach(rgr => schoolSchedule.schoolSchedule(rgr).classSchedule(p.day)(p.hour) = artTjs(1))
+          remPoss = l :: p :: remPoss
+        }
+        p
+      })
+      if(!remPoss.isEmpty) {
+        jobToTJAndPoss += (x._1 -> (x._2._1 diff artTjs, x._2._2 -- remPoss.toSet))
+      }
+    })
+
+    jobToTJAndPoss.filter(x => x._1.classHour.twoHour).foreach(x => {
+      val twoHourMap = new mutable.HashMap[Set[String],List[TeachersJob]]()
+      x._2._1.filter(y => y.classHour.twoHour).foreach(y => {
+        twoHourMap.get(y.classHour.subjects) match {
+          case None => twoHourMap += (y.classHour.subjects -> (y :: Nil))
+          case Some(tjs) => twoHourMap += (y.classHour.subjects -> (y :: tjs))
+        }
+      })
+      var remPoss = List[(TeachersJob,Possibility)]()
+      twoHourMap.filter(y => (y._2.size >= 2)).foreach(y => {
+        x._2._2.toList.sortWith(possSort).foldLeft(Possibility(-10,-10))((l,p) => {
+          if(l.day == -10) p
+          else if ((p.day - l.day) >= 2) {
+            y._2(0).classHour.classes.foreach(rgr => schoolSchedule.schoolSchedule(rgr).classSchedule(l.day)(l.hour) = y._2(0))
+            y._2(1).classHour.classes.foreach(rgr => schoolSchedule.schoolSchedule(rgr).classSchedule(p.day)(p.hour) = y._2(1))
+            remPoss = (y._2(0),l) :: (y._2(1),p) :: remPoss
+            Possibility(-10,-10)
+          } else l
+        })
+      })
+      if(!remPoss.isEmpty) {
+        jobToTJAndPoss += (x._1 -> (x._2._1 diff remPoss.unzip._1, x._2._2 -- remPoss.unzip._2.toSet))
+      }
+    })
+
     jobToTJAndPoss.unzip._2.foreach(x => {
       var tjs = x._1
-      val poss = x._2.toList.sortWith((p1,p2) => (p1.day<p2.day) || (p1.day==p2.day && p1.hour<p2.hour))
+      val poss = x._2.toList.sortWith(possSort)
       val tjsByDays = mutable.Map[Int,List[TeachersJob]]()
       val hoursAvailPerDay = new Array[Int](FRIDAY - MONDAY + 1)
       poss.foreach(p => hoursAvailPerDay(p.day)=hoursAvailPerDay(p.day)+1)

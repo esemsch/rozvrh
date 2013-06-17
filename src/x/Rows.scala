@@ -63,6 +63,7 @@ object Rows extends App {
   tilesSolver.applyTile(tilesLookup("Lucka")(Set(5,6,7,8)),MONDAY,6)
   tilesSolver.applyTile(tilesLookup("Lucka")(Set(5,6,7,8)),THURSDAY,5)
   tilesSolver.applyTile(tilesLookup("Lucka")(Set(5,6,7,8)),THURSDAY,6)
+  tilesSolver.applyTile(tilesLookup("Tereza")(Set(5,6)),MONDAY,0)
 
   val teachersOrder = List("Iva","Bohunka","Eva","Hana","Lucka")
 
@@ -72,6 +73,77 @@ object Rows extends App {
       teachersOrder.indexOf(tile.job.teacher.name)
     }).foldLeft(0)((sum,x) => sum - math.pow(2,10-x).toInt)
   })
+
+  class RowOpen {
+    var open = new mutable.HashSet[Int]() {
+      (1 to rows.size).foreach(t => add(t-1))
+    }
+
+    val stack = new mutable.Stack[Set[Int]]()
+
+    def popFromOpen(ind:Int) {
+      val neverApplicable = open.filter(!rowEverApplicable(_)).toSet
+      stack.push(neverApplicable)
+      open --= neverApplicable
+    }
+    def pushToOpen(ind:Int) {
+      open ++= stack.pop()
+    }
+    def options(day:Int,hour:Int):List[Int] = {
+      open.filter(ri => rowApplicable(ri,day,hour)).toList.sortBy(ri => calcConstraints(day,hour,ri))
+    }
+    def isEmpty:Boolean = open.isEmpty
+  }
+
+  val rowOpen = new RowOpen()
+
+  def filterRows(day:Int,hour:Int,subjs:List[(String,Set[String],Set[Int])]):(Int,Int,List[Int]) = {
+    val options = rowOpen.options(day, hour)
+    val ret = options.filter(ri => {
+      subjs.forall(x => {
+        rows(ri).exists(ti => {
+          val t = tiles(ti)
+          (x._1 == null || t.job.teacher.name == x._1) &&
+          (x._2 == null || (t.job.classHour.subjects diff x._2).size < t.job.classHour.subjects.size) &&
+          (x._3 == null || (x._3 diff t.job.classHour.classes).size == 0)
+        })
+      })
+    })
+
+    ret.foreach(ri => {
+      val r = rows(ri)
+      println(r.map(ti => tiles(ti).job).mkString(","))
+    })
+
+    println("===============================================")
+    (day,hour,ret)
+  }
+  def filterRows(day:Int,hour:Int,teacher:String):(Int,Int,List[Int]) = {
+    filterRows(day,hour,List[(String,Set[String],Set[Int])]((teacher,null,null)))
+  }
+  def filterRows(day:Int,hour:Int,teacher:String,subject:String,grade:Int):(Int,Int,List[Int]) = {
+    filterRows(day,hour,List[(String,Set[String],Set[Int])]((teacher,Set[String](subject),Set[Int](grade))))
+  }
+  def filterRows(day:Int,hour:Int,teacher:String,subject:String,grades:Set[Int]):(Int,Int,List[Int]) = {
+    filterRows(day,hour,List[(String,Set[String],Set[Int])]((teacher,if(subject!=null)Set[String](subject) else null,grades)))
+  }
+  def preassignRow(candidateRows:(Int,Int,List[Int])) {
+    val ri = candidateRows._3.head
+    applyRow(ri,candidateRows._1,candidateRows._2)
+    rowOpen.popFromOpen(ri)
+  }
+
+  preassignRow(filterRows(MONDAY,1,"Tereza",null,Set(5,6)))
+  preassignRow(filterRows(FRIDAY,2,"Iva"))
+  preassignRow(filterRows(FRIDAY,3,"Iva"))
+//  preassignRow(filterRows(MONDAY,2,null,"Vv",Set(1,3)))
+  preassignRow(filterRows(MONDAY,3,List(("Alena",null,null),(null,Set("Vv"),Set(3)),(null,Set("D"),Set(7)))))
+  preassignRow(filterRows(MONDAY,4,null,"Vv",Set(3)))
+
+  preassignRow(filterRows(THURSDAY,2,"Alena"))
+  preassignRow(filterRows(THURSDAY,3,"Alena"))
+
+  preassignRow(filterRows(FRIDAY,4,List(("Tereza",Set("Vv"),Set(5,6)),("Alena",null,null))))
 
   def rowApplicable(rowInd:Int,day:Int,hour:Int) = {
     rows(rowInd).forall(ti => counts(ti)>0 && tilesSolver.applicable(tiles(ti),day,hour))
@@ -121,42 +193,9 @@ object Rows extends App {
         rowTiles.foldLeft(0)((tot,t) => tot + (if(t.job.classHour.mainSubject) 1 else 0))
       }
     }
-//    println(rowTiles.map(t=>t.job).mkString(",")+" --- Teachers = "+teachers+" Spread = "+spread+" Combined = "+combined+" Main = "+main)
+    //    println(rowTiles.map(t=>t.job).mkString(",")+" --- Teachers = "+teachers+" Spread = "+spread+" Combined = "+combined+" Main = "+main)
     teachers + spread + combined + main
   }
-
-  class RowOpen {
-    var open = new mutable.HashSet[Int]() {
-      (1 to rows.size).foreach(t => add(t-1))
-    }
-
-    val stack = new mutable.Stack[Set[Int]]()
-
-    def popFromOpen(ind:Int) {
-      val neverApplicable = open.filter(!rowEverApplicable(_)).toSet
-      stack.push(neverApplicable)
-      open --= neverApplicable
-    }
-    def pushToOpen(ind:Int) {
-      open ++= stack.pop()
-    }
-    def options(day:Int,hour:Int):List[Int] = {
-      open.filter(ri => rowApplicable(ri,day,hour)).toList.sortBy(ri => calcConstraints(day,hour,ri))
-    }
-    def isEmpty:Boolean = open.isEmpty
-  }
-
-  val rowOpen = new RowOpen()
-
-  def preassignRow(day:Int,hour:Int,teacher:String) {
-    val options = rowOpen.options(day,hour).map(ri => (rows(ri).map(ti => tiles(ti)),calcConstraints(day,hour,ri)))
-//    println(options.map(o=>o._1.map(t=>t.job).mkString(",")+" --- "+o._2).mkString("\n"))
-    val ri = rowOpen.options(day,hour).filter(ri => rows(ri).exists(ti => tiles(ti).job.teacher.name == teacher)).head
-    applyRow(ri,day,hour)
-    rowOpen.popFromOpen(ri)
-  }
-  preassignRow(FRIDAY,2,"Iva")
-  preassignRow(FRIDAY,3,"Iva")
 
   var cnt = 0
   def search(dayIndex:Int,hour:Int):Boolean = {

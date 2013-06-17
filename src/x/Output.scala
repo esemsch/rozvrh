@@ -37,48 +37,50 @@ object Output {
     })
   }
 
-  def printSchedule(schoolSchedule:SchoolSchedule) {
+  def printSchedule(schoolSchedule:SchoolSchedule, simple:Boolean = true) {
 
     def printClassSchedule(cs:ClassSchedule) {
       printTable(cs.classSchedule.map(x=>x.toSeq),true)
     }
 
-    (FIRST_GRADE to LAST_GRADE).foreach(gr => {
-      println((gr+1)+". Třída")
-      printClassSchedule(schoolSchedule.schoolSchedule(gr))
-    })
+    if(!simple) {
+      (FIRST_GRADE to LAST_GRADE).foreach(gr => {
+        println((gr+1)+". Třída")
+        printClassSchedule(schoolSchedule.schoolSchedule(gr))
+      })
 
-    var byTeachers = Map[Teacher,SchoolSchedule]()
-    (FIRST_GRADE to LAST_GRADE).foreach(gr => {
-      (MONDAY to FRIDAY).foreach(d => {
-        (FIRST_HOUR to LAST_HOUR).foreach(h => {
-          Option(schoolSchedule.schoolSchedule(gr).classSchedule(d)(h)) match {
-            case None => {}
-            case Some(tj) => {
-              val ss = byTeachers.get(tj.teacher) match {
-                case None => new SchoolSchedule
-                case Some(ss) => ss
+      var byTeachers = Map[Teacher,SchoolSchedule]()
+      (FIRST_GRADE to LAST_GRADE).foreach(gr => {
+        (MONDAY to FRIDAY).foreach(d => {
+          (FIRST_HOUR to LAST_HOUR).foreach(h => {
+            Option(schoolSchedule.schoolSchedule(gr).classSchedule(d)(h)) match {
+              case None => {}
+              case Some(tj) => {
+                val ss = byTeachers.get(tj.teacher) match {
+                  case None => new SchoolSchedule
+                  case Some(ss) => ss
+                }
+                tj.classHour.classes.foreach(rgr => ss.schoolSchedule(rgr).classSchedule(d)(h) = tj)
+                byTeachers = byTeachers + (tj.teacher -> ss)
               }
-              tj.classHour.classes.foreach(rgr => ss.schoolSchedule(rgr).classSchedule(d)(h) = tj)
-              byTeachers = byTeachers + (tj.teacher -> ss)
             }
-          }
+          })
         })
       })
-    })
-    byTeachers.foreach(tss => {
-      println(tss._1.name)
-      val byDays = (MONDAY to FRIDAY).map(d => (FIRST_GRADE to LAST_GRADE).map(gr => byTeachers(tss._1).schoolSchedule(gr).classSchedule(d)).toArray)
-      byDays.zipWithIndex.foreach(daySch => {
-        println(DAY_NAME(daySch._2))
-        printTable(daySch._1.map(x=>x.toSeq),false)
+      byTeachers.foreach(tss => {
+        println(tss._1.name)
+        val byDays = (MONDAY to FRIDAY).map(d => (FIRST_GRADE to LAST_GRADE).map(gr => byTeachers(tss._1).schoolSchedule(gr).classSchedule(d)).toArray)
+        byDays.zipWithIndex.foreach(daySch => {
+          println(DAY_NAME(daySch._2))
+          printTable(daySch._1.map(x=>x.toSeq),false)
+        })
       })
-    })
+    }
 
     val byDays = (MONDAY to FRIDAY).map(d => (FIRST_GRADE to LAST_GRADE).map(gr => schoolSchedule.schoolSchedule(gr).classSchedule(d)).toArray)
     byDays.zipWithIndex.foreach(daySch => {
-      println(DAY_NAME(daySch._2))
-      printTable(daySch._1.map(x=>x.toSeq),false)
+        println(DAY_NAME(daySch._2))
+        printTable(daySch._1.map(x=>x.toSeq),false)
     })
 
   }

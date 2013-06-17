@@ -105,7 +105,7 @@ object Rows extends App {
           val t = tiles(ti)
           (x._1 == null || t.job.teacher.name == x._1) &&
           (x._2 == null || (t.job.classHour.subjects diff x._2).size < t.job.classHour.subjects.size) &&
-          (x._3 == null || (x._3 diff t.job.classHour.classes).size == 0)
+          (x._3 == null || (x._3.toSet == t.job.classHour.classes))
         })
       })
     })
@@ -133,10 +133,12 @@ object Rows extends App {
     rowOpen.popFromOpen(ri)
   }
 
+  preassignRow(filterRows(TUESDAY,2,"Martina","Vv",null))
+  preassignRow(filterRows(TUESDAY,3,"Martina","Vv",Set(4)))
+
   preassignRow(filterRows(MONDAY,1,"Tereza",null,Set(5,6)))
   preassignRow(filterRows(FRIDAY,2,"Iva"))
   preassignRow(filterRows(FRIDAY,3,"Iva"))
-//  preassignRow(filterRows(MONDAY,2,null,"Vv",Set(1,3)))
   preassignRow(filterRows(MONDAY,3,List(("Alena",null,null),(null,Set("Vv"),Set(3)),(null,Set("D"),Set(7)))))
   preassignRow(filterRows(MONDAY,4,null,"Vv",Set(3)))
 

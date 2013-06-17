@@ -45,8 +45,6 @@ object Y extends App {
 
   // </preassignment>
 
-  case class Possibility(day:Int,hour:Int)
-
   trait Group {
     def getN:Int
     def getP:Int

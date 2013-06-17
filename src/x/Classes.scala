@@ -2,6 +2,8 @@ package x
 
 import collection.mutable
 
+case class Possibility(day:Int,hour:Int)
+
 case class ClassHour(val subject:String, val classes:Set[Int]) {
   val subjects = """([A-záéěíóúýÁÉÍÓÚÝčďřšťžňČĎŘŠŤŽŇ]+)""".r.findAllIn(subject).matchData.map(_.group(1)).toSet
   val arts = subject.contains("Vv")

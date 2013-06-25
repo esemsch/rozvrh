@@ -50,29 +50,31 @@ object Straightener {
       else (x, filtered.toList)
     }).filter(x => !x._2.isEmpty)
 
-    twoArtsDifferentClasses.foldLeft(List(twoArtsDifferentClasses.head))((l,ths) => {
-      if(!l.contains(ths) && !l.exists(x => x._2.exists(y => y == ths._1))) ths :: l
-      else l
-    }).foreach(x => {
-      val a1 = x._1
-      val a1tj = x._1._2._1.find(_.classHour.arts).get
-      val a2l = x._2
+    if(!twoArtsDifferentClasses.isEmpty) {
+      twoArtsDifferentClasses.foldLeft(List(twoArtsDifferentClasses.head))((l,ths) => {
+        if(!l.contains(ths) && !l.exists(x => x._2.exists(y => y == ths._1))) ths :: l
+        else l
+      }).foreach(x => {
+        val a1 = x._1
+        val a1tj = x._1._2._1.find(_.classHour.arts).get
+        val a2l = x._2
 
-      a2l.exists(a2 => {
-        val a2tj = a2._2._1.find(_.classHour.arts).get
-        a1._2._2.exists(p1 => {
-          a2._2._2.exists(p2 => {
-            if(p1.day == p2.day && math.abs(p1.hour-p2.hour)==1) {
-              a1tj.classHour.classes.foreach(rgr => schoolSchedule.schoolSchedule(rgr).classSchedule(p1.day)(p1.hour) = a1tj)
-              a2tj.classHour.classes.foreach(rgr => schoolSchedule.schoolSchedule(rgr).classSchedule(p2.day)(p2.hour) = a2tj)
-              jobToTJAndPoss += (a1._1 -> ((a1._2._1 diff List(a1tj),a1._2._2 - p1)))
-              jobToTJAndPoss += (a2._1 -> ((a2._2._1 diff List(a2tj),a2._2._2 - p2)))
-              true
-            } else false
+        a2l.exists(a2 => {
+          val a2tj = a2._2._1.find(_.classHour.arts).get
+          a1._2._2.exists(p1 => {
+            a2._2._2.exists(p2 => {
+              if(p1.day == p2.day && math.abs(p1.hour-p2.hour)==1) {
+                a1tj.classHour.classes.foreach(rgr => schoolSchedule.schoolSchedule(rgr).classSchedule(p1.day)(p1.hour) = a1tj)
+                a2tj.classHour.classes.foreach(rgr => schoolSchedule.schoolSchedule(rgr).classSchedule(p2.day)(p2.hour) = a2tj)
+                jobToTJAndPoss += (a1._1 -> ((a1._2._1 diff List(a1tj),a1._2._2 - p1)))
+                jobToTJAndPoss += (a2._1 -> ((a2._2._1 diff List(a2tj),a2._2._2 - p2)))
+                true
+              } else false
+            })
           })
         })
       })
-    })
+    }
 
     jobToTJAndPoss.filter(x => x._1.classHour.twoHour).foreach(x => {
       val twoHourMap = new mutable.HashMap[Set[String],List[TeachersJob]]()

@@ -121,7 +121,8 @@ object Data {
     val BohunkaJobs = Map(
       "ČJ 8/9" -> 1,
       "ČJ 8" -> 3,
-      "ČJ 9" -> 3
+      "ČJ 9" -> 3,
+      "SPV 9" -> 1
     ).map(e => createJob(e._1,e._2,"Bohunka")).toList
 
     val LuckaJobs = Map(

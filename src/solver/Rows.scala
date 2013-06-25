@@ -11,15 +11,17 @@ object Rows extends App {
     Teacher("Iva") -> (Set(WEDNESDAY),(0 to 1)++(4 to 7)),
     Teacher("Bohunka") -> (Set(TUESDAY,WEDNESDAY,THURSDAY),0 to 7),
     Teacher("Eva") -> (Set(TUESDAY,FRIDAY),0 to 7),
+    Teacher("Eva") -> (Set(MONDAY,WEDNESDAY,THURSDAY),0 to 2),
     Teacher("Lucka") -> (Set(FRIDAY),0 to 7),
-    Teacher("Tereza") -> (Set(THURSDAY),5 to 7)).foreach(ta => {
+    Teacher("Tereza") -> (Set(THURSDAY),5 to 7),
+    Teacher("Gita") -> (Set(THURSDAY),3 to 7)).foreach(ta => {
     val index = teachers.indexOf(ta._1)
     ta._2._1.foreach(d => {
       ta._2._2.foreach(h => places(d)(h)(1) = setBit(places(d)(h)(1),index))
     })
   })
 
-    val daysOrder = Array(TUESDAY,WEDNESDAY,MONDAY,FRIDAY,THURSDAY,1000)
+    val daysOrder = Array(THURSDAY,TUESDAY,WEDNESDAY,MONDAY,FRIDAY,1000)
   def freeHours(days:Seq[Int],grades:Seq[Int],hours:Seq[Int]) {
     days.foreach(d => hours.foreach(h => {
       grades.foreach(gr => {
@@ -41,12 +43,15 @@ object Rows extends App {
   tilesSolver.applyTile(tilesLookup("Lucka")(Set(5,6,7,8)),THURSDAY,5)
   tilesSolver.applyTile(tilesLookup("Hana")(Set(5,6,7,8)),THURSDAY,6)
 
-  tilesSolver.applyTile(tilesLookup("Tereza")(Set(7,8)),MONDAY,0)
+  tilesSolver.applyTile(tilesLookup("Tereza")(Set(7,8)),FRIDAY,0)
   tilesSolver.applyTile(tilesLookup("Tereza")(Set(7,8)),WEDNESDAY,0)
+  tilesSolver.applyTile(tilesLookup("Tereza")(Set(3,4)),TUESDAY,5)
+  tilesSolver.applyTile(tilesLookup("Tereza")(Set(5,6)),THURSDAY,0)
   tilesSolver.applyTile(tilesLookup("Hana")(Set(7,8)),TUESDAY,0)
   tilesSolver.applyTile(tilesLookup("Hana")(Set(7,8)),THURSDAY,0)
+  tilesSolver.applyTile(tilesLookup("Bohunka")(Set(8)),FRIDAY,5)
 
-  val teachersOrder = List("Iva","Bohunka")
+  val teachersOrder = List("Iva","Bohunka","Eva")
 
   val rows = H.tileIndexRows.sortBy(r => {
     r.map(ti => {
@@ -114,10 +119,12 @@ object Rows extends App {
     rowOpen.popFromOpen(ri)
   }
 
-//  preassignRow(filterRows(TUESDAY,2,"Iva",null,Set(6)))
-//  preassignRow(filterRows(TUESDAY,3,"Iva",null,Set(6)))
-//  preassignRow(filterRows(WEDNESDAY,2,"Iva",null,Set(7)))
-//  preassignRow(filterRows(WEDNESDAY,3,"Iva",null,Set(7)))
+  preassignRow(filterRows(TUESDAY,4,"Tereza",null,Set(3,4)))
+  preassignRow(filterRows(THURSDAY,1,"Tereza",null,Set(5,6)))
+  preassignRow(filterRows(TUESDAY,2,"Iva",null,Set(6)))
+  preassignRow(filterRows(TUESDAY,3,"Iva",null,Set(6)))
+  preassignRow(filterRows(WEDNESDAY,2,"Iva",null,Set(7)))
+  preassignRow(filterRows(WEDNESDAY,3,"Iva",null,Set(7)))
 
 //  preassignRow(filterRows(MONDAY,1,"Tereza",null,Set(5,6)))
 //  preassignRow(filterRows(TUESDAY,2,"Martina","Vv",null))

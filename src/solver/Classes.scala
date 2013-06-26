@@ -8,7 +8,7 @@ case class ClassHour(val subject:String, val classes:Set[Int]) {
   val subjects = """([A-záéěíóúýÁÉÍÓÚÝčďřšťžňČĎŘŠŤŽŇ]+)""".r.findAllIn(subject).matchData.map(_.group(1)).toSet
   val arts = subject.contains("Vv")
   val mainSubject = Set("Čj","Aj","M").exists(subject.contains(_))
-  val twoHour = Set("Vl", "Př", "D ", "Z", "F", "Ch ", "Inf 8", "Inf 9").exists(subject.contains(_))
+  val twoHour = Set("Vl", "Př", "D ", "Z", "F", "Ch ", "Inf", "Prv", "Pč").exists(subject.contains(_))
   val combinedClasses = classes.size>1
   val pe = subject.contains("Tv")
   val firstSecond = classes.contains(FIRST_GRADE) || classes.contains(FIRST_GRADE+1)
@@ -61,7 +61,9 @@ abstract class NecessaryConstraint extends Constraint {
   def preferred:Boolean = {valid}
   def h:Int = {if(valid) 0 else VERY_HIGH_H}
 
-  def printViolations = println("Violating: "+violators.result.toList.sortBy(x => x._1.teacher.name).map(x => "["+x._1+" @ "+x._2+"]").mkString(","))
+  def printViolations = println("Violating: "+violators.result.toList.sortBy({
+    x => x._1.teacher.name+x._1.classHour.subjects.toList.sorted.mkString+x._1.classHour.lowestClass
+  }).map(x => "["+x._1+" @ "+x._2+"]").mkString("\n"))
 }
 
 abstract class PreferenceConstraint extends Constraint {
@@ -232,32 +234,35 @@ class VvVzdyPoSobe(val schoolSchedule:SchoolSchedule) extends NecessaryConstrain
 
 class DvojhodinnovePredmetyNeVeDnechPoSobe(val schoolSchedule:SchoolSchedule) extends NecessaryConstraint {
   def valid = {
-    val twoHourSubjects: IndexedSeq[IndexedSeq[Array[TeachersJob]]] = (FIRST_GRADE to LAST_GRADE).map(cls => (MONDAY to FRIDAY).map(day => {
+    val twoHourSubjects = (FIRST_GRADE to LAST_GRADE).map(cls => (MONDAY to FRIDAY).map(day => {
       schoolSchedule.schoolSchedule(cls).classSchedule(day).filter(tj => tj!=null && tj.classHour.twoHour)
     }))
     twoHourSubjects.foreach(allDaysForClass => {
-      allDaysForClass.zipWithIndex.foldLeft(Map[TeachersJob,Int]())((twoHoursSubjectsWithDays,oneDay) => {
-        val currentDaysTwoHourSubjects: Array[TeachersJob] = oneDay._1
-        val currentDay: Int = oneDay._2
+      allDaysForClass.zipWithIndex.foldLeft(Map[String,Int]())((twoHoursSubjectsWithDays,oneDay) => {
+        val currentDaysTwoHourSubjects = oneDay._1.map(tj => {
+          (tj.classHour.subjects.toList.sorted.mkString(" "),tj)
+        })
+        val currentDay = oneDay._2
 
-        val twoInTheSameDay = currentDaysTwoHourSubjects.distinct.size != currentDaysTwoHourSubjects.size
+        val twoInTheSameDay = currentDaysTwoHourSubjects.unzip._1.distinct.size != currentDaysTwoHourSubjects.size
         if(twoInTheSameDay) {
-          (currentDaysTwoHourSubjects diff currentDaysTwoHourSubjects.distinct).foreach(v => {
-            val tuple: (TeachersJob, String) = (v, DAY_NAME(currentDay))
-            violators += tuple
+          val violatingSet = (currentDaysTwoHourSubjects.unzip._1 diff currentDaysTwoHourSubjects.unzip._1.distinct).toSet
+          currentDaysTwoHourSubjects.foreach(v => {
+            if(violatingSet.contains(v._1)) {
+              val tuple = (v._2, DAY_NAME(currentDay))
+              violators += tuple
+            }
           })
         }
 
         currentDaysTwoHourSubjects.foreach(subj => {
-          if(twoHoursSubjectsWithDays.get(subj).exists(day => currentDay-day <= 1)) {
-            val tuple1: (TeachersJob, String) = (subj, DAY_NAME(currentDay))
-            val tuple2: (TeachersJob, String) = (subj, DAY_NAME(twoHoursSubjectsWithDays(subj)))
+          if(twoHoursSubjectsWithDays.get(subj._1).exists(day => currentDay-day <= 1)) {
+            val tuple1 = (subj._2, DAY_NAME(currentDay)+" - "+DAY_NAME(twoHoursSubjectsWithDays(subj._1)))
             violators += tuple1
-            violators += tuple2
           }
         })
 
-        currentDaysTwoHourSubjects.foldLeft(twoHoursSubjectsWithDays)((m,subj) => m + (subj -> currentDay))
+        currentDaysTwoHourSubjects.foldLeft(twoHoursSubjectsWithDays)((m,subj) => m + (subj._1 -> currentDay))
       })
     })
     printViolations

@@ -41,7 +41,7 @@ object Output {
 
     divide
 
-    printLine((0 to cs(0).size).map(_.toString).toList,"")
+    printLine((1 to cs(0).size).map(_.toString).toList,"")
 
     divide
 
@@ -53,10 +53,14 @@ object Output {
 
   def printSchedule(schoolSchedule:SchoolSchedule, simple:Boolean = true) {
 
+    def printData(cs:Seq[Seq[Any]],leftAxisDays:Boolean) {
+      printTable(cs,leftAxisDays)
+    }
+
     if(!simple) {
       (FIRST_GRADE to LAST_GRADE).foreach(gr => {
         println((gr+1)+". Třída")
-        printCSV(schoolSchedule.schoolSchedule(gr).classSchedule.map(x=>x.toSeq),true)
+        printData(schoolSchedule.schoolSchedule(gr).classSchedule.map(x=>x.toSeq),true)
       })
 
       var byTeachers = Map[Teacher,SchoolSchedule]()
@@ -82,7 +86,7 @@ object Output {
         val byDays = (MONDAY to FRIDAY).map(d => (FIRST_GRADE to LAST_GRADE).map(gr => byTeachers(tss._1).schoolSchedule(gr).classSchedule(d)).toArray)
         byDays.zipWithIndex.foreach(daySch => {
           println(DAY_NAME(daySch._2))
-          printCSV(daySch._1.map(x=>x.toSeq),false)
+          printData(daySch._1.map(x=>x.toSeq),false)
         })
       })
     }
@@ -90,7 +94,7 @@ object Output {
     val byDays = (MONDAY to FRIDAY).map(d => (FIRST_GRADE to LAST_GRADE).map(gr => schoolSchedule.schoolSchedule(gr).classSchedule(d)).toArray)
     byDays.zipWithIndex.foreach(daySch => {
         println(DAY_NAME(daySch._2))
-        printCSV(daySch._1.map(x=>x.toSeq),false)
+      printData(daySch._1.map(x=>x.toSeq),false)
     })
 
   }

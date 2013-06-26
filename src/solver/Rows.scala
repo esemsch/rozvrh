@@ -21,7 +21,8 @@ object Rows extends App {
     })
   })
 
-    val daysOrder = Array(THURSDAY,TUESDAY,WEDNESDAY,MONDAY,FRIDAY,1000)
+  val daysOrder = Array(THURSDAY,TUESDAY,WEDNESDAY,MONDAY,FRIDAY,1000)
+
   def freeHours(days:Seq[Int],grades:Seq[Int],hours:Seq[Int]) {
     days.foreach(d => hours.foreach(h => {
       grades.foreach(gr => {
@@ -42,15 +43,15 @@ object Rows extends App {
   tilesSolver.applyTile(tilesLookup("Lucka")(Set(5,6,7,8)),MONDAY,6)
   tilesSolver.applyTile(tilesLookup("Lucka")(Set(5,6,7,8)),THURSDAY,5)
   tilesSolver.applyTile(tilesLookup("Hana")(Set(5,6,7,8)),THURSDAY,6)
-//
-  tilesSolver.applyTile(tilesLookup("Tereza")(Set(5,6)),TUESDAY,5)
-  tilesSolver.applyTile(tilesLookup("Tereza")(Set(3,4)),THURSDAY,5)
+
+  tilesSolver.applyTile(tilesLookup("Tereza")(Set(5,6)),FRIDAY,5)
+//  tilesSolver.applyTile(tilesLookup("Tereza")(Set(3,4)),THURSDAY,5)
   tilesSolver.applyTile(tilesLookup("Hana")(Set(7,8)),FRIDAY,5)
-  tilesSolver.applyTile(tilesLookup("Hana")(Set(7,8)),THURSDAY,0)
-  tilesSolver.applyTile(tilesLookup("Lucka")(Set(7,8)),MONDAY,0)
-  tilesSolver.applyTile(tilesLookup("Lucka")(Set(7,8)),TUESDAY,5)
-  tilesSolver.applyTile(tilesLookup("Lucka")(Set(7,8)),WEDNESDAY,0)
-  tilesSolver.applyTile(tilesLookup("Alena")(Set(7,8)),FRIDAY,0)
+//  tilesSolver.applyTile(tilesLookup("Hana")(Set(7,8)),THURSDAY,0)
+  tilesSolver.applyTile(tilesLookup("Lucka")(Set(5,6)),MONDAY,7)
+//  tilesSolver.applyTile(tilesLookup("Lucka")(Set(7,8)),TUESDAY,5)
+//  tilesSolver.applyTile(tilesLookup("Lucka")(Set(7,8)),WEDNESDAY,0)
+//  tilesSolver.applyTile(tilesLookup("Alena")(Set(7,8)),FRIDAY,0)
   tilesSolver.applyTile(tilesLookup("Eva")(Set(7,8)),MONDAY,7)
   tilesSolver.applyTile(tilesLookup("Eva")(Set(7,8)),THURSDAY,7)
   tilesSolver.applyTile(tilesLookup("Eva")(Set(4,5)),WEDNESDAY,5)
@@ -123,18 +124,19 @@ object Rows extends App {
     rowOpen.popFromOpen(ri)
   }
 
-  preassignRow(filterRows(TUESDAY,4,"Tereza",null,Set(5,6)))
-  preassignRow(filterRows(THURSDAY,4,"Tereza",null,Set(3,4)))
+//  preassignRow(filterRows(TUESDAY,4,"Tereza",null,Set(5,6)))
+  preassignRow(filterRows(MONDAY,4,"Eva",null,Set(8)))
+//  preassignRow(filterRows(MONDAY,4,"Eva",null,Set(5,6)))
   preassignRow(filterRows(TUESDAY,2,"Iva",null,Set(6)))
   preassignRow(filterRows(TUESDAY,3,"Iva",null,Set(7)))
   preassignRow(filterRows(WEDNESDAY,2,"Iva",null,Set(6)))
   preassignRow(filterRows(WEDNESDAY,3,"Iva",null,Set(7)))
-  preassignRow(filterRows(MONDAY,4,"Eva",null,Set(5,6)))
+
+  preassignRow(filterRows(MONDAY,3,List(("Alena",null,Set(5,6)),("Hana",null,Set(7)))))
 
 //  preassignRow(filterRows(MONDAY,1,"Tereza",null,Set(5,6)))
 //  preassignRow(filterRows(TUESDAY,2,"Martina","Vv",null))
 //  preassignRow(filterRows(TUESDAY,3,"Martina","Vv",Set(4)))
-//  preassignRow(filterRows(MONDAY,3,List(("Alena",null,null),(null,Set("Vv"),Set(3)),(null,Set("D"),Set(7)))))
 //  preassignRow(filterRows(MONDAY,4,null,"Vv",Set(3)))
 //  preassignRow(filterRows(THURSDAY,2,"Alena"))
 //  preassignRow(filterRows(THURSDAY,3,"Alena"))
@@ -268,16 +270,21 @@ object Rows extends App {
   maxRowSearch(0,1)
 
   Output.printSchedule(Conversions.remapGrades(Conversions.tilesToSchoolSchedule(places,tiles,placed)))
-//  val schoolSchedule = Straightener.straighten2(Conversions.tilesToJobsArray(places,tiles,placed),jobs._2.toMap)
 
-  val preStraightenings = Map[Job,List[(Int,Int,String)]](
-    (tilesLookup("Gita")(Set(3,4)).job) -> List((MONDAY,7,"Hv"),(WEDNESDAY,2,"M"),(THURSDAY,2,"M"),(TUESDAY,1,"M"))
-  )
-  val schoolSchedule = Straightener.straighten2(Conversions.tilesToJobsArray(places,tiles,placed),jobs._2.toMap, preStraightenings)
+  val schoolSchedule = Straightener.straighten2(Conversions.tilesToJobsArray(places,tiles,placed),jobs._2.toMap)
 
-  Output.printSchedule(Conversions.remapGrades(schoolSchedule))
+//  val preStraightenings = Map[Job,List[(Int,Int,String)]](
+//    (tilesLookup("Gita")(Set(3,4)).job) -> List((MONDAY,7,"Hv"),(WEDNESDAY,2,"M"),(THURSDAY,2,"M"),(TUESDAY,1,"M")),
+//    (tilesLookup("Hana")(Set(5,6)).job) -> List((THURSDAY,1,"D")),
+//    (tilesLookup("Hana")(Set(5)).job) -> List((FRIDAY,1,"Z"),(MONDAY,1,"D")),
+//    (tilesLookup("Hana")(Set(6)).job) -> List((FRIDAY,0,"Z"),(MONDAY,0,"D")),
+//    (tilesLookup("Hana")(Set(7,8)).job) -> List((FRIDAY,5,"D")),
+//    (tilesLookup("Hana")(Set(7)).job) -> List((FRIDAY,4,"Z")),
+//    (tilesLookup("Hana")(Set(8)).job) -> List((FRIDAY,0,"Z"),(MONDAY,0,"D"))
+//  )
+//  val schoolSchedule = Straightener.straighten2(Conversions.tilesToJobsArray(places,tiles,placed),jobs._2.toMap, preStraightenings)
 
-  Output.printSchedule(Conversions.remapGrades(schoolSchedule),false)
+  Output.printSchedule(Conversions.remapGrades(schoolSchedule),true)
 
   Checker.check(schoolSchedule,jobs._2.flatMap(x => x._2).toList)
 }

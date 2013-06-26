@@ -267,12 +267,21 @@ class DvojhodinnovePredmetyNeVeDnechPoSobe(val schoolSchedule:SchoolSchedule) ex
 
 class StejnyPredmetNeVTenSamyDen(val schoolSchedule:SchoolSchedule) extends PreferenceConstraint {
   def h = {
-    schoolSchedule.schoolSchedule.foldLeft(0)((totalPerSchool,cs) => {
-      totalPerSchool + cs.classSchedule.foldLeft(0)((totalPerClass,ds) => {
+    val buf = new mutable.ListBuffer[(String,Int,Int)]()
+    val hOut = schoolSchedule.schoolSchedule.zipWithIndex.foldLeft(0)((totalPerSchool,csi) => {
+      val cs = csi._1
+      totalPerSchool + cs.classSchedule.zipWithIndex.foldLeft(0)((totalPerClass,dsi) => {
+        val ds = dsi._1
         val subjectsOfTheDay: Array[String] = ds.filter(tj => tj != null && !tj.classHour.arts && !tj.classHour.pe).map(tj => tj.classHour.subject)
-        totalPerClass + (subjectsOfTheDay.size - subjectsOfTheDay.distinct.size)
+        val hInc = totalPerClass + (subjectsOfTheDay.size - subjectsOfTheDay.distinct.size)
+        if(hInc>0) {
+          (subjectsOfTheDay diff subjectsOfTheDay.distinct).foreach(x => buf ++= List((x,csi._2,dsi._2)))
+        }
+        hInc
       })
     })
+    println("Violating: "+buf.map(x => x._1+" @ "+x._2+". třída "+DAY_NAME(x._3)).mkString(", "))
+    hOut
   }
 }
 

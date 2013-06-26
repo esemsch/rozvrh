@@ -49,4 +49,28 @@ object Conversions {
     schoolSchedule
   }
 
+  def remapGrades(ss:SchoolSchedule) = {
+    val schoolSchedule = new SchoolSchedule()
+
+    ss.schoolSchedule.zipWithIndex.foreach(gri => gri._1.classSchedule.zipWithIndex.foreach(di => di._1.zipWithIndex.foreach(hi => {
+      val tj = hi._1
+      val gr = gri._2
+      val d = di._2
+      val h = hi._2
+      val ntj = if(tj!=null) {
+        TeachersJob(tj.teacher,ClassHour(tj.classHour.subject.replace("2","1"),if(tj.classHour.classes.contains(1)) {
+          (tj.classHour.classes - 1) + 0
+        } else tj.classHour.classes))
+      } else null
+      schoolSchedule.schoolSchedule(gr).classSchedule(d)(h) = ntj
+    })))
+
+    schoolSchedule.schoolSchedule(FIRST_GRADE+1).classSchedule.zipWithIndex.foreach(x => x._1.zipWithIndex.foreach(y => {
+      schoolSchedule.schoolSchedule(FIRST_GRADE).classSchedule(x._2)(y._2) = y._1
+      schoolSchedule.schoolSchedule(FIRST_GRADE+1).classSchedule(x._2)(y._2) = null
+    }))
+
+    schoolSchedule
+  }
+
 }

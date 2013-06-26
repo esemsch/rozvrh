@@ -4,7 +4,7 @@ import scala.collection.mutable
 
 object Straightener {
 
-  def straighten2(schedule:Array[Array[Array[Job]]],realJobs:Map[Job,List[TeachersJob]]) = {
+  def straighten2(schedule:Array[Array[Array[Job]]],realJobs:Map[Job,List[TeachersJob]],preStraightenings:Map[Job,List[(Int,Int,String)]] = Map()) = {
     val possSort = (p1:Possibility,p2:Possibility) => (p1.day<p2.day) || (p1.day==p2.day && p1.hour<p2.hour)
 
     val jobToTJAndPoss = new mutable.HashMap[Job,(List[TeachersJob],Set[Possibility])]()
@@ -25,6 +25,20 @@ object Straightener {
     )
 
     val schoolSchedule = new SchoolSchedule
+
+    preStraightenings.foreach(x => {
+      val job = x._1
+      x._2.foreach(y => {
+        val d = y._1
+        val h = y._2
+        val subj = y._3
+        val e = jobToTJAndPoss(job)
+        val tj = e._1.find(tjx => tjx.classHour.subjects.contains(subj)).get
+        tj.classHour.classes.foreach(ci => schoolSchedule.schoolSchedule(ci).classSchedule(d)(h) = tj)
+
+        jobToTJAndPoss += (job -> (e._1 diff List(tj), e._2 - Possibility(d, h)))
+      })
+    })
 
     jobToTJAndPoss.filter(x => x._1.classHour.arts && (2 <= x._2._1.foldLeft(0)((tot,y) => tot + (if(y.classHour.arts) 1 else 0)))).foreach(x => {
       val artTjs = x._2._1.filter(y => y.classHour.arts)

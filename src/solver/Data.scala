@@ -43,16 +43,16 @@ object Data {
     }
 
     val TerezaJobs = Map(
-      "AJ 8/9" -> 1,
-      "AJ 8" -> 2,
-      "AJ 9" -> 2,
-      "AJ 6/7" -> 2,
-      "AJ 6" -> 1,
-      "AJ 7" -> 1,
+      "Aj 8/9" -> 1,
+      "Aj 8" -> 2,
+      "Aj 9" -> 2,
+      "Aj 6/7" -> 2,
+      "Aj 6" -> 1,
+      "Aj 7" -> 1,
       "Hv 2/3" -> 1,
-      "AJ 4/5" -> 1,
-      "AJ 4" -> 2,
-      "AJ 5" -> 2,
+      "Aj 4/5" -> 1,
+      "Aj 4" -> 2,
+      "Aj 5" -> 2,
       "Vv 6/7" -> 2,
       "Vv 8/9" -> 1,
       "Vv 2/3" -> 1,
@@ -61,24 +61,24 @@ object Data {
     ).map(e => createJob(e._1,e._2,"Tereza")).toList
 
     val AlenaJobs = Map(
-      "M 6/7" -> 2,
-      "M 6" -> 3,
-      "M 7" -> 3,
+      "M 6/7" -> 3,
+      "M 6" -> 2,
+      "M 7" -> 2,
       "F 6/7" -> 1,
       "F 6" -> 1,
       "F 7" -> 1,
-      "M 8/9" -> 2,
-      "M 8" -> 3,
-      "M 9" -> 3,
+      "M 8/9" -> 1,
+      "M 8" -> 4,
+      "M 9" -> 4,
       "F 8/9" -> 1,
       "F 8" -> 1,
       "F 9" -> 1
     ).map(e => createJob(e._1,e._2,"Alena")).toList
 
     val HanaJobs = Map(
-      "ČJ 6/7" -> 1,
-      "ČJ 6" -> 3,
-      "ČJ 7" -> 3,
+      "Čj 6/7" -> 1,
+      "Čj 6" -> 3,
+      "Čj 7" -> 3,
       "D 6/7" -> 1,
       "D 6" -> 1,
       "D 7" -> 1,
@@ -96,8 +96,8 @@ object Data {
     ).map(e => createJob(e._1,e._2,"Hana")).toList
 
     val GitaJobs = Map(
-      "ČJ 4/5" -> 7,
-      "ČJ 4" -> 1,
+      "Čj 4/5" -> 7,
+      "Čj 4" -> 1,
       "M 4/5" -> 5,
       "Př 4/5" -> 1,
       "Př 5" -> 1,
@@ -111,17 +111,17 @@ object Data {
     val MartinaJobs = Map(
       "Prv 2/3" -> 2,
       "Prv 3" -> 1,
-      "AJ 3" -> 3,
-      "ČJ 2/3" -> 9,
+      "Aj 3" -> 3,
+      "Čj 2/3" -> 9,
       "M 2/3" -> 4,
       "M 3" -> 1,
       "Tv 2/3" -> 2
     ).map(e => createJob(e._1,e._2,"Martina")).toList
 
     val BohunkaJobs = Map(
-      "ČJ 8/9" -> 1,
-      "ČJ 8" -> 3,
-      "ČJ 9" -> 3,
+      "Čj 8/9" -> 1,
+      "Čj 8" -> 3,
+      "Čj 9" -> 3,
       "SPV 9" -> 1
     ).map(e => createJob(e._1,e._2,"Bohunka")).toList
 
@@ -137,7 +137,7 @@ object Data {
       "Ch 9" -> 1,
       "Hv 8/9" -> 1,
       "Tv_Dív 6/7/8/9" -> 2,
-      "VO 6/7" -> 1,
+      "Vo 6/7" -> 1,
       "Rv 7" -> 1
     ).map(e => createJob(e._1,e._2,"Lucka")).toList
 
@@ -145,7 +145,7 @@ object Data {
       "Inf 5/6" -> 1,
       "Inf 9" -> 2,
       "Inf 8" -> 1,
-      "VO 8/9" -> 1,
+      "Vo 8/9" -> 1,
       "Rv 8/9" -> 1,
       "Pč 4/5" -> 1,
       "Pč 6/7" -> 1,
@@ -154,7 +154,7 @@ object Data {
 
     val IvaJobs = Map(
       "Rj 7" -> 2,
-      "RJ 8" -> 2
+      "Rj 8" -> 2
     ).map(e => createJob(e._1,e._2,"Iva")).toList
 
     TerezaJobs ++ AlenaJobs ++ HanaJobs ++ GitaJobs ++ MartinaJobs ++ BohunkaJobs ++ LuckaJobs ++ EvaJobs ++ IvaJobs

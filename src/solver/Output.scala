@@ -2,6 +2,21 @@ package solver
 
 object Output {
 
+  def printCSV(cs:Seq[Seq[Any]],leftAxisDays:Boolean) {
+    def printLine(ds:Seq[Any],leftAxis:String) {
+      print(leftAxis+",")
+      ds.foreach(x => {
+        val tj: String = if (x==null) "" else x.toString
+        print(tj+",")
+      })
+      print("\n")
+    }
+
+    cs.zipWithIndex.foreach(ds => {
+      printLine(ds._1,if(leftAxisDays) DAY_NAME(ds._2) else (ds._2+1).toString+".")
+    })
+  }
+
   def printTable(cs:Seq[Seq[Any]],leftAxisDays:Boolean) {
     val leftAxisPad = if(leftAxisDays) 10 else 3
 
@@ -38,14 +53,10 @@ object Output {
 
   def printSchedule(schoolSchedule:SchoolSchedule, simple:Boolean = true) {
 
-    def printClassSchedule(cs:ClassSchedule) {
-      printTable(cs.classSchedule.map(x=>x.toSeq),true)
-    }
-
     if(!simple) {
       (FIRST_GRADE to LAST_GRADE).foreach(gr => {
         println((gr+1)+". Třída")
-        printClassSchedule(schoolSchedule.schoolSchedule(gr))
+        printCSV(schoolSchedule.schoolSchedule(gr).classSchedule.map(x=>x.toSeq),true)
       })
 
       var byTeachers = Map[Teacher,SchoolSchedule]()
@@ -71,7 +82,7 @@ object Output {
         val byDays = (MONDAY to FRIDAY).map(d => (FIRST_GRADE to LAST_GRADE).map(gr => byTeachers(tss._1).schoolSchedule(gr).classSchedule(d)).toArray)
         byDays.zipWithIndex.foreach(daySch => {
           println(DAY_NAME(daySch._2))
-          printTable(daySch._1.map(x=>x.toSeq),false)
+          printCSV(daySch._1.map(x=>x.toSeq),false)
         })
       })
     }
@@ -79,7 +90,7 @@ object Output {
     val byDays = (MONDAY to FRIDAY).map(d => (FIRST_GRADE to LAST_GRADE).map(gr => schoolSchedule.schoolSchedule(gr).classSchedule(d)).toArray)
     byDays.zipWithIndex.foreach(daySch => {
         println(DAY_NAME(daySch._2))
-        printTable(daySch._1.map(x=>x.toSeq),false)
+        printCSV(daySch._1.map(x=>x.toSeq),false)
     })
 
   }

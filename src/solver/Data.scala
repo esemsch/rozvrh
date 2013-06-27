@@ -35,12 +35,16 @@ object Data {
     (mergedJobs,jobsMapping)
   }
 
+  def createClassHour(s:String) = {
+    val clss = s.filter(_.isDigit).map(_.toString.toInt-1).toSet
+    new ClassHour(s,clss)
+  }
+
+  def createJob(s:String, cnt:Int, teacher:String) = {
+    Job(Teacher(teacher),createClassHour(s),cnt)
+  }
+
   def data2 = {
-    def createJob(s:String, i:Int, n:String) = {
-      val clss = s.filter(_.isDigit).map(_.toString.toInt-1).toSet
-      val ch = new ClassHour(s,clss)
-      Job(Teacher(n),ch,i)
-    }
 
     val TerezaJobs = Map(
       "Aj 8/9" -> 1,

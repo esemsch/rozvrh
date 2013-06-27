@@ -138,6 +138,38 @@ class UcitelUciVUrciteHodiny(val schoolSchedule:SchoolSchedule, t:Teacher, hours
   }
 }
 
+class UcitelNeuciVicNez5(val schoolSchedule:SchoolSchedule) extends NecessaryConstraint {
+  def valid = {
+    val buf = new mutable.ListBuffer[String]()
+    (MONDAY to FRIDAY).foreach(d => {
+      val dayLoad = (FIRST_GRADE to LAST_GRADE).foldLeft(new mutable.HashMap[String,Int]())((tot,gr) => {
+        (FIRST_HOUR to LAST_HOUR).foreach(h => {
+          val tj = schoolSchedule.schoolSchedule(gr).classSchedule(d)(h)
+          Option(tj) match {
+            case Some(tjx) => {
+              if(gr == tjx.classHour.lowestClass) {
+                tot.get(tjx.teacher.name) match {
+                  case None => tot += (tjx.teacher.name -> 1)
+                  case Some(cnt) => tot += (tjx.teacher.name -> (cnt+1))
+                }
+              }
+            }
+            case _ => {}
+          }
+        })
+        tot
+      })
+      dayLoad.foreach(x => {
+        if(x._2 > 5) {
+          buf ++= List(x._1 + " @ "+DAY_NAME(d)+" "+x._2)
+        }
+      })
+    })
+    println("Viloating: "+buf.mkString("\n"))
+    buf.isEmpty
+  }
+}
+
 class Druzinar(val schoolSchedule:SchoolSchedule, t:Teacher, normalHour:Int) extends NecessaryConstraint {
   def valid = {
     val findEndOfDay: (Int) => Int = day => schoolSchedule.schoolSchedule.map({

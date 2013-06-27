@@ -126,7 +126,7 @@ object Straightener {
           val minHour = poss.filter(p => p.day == d).foldLeft(100)((min,p) => if(min>p.hour)p.hour else min)
           val uniques = tjs.toSet.toList.sortWith((tj1,tj2) => if(minHour>5){
             !tj1.classHour.mainSubject
-          } else true)
+          } else tj1.classHour.mainSubject)
           val tj = uniques(h%uniques.size)
           tjs = tjs diff List(tj)
           tjsByDays.get(d) match {
@@ -137,7 +137,7 @@ object Straightener {
       })
       tjsByDays.foreach(e => {
         val d = e._1
-        val tjs = e._2
+        val tjs = e._2.reverse
         val possFilt = poss.filter(p => p.day == d)
         tjs.zipWithIndex.foreach(tj => {
           val p = possFilt(tj._2)

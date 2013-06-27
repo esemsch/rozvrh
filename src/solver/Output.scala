@@ -1,5 +1,7 @@
 package solver
 
+import java.io.{File, PrintWriter}
+
 object Output {
 
   def printCSV(cs:Seq[Seq[Any]],leftAxisDays:Boolean) {
@@ -97,6 +99,28 @@ object Output {
       printData(daySch._1.map(x=>x.toSeq),false)
     })
 
+  }
+
+  def saveToFile(schoolSchedule:SchoolSchedule,file:String) {
+    var buf = ""
+
+    def line(ds:Seq[Any]) {
+      ds.foreach(x => {
+        val tj: String = if (x==null) "" else x.toString
+        buf = buf + (tj+",")
+      })
+      buf = buf + "\n"
+    }
+
+    val byDays = (MONDAY to FRIDAY).map(d => (FIRST_GRADE to LAST_GRADE).map(gr => schoolSchedule.schoolSchedule(gr).classSchedule(d)).toArray)
+    byDays.zipWithIndex.foreach(daySch => {
+      daySch._1.map(x=>x.toSeq).foreach(y => line(y))
+    })
+
+    val writer = new PrintWriter(new File(file))
+    writer.write(buf)
+    writer.flush
+    writer.close
   }
 
   def printTiles(places:Array[Array[Array[Int]]],tiles:Seq[Tile],placed:Seq[Array[Int]]) {

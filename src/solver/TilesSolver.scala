@@ -222,7 +222,7 @@ class TilesSolver(tiles:Array[Tile],places:Array[Array[Array[Int]]],counts:Array
 object TilesSolver {
   def factory = {
     val teachers = Data.data._2.toList
-    val jobs = Data.data3
+    val jobs = Data.data4
     val tiles = jobs._1.map(j => {
       val clss = j.classHour.classes.foldLeft(0)((result,cls) => setBit(result,cls-1))
       val teacher = setBit(0,teachers.indexOf(j.teacher))

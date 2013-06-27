@@ -35,6 +35,39 @@ object Data {
     (mergedJobs,jobsMapping)
   }
 
+  def data4 = {
+    def tag(tj:Job) = if(tj.classHour.mainSubject) "Main" else "Secondary"
+
+    val jobs = data2
+    val jobsMapping = new mutable.HashMap[Job,List[TeachersJob]]()
+    val mergedJobs = jobs.foldLeft(Map[Teacher,Map[(Set[Int],String),(Int, String, List[TeachersJob])]]())((map,job) => {
+      val newRecord: (Teacher, Map[(Set[Int],String), (Int, String, List[TeachersJob])]) = map.get(job.teacher) match {
+        case None => {
+          job.teacher -> Map((job.classHour.classes,tag(job)) ->(job.count, job.classHour.subjects.mkString(","), job.toTeachersJobs))
+        }
+        case Some(clsToReduced) => {
+          clsToReduced.get((job.classHour.classes,tag(job))) match {
+            case None => {
+              job.teacher -> (clsToReduced + ((job.classHour.classes,tag(job)) ->(job.count, job.classHour.subjects.mkString(","), job.toTeachersJobs)))
+            }
+            case Some(reduced) => {
+              job.teacher -> (clsToReduced + ((job.classHour.classes,tag(job)) ->(reduced._1 + job.count, reduced._2 + {
+                val newSubjs = job.classHour.subjects.filter(sbj => !reduced._2.endsWith(sbj) && !reduced._2.contains(sbj+",")).mkString(",")
+                if (!newSubjs.isEmpty) "," + newSubjs else ""
+              },job.toTeachersJobs ::: reduced._3)))
+            }
+          }
+        }
+      }
+      map + newRecord
+    }).flatMap(tm => tm._2.map(cls => {
+      val job = Job(tm._1,ClassHour(cls._2._2+" "+cls._1._1.map(c=>c+1).mkString("/"),cls._1._1),cls._2._1)
+      jobsMapping += (job -> cls._2._3)
+      job
+    })).toList
+    (mergedJobs,jobsMapping)
+  }
+
   def createClassHour(s:String) = {
     val clss = s.filter(_.isDigit).map(_.toString.toInt-1).toSet
     new ClassHour(s,clss)

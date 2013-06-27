@@ -21,7 +21,10 @@ object Rows extends App {
     })
   })
 
-  val daysOrder = Array(THURSDAY,TUESDAY,WEDNESDAY,MONDAY,FRIDAY,1000)
+  val daysOrder = Array(THURSDAY,TUESDAY,WEDNESDAY,MONDAY,FRIDAY,
+    THURSDAY,TUESDAY,WEDNESDAY,MONDAY,FRIDAY,
+    THURSDAY,TUESDAY,WEDNESDAY,MONDAY,FRIDAY,
+    THURSDAY,TUESDAY,WEDNESDAY,MONDAY,FRIDAY,1000)
 
   def freeHours(days:Seq[Int],grades:Seq[Int],hours:Seq[Int]) {
     days.foreach(d => hours.foreach(h => {
@@ -54,7 +57,7 @@ object Rows extends App {
 //  tilesSolver.applyTile(tilesLookup("Lucka")(Set(7,8)),TUESDAY,0)
 //  tilesSolver.applyTile(tilesLookup("Lucka")(Set(7,8)),WEDNESDAY,5)
 //  tilesSolver.applyTile(tilesLookup("Alena")(Set(7,8)),FRIDAY,0)
-//  tilesSolver.applyTile(tilesLookup("Eva")(Set(7,8)),MONDAY,7)
+  tilesSolver.applyTile(tilesLookup("Eva")(Set(7,8)),MONDAY,7)
 //  tilesSolver.applyTile(tilesLookup("Eva")(Set(7,8)),THURSDAY,7)
 //  tilesSolver.applyTile(tilesLookup("Eva")(Set(4,5)),WEDNESDAY,5)
 
@@ -103,12 +106,12 @@ object Rows extends App {
       })
     })
 
-    ret.foreach(ri => {
-      val r = rows(ri)
-      println(r.map(ti => tiles(ti).job).mkString(","))
-    })
-
-    println("===============================================")
+//    ret.foreach(ri => {
+//      val r = rows(ri)
+//      println(r.map(ti => tiles(ti).job).mkString(","))
+//    })
+//
+//    println("===============================================")
     (day,hour,ret)
   }
   def filterRows(day:Int,hour:Int,teacher:String):(Int,Int,List[Int]) = {
@@ -186,10 +189,10 @@ object Rows extends App {
     }
     def teachersSpread = {
       val tilesPerThisDay = tilesPerDay.filter(td => td._1(day)>0 && !teachersOrder.contains(td._2.job.teacher.name)).map(td => (td._2,td._1(day)))
-      rowTiles.foldLeft(Integer.MIN_VALUE)((max,t) => {
+      rowTiles.foldLeft(0.0)((sum,t) => {
         val sumT = tilesPerThisDay.filter(x => x._1.teacher == t.teacher).foldLeft(0)((a,b) => a + b._2)
-        if(max > sumT) max else sumT
-      })
+        sum + sumT
+      })/rowTiles.size
     }
     def spread = {
       val tilesPerThisDay = tilesPerDay.filter(td => td._1(day)>0)
@@ -205,13 +208,11 @@ object Rows extends App {
       }
     }
     def main = {
-      if(hour>=1 && hour <=2) {
-        rowTiles.foldLeft(0)((tot,t) => tot + (if(t.job.classHour.mainSubject) -2 else 0))
-      } else {
-        rowTiles.foldLeft(0)((tot,t) => tot + (if(t.job.classHour.mainSubject) 2 else 0))
-      }
+      val coeff = if(hour>=1 && hour <=2) -1 else 1
+      rowTiles.foldLeft(0)((tot,t) => tot + (if(t.job.classHour.mainSubject) coeff*t.job.classHour.classes.size else 0))
     }
-    //    println(rowTiles.map(t=>t.job).mkString(",")+" --- Teachers = "+teachers+" Spread = "+spread+" Combined = "+combined+" Main = "+main)
+//        println(rowTiles.map(t=>t.job).mkString(",")+" --- Teachers = "+teachers+" Spread = "+spread+" Combined = "+combined+" Main = "+main+" Teachers spread = "+teachersSpread)
+//    spread
     teachers + spread + combined + main + teachersSpread
   }
 
@@ -231,14 +232,14 @@ object Rows extends App {
       true
     }
     else if(hour<=7 && tilesSolver.hourComplete(day,hour)) {
-      search(dayIndex,(hour+1))
+      search((dayIndex+1),if(day==daysOrder(4)) (hour+1) else hour)
     }
 //    else if(((day==TUESDAY || day==WEDNESDAY) && hour>=6)||((day != TUESDAY && day != WEDNESDAY) && hour>=5)) {
 //    else if(((day==TUESDAY || day==WEDNESDAY || day==FRIDAY) && hour>=6)||((day != TUESDAY && day != WEDNESDAY && day!=FRIDAY) && hour>=5)) {
 //    else if(((day==TUESDAY) && hour>=6)||((day != TUESDAY) && hour>=5)) {
-    else if(hour>=5) {
-      search((dayIndex+1),1)
-    }
+//    else if(hour>=5) {
+//      search((dayIndex+1),1)
+//    }
     else if(rowOpen.isEmpty) {
       false
     }
@@ -246,7 +247,9 @@ object Rows extends App {
       rowOpen.options(day,hour).exists(rowInd => {
         applyRow(rowInd,day,hour)
         rowOpen.popFromOpen(rowInd)
-        if(!search(dayIndex,(hour+1))) {
+        Output.printTiles(places,tiles,placed)
+        Console.readLine()
+        if(!search(dayIndex+1,if(day==daysOrder(4)) (hour+1) else hour)) {
           revertRow(rowInd,day,hour)
           rowOpen.pushToOpen(rowInd)
           false

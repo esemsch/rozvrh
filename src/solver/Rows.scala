@@ -58,8 +58,8 @@ object Rows extends App {
 //  tilesSolver.applyTile(tilesLookup("Lucka")(Set(7,8)),WEDNESDAY,5)
 //  tilesSolver.applyTile(tilesLookup("Alena")(Set(7,8)),FRIDAY,0)
   tilesSolver.applyTile(tilesLookup("Eva")(Set(7,8)),MONDAY,7)
-//  tilesSolver.applyTile(tilesLookup("Eva")(Set(7,8)),THURSDAY,7)
-//  tilesSolver.applyTile(tilesLookup("Eva")(Set(4,5)),WEDNESDAY,5)
+  tilesSolver.applyTile(tilesLookup("Eva")(Set(7,8)),THURSDAY,7)
+  tilesSolver.applyTile(tilesLookup("Eva")(Set(7,8)),WEDNESDAY,5)
 
   val teachersOrder = List("Iva","Bohunka")
 
@@ -141,7 +141,7 @@ object Rows extends App {
   preassignRow(filterRows(TUESDAY,3,"Iva",null,Set(7)))
 
   preassignRow(filterRows(WEDNESDAY,2,"Iva",null,Set(6)))
-  preassignRow(filterRows(WEDNESDAY,3,"Iva",null,Set(7)))
+  preassignRow(filterRows(WEDNESDAY,3,List(("Iva",null,Set(7)),("Eva",null,Set(8)))))
 
 //  preassignRow(filterRows(FRIDAY,1,"Bohunka",null,Set(7)))
 //  preassignRow(filterRows(FRIDAY,2,"Bohunka",null,Set(8)))
@@ -208,7 +208,7 @@ object Rows extends App {
       }
     }
     def main = {
-      val coeff = if(hour>=1 && hour <=2) -1 else 1
+      val coeff = if(hour>=1 && hour <=4) -1 else 1
       rowTiles.foldLeft(0)((tot,t) => tot + (if(t.job.classHour.mainSubject) coeff*t.job.classHour.classes.size else 0))
     }
 //        println(rowTiles.map(t=>t.job).mkString(",")+" --- Teachers = "+teachers+" Spread = "+spread+" Combined = "+combined+" Main = "+main+" Teachers spread = "+teachersSpread)
@@ -247,8 +247,8 @@ object Rows extends App {
       rowOpen.options(day,hour).exists(rowInd => {
         applyRow(rowInd,day,hour)
         rowOpen.popFromOpen(rowInd)
-        Output.printTiles(places,tiles,placed)
-        Console.readLine()
+//        Output.printTiles(places,tiles,placed)
+//        Console.readLine()
         if(!search(dayIndex+1,if(day==daysOrder(4)) (hour+1) else hour)) {
           revertRow(rowInd,day,hour)
           rowOpen.pushToOpen(rowInd)

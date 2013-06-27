@@ -2,7 +2,7 @@ package solver
 
 object Finisher extends App {
 
-  val ss = Conversions.remapGrades(Input.readScheduleFromFile("schedule_bkp_spread.txt"))
+  val ss = Conversions.remapGrades(Input.readScheduleFromFile("schedule_new.txt"))
 
   Output.printSchedule(ss)
 //  Output.printSchedule(ss,false)

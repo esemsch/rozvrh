@@ -88,7 +88,7 @@ class TilesSolver(tiles:Array[Tile],places:Array[Array[Array[Int]]],counts:Array
       depthCounter(depth) = depthCounter(depth) + 1
       if(cnt%1000000==0) {
         println(cnt)
-        println(depthCounter.filter(x => x>0).zipWithIndex.map(x=>x._2+" = "+x._1).mkString("\n"))
+//        println(depthCounter.filter(x => x>0).zipWithIndex.map(x=>x._2+" = "+x._1).mkString("\n"))
       }
 //      if(cnt%10000000==0) {
 //        Output.printTiles(places,tiles,placed)
@@ -228,13 +228,13 @@ object TilesSolver {
       val teacher = setBit(0,teachers.indexOf(j.teacher))
       Tile(clss,teacher,-1,j)
     }).zipWithIndex.map(ti => Tile(ti._1.classes,ti._1.teacher,ti._2,ti._1.job)).toArray
-    val tilesLookup = tiles.foldLeft(Map[String,Map[Set[Int],Tile]]())((map,tile) => {
+    val tilesLookup = tiles.foldLeft(Map[String,Map[(Set[Int],Boolean),Tile]]())((map,tile) => {
       map.get(tile.job.teacher.name) match {
         case None => {
-          map + (tile.job.teacher.name -> Map(tile.job.classHour.classes -> tile))
+          map + (tile.job.teacher.name -> Map((tile.job.classHour.classes,tile.job.classHour.mainSubject) -> tile))
         }
         case Some(clsToTile) => {
-          map + (tile.job.teacher.name -> (clsToTile + (tile.job.classHour.classes -> tile)))
+          map + (tile.job.teacher.name -> (clsToTile + ((tile.job.classHour.classes,tile.job.classHour.mainSubject) -> tile)))
         }
       }
     })

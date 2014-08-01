@@ -9,7 +9,7 @@ object Checker {
     val neprerusene = new NepreruseneVyucovaniDopoledne(schoolSchedule)
     val exklusivitaUcitele = new JedenUcitelJednaHodina(schoolSchedule)
     val vvVzdyPoSobe = new VvVzdyPoSobe(schoolSchedule)
-    val dvojHodinoveNePoSobe = new DvojhodinnovePredmetyNeVeDnechPoSobe(schoolSchedule)
+    val dvojHodinoveNePoSobe = new DvojhodinovePredmetyNeVeDnechPoSobe(schoolSchedule)
     val stejnyNeVeStejnyDen = new StejnyPredmetNeVTenSamyDen(schoolSchedule)
     val hlavniPredmety = new HlavniPredmetyRano(schoolSchedule)
     val spojenePredmety = new SpojenePredmetyRano(schoolSchedule)

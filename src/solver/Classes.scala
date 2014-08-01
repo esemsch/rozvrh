@@ -264,7 +264,7 @@ class VvVzdyPoSobe(val schoolSchedule:SchoolSchedule) extends NecessaryConstrain
 
 }
 
-class DvojhodinnovePredmetyNeVeDnechPoSobe(val schoolSchedule:SchoolSchedule) extends NecessaryConstraint {
+class DvojhodinovePredmetyNeVeDnechPoSobe(val schoolSchedule:SchoolSchedule) extends NecessaryConstraint {
   def valid = {
     val twoHourSubjects = (FIRST_GRADE to LAST_GRADE).map(cls => (MONDAY to FRIDAY).map(day => {
       schoolSchedule.schoolSchedule(cls).classSchedule(day).filter(tj => tj!=null && tj.classHour.twoHour)

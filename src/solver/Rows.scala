@@ -6,15 +6,17 @@ object Rows extends App {
 
   val (tilesSolver,tiles,places,counts,placed,mapToPlaced,tilesPerDay,jobs,tilesLookup,teachers) = TilesSolver.factory
 
+  // UNAVAILABILITY
   List(Teacher("Iva") -> (Set(MONDAY,THURSDAY,FRIDAY),0 to 7),
     Teacher("Iva") -> (Set(TUESDAY),(0 to 1)++(4 to 7)),
     Teacher("Iva") -> (Set(WEDNESDAY),(0 to 1)++(4 to 7)),
     Teacher("Bohunka") -> (Set(TUESDAY,WEDNESDAY,THURSDAY),0 to 7),
-    Teacher("Eva") -> (Set(TUESDAY,FRIDAY),0 to 7),
-    Teacher("Eva") -> (Set(MONDAY,WEDNESDAY,THURSDAY),0 to 2),
-    Teacher("Lucka") -> (Set(FRIDAY),0 to 7),
-    Teacher("Tereza") -> (Set(THURSDAY),5 to 7),
-    Teacher("Gita") -> (Set(THURSDAY),3 to 7),
+    Teacher("Matematika") -> (Set(FRIDAY),0 to 7),
+    Teacher("Lucka") -> (Set(THURSDAY,FRIDAY),0 to 7),
+    Teacher("Tereza") -> (Set(MONDAY,WEDNESDAY,FRIDAY),3 to 7),
+    Teacher("Tereza") -> (Set(TUESDAY),3 to 6),
+    Teacher("Tereza") -> (Set(THURSDAY),0 to 1),
+    Teacher("Gita") -> ((MONDAY to FRIDAY).toSet, 6 to 7), // relax if needed
     Teacher("Hana") -> (Set(TUESDAY,WEDNESDAY,FRIDAY),5 to 7)).foreach(ta => {
     val index = teachers.indexOf(ta._1)
     ta._2._1.foreach(d => {
@@ -37,6 +39,8 @@ object Rows extends App {
     }))
   }
 
+  // FREEHOURS
+  freeHours(MONDAY to FRIDAY,List(FIRST_GRADE),List(0))
   freeHours(MONDAY to FRIDAY,List(FIRST_GRADE+1),List(0))
   freeHours(MONDAY to FRIDAY,List(FIRST_GRADE+2),List(0))
 //  freeHours((TUESDAY to FRIDAY),List(FIRST_GRADE+2),List(0))
@@ -46,31 +50,31 @@ object Rows extends App {
   freeHours(TUESDAY to FRIDAY,FIRST_GRADE+3 to FIRST_GRADE+4,6 to 7)
   freeHours(List(TUESDAY,WEDNESDAY,FRIDAY),FIRST_GRADE+1 to LAST_GRADE,6 to 7)
 
+  // PRE-PLACEMENTS
   tilesSolver.applyTile(tilesLookup("Hana")((Set(5,6,7,8),false)),MONDAY,5)
-  tilesSolver.applyTile(tilesLookup("Lucka")((Set(5,6,7,8),false)),MONDAY,6)
-  tilesSolver.applyTile(tilesLookup("Lucka")((Set(5,6,7,8),false)),THURSDAY,5)
+  tilesSolver.applyTile(tilesLookup("Hana")((Set(5,6,7,8),false)),MONDAY,6)
+  tilesSolver.applyTile(tilesLookup("Hana")((Set(5,6,7,8),false)),THURSDAY,5)
   tilesSolver.applyTile(tilesLookup("Hana")((Set(5,6,7,8),false)),THURSDAY,6)
 
 //  tilesSolver.applyTile(tilesLookup("Bohunka")((Set(7),true)),FRIDAY,5)
 
 //  tilesSolver.applyTile(tilesLookup("Tereza")((Set(7,8),false)),FRIDAY,0)
-  tilesSolver.applyTile(tilesLookup("Tereza")((Set(3,4),false)),WEDNESDAY,5)
-  tilesSolver.applyTile(tilesLookup("Tereza")((Set(5,6),false)),FRIDAY,5)
+//  tilesSolver.applyTile(tilesLookup("Tereza")((Set(3,4),false)),WEDNESDAY,5)
+//  tilesSolver.applyTile(tilesLookup("Tereza")((Set(5,6),false)),FRIDAY,5)
 //  tilesSolver.applyTile(tilesLookup("Hana")(Set(7,8)),FRIDAY,5)
 //  tilesSolver.applyTile(tilesLookup("Hana")(Set(7,8)),WEDNESDAY,0)
 //  tilesSolver.applyTile(tilesLookup("Hana")(Set(6)),WEDNESDAY,5)
 //  tilesSolver.applyTile(tilesLookup("Lucka")(Set(5,6),false),WEDNESDAY,5)
 //  tilesSolver.applyTile(tilesLookup("Lucka")(Set(7,8),false),TUESDAY,0)
 //  tilesSolver.applyTile(tilesLookup("Lucka")(Set(7,8)),WEDNESDAY,5)
-  tilesSolver.applyTile(tilesLookup("Alena")((Set(8),false)),WEDNESDAY,5)
-  tilesSolver.applyTile(tilesLookup("Eva")((Set(7,8),false)),MONDAY,7)
-  tilesSolver.applyTile(tilesLookup("Eva")((Set(7,8),false)),THURSDAY,7)
+//  tilesSolver.applyTile(tilesLookup("Eva")((Set(7,8),false)),MONDAY,7)
+//  tilesSolver.applyTile(tilesLookup("Eva")((Set(7,8),false)),THURSDAY,7)
 //  tilesSolver.applyTile(tilesLookup("Eva")((Set(7,8),false)),WEDNESDAY,5)
 
   val teachersOrder = List(
     Set("Iva","Bohunka"),
     Set("Eva","Hana","Lucka"),
-    Set("Tereza","Alena","Gita","Martina")
+    Set("Tereza","Matematika","Gita","Martina")
   )
 
   val rows = H.tileIndexRows.sortBy(r => {
@@ -140,22 +144,24 @@ object Rows extends App {
     rowOpen.popFromOpen(ri)
   }
 
-  preassignRow(filterRows(WEDNESDAY,4,"Tereza",null,Set(3,4),false))
+  // PRE-ASSIGNMENTS
+//  preassignRow(filterRows(WEDNESDAY,4,"Tereza",null,Set(3,4),false))
 //  preassignRow(filterRows(TUESDAY,4,List(("Tereza",null,(Set(5,6),false)),("Lucka",null,null))))
 //  preassignRow(filterRows(MONDAY,4,"Eva",null,Set(8)))
-  preassignRow(filterRows(THURSDAY,4,"Eva",null,Set(7,8),false))
+//  preassignRow(filterRows(THURSDAY,4,"Eva",null,Set(7,8),false))
 //  preassignRow(filterRows(MONDAY,1,"Bohunka",null,Set(7,8)))
 //  preassignRow(filterRows(MONDAY,2,"Bohunka",null,Set(8)))
 //  preassignRow(filterRows(MONDAY,3,"Bohunka",null,Set(7)))
-  preassignRow(filterRows(MONDAY,1,"Hana",null,Set(5,6),false))
+//  preassignRow(filterRows(MONDAY,1,"Hana",null,Set(5,6),false))
 
-  preassignRow(filterRows(TUESDAY,2,"Iva",null,Set(6),false))
-  preassignRow(filterRows(TUESDAY,3,"Iva",null,Set(7),false))
+  preassignRow(filterRows(TUESDAY,2,"Iva",null,Set(6,7),false))
+  preassignRow(filterRows(TUESDAY,3,"Iva",null,Set(8),false))
 
-  preassignRow(filterRows(WEDNESDAY,2,"Iva",null,Set(6),false))
-  preassignRow(filterRows(WEDNESDAY,3,List(("Iva",null,(Set(7),false)),("Eva",null,(Set(8),false)),("Lucka",null,null))))
+  preassignRow(filterRows(WEDNESDAY,2,"Iva",null,Set(6,7),false))
+  preassignRow(filterRows(WEDNESDAY,3,"Iva",null,Set(8),false))
+//  preassignRow(filterRows(WEDNESDAY,3,List(("Iva",null,(Set(7),false)),("Eva",null,(Set(8),false)),("Lucka",null,null))))
 
-  preassignRow(filterRows(FRIDAY,4,"Tereza",null,Set(5,6),false))
+//  preassignRow(filterRows(FRIDAY,4,"Tereza",null,Set(5,6),false))
 //  preassignRow(filterRows(FRIDAY,1,"Bohunka",null,Set(7)))
 //  preassignRow(filterRows(FRIDAY,2,"Bohunka",null,Set(8)))
 //  preassignRow(filterRows(FRIDAY,3,"Bohunka",null,Set(7)))

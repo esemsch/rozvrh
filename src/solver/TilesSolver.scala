@@ -74,7 +74,6 @@ class TilesSolver(tiles:Array[Tile],places:Array[Array[Array[Int]]],counts:Array
 
   def solve = {
     val daysOrder = Array(FRIDAY,MONDAY,TUESDAY,WEDNESDAY,THURSDAY,1000)
-//    val daysOrder = Array(MONDAY,TUESDAY,WEDNESDAY,THURSDAY,FRIDAY,1000)
 
     val open = new Open()
     var cnt = 0
@@ -88,12 +87,11 @@ class TilesSolver(tiles:Array[Tile],places:Array[Array[Array[Int]]],counts:Array
       depthCounter(depth) = depthCounter(depth) + 1
       if(cnt%1000000==0) {
         println(cnt)
-//        println(depthCounter.filter(x => x>0).zipWithIndex.map(x=>x._2+" = "+x._1).mkString("\n"))
       }
-//      if(cnt%10000000==0) {
-//        Output.printTiles(places,tiles,placed)
-//        println(open)
-//      }
+      if(cnt%10000000==0) {
+        Output.printTiles(places,tiles,placed)
+        println(open)
+      }
       val openSize = open.open.foldLeft(0)((tot,t) => tot + counts(t.id))
       if(openSize<best) {
         Output.printTiles(places,tiles,placed)
@@ -165,7 +163,6 @@ class TilesSolver(tiles:Array[Tile],places:Array[Array[Array[Int]]],counts:Array
 
     def searchForLines(depth:Int,line:Set[Int]):Boolean = {
       if(line.size>=maxSize) {
-//        println(line)
         if(line.size>maxSize) {
           maxSize = line.size
           maxLine = Set[Set[Int]]()
@@ -192,9 +189,6 @@ class TilesSolver(tiles:Array[Tile],places:Array[Array[Array[Int]]],counts:Array
             revertTile(t,day,hour)
             open.pushToOpen(t)
             false
-          }
-          if(depth==0) {
-//            print("\n"+t.job+" ----> "+(lineCount-currLC))
           }
           ok
         })

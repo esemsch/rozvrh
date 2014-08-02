@@ -1,5 +1,7 @@
 package solver
 
+import scala.collection.mutable.Map
+
 object Stats  {
 
   def printStats(tiles:Array[Tile],rows:Array[Array[Int]],jobs:List[Job]) {
@@ -15,7 +17,8 @@ object Stats  {
         case Some(i) => i
       }))
       m
-    }).map(e => e._1+" --- "+e._2).mkString("\n"));
+    }
+    ).map(e => e._1+" --- "+e._2).mkString("\n"));
     println
 
     println("Number of hours per class: ")
@@ -28,8 +31,35 @@ object Stats  {
         }))
       })
       m
-    }).map(e => e._1+1+" --- "+e._2).toList.sorted.mkString("\n"));
+    }
+    ).map(e => e._1+1+" --- "+e._2).toList.sorted.mkString("\n"));
     println
+
+    println("Number of hours per class and subject: ")
+    println(jobs.foldLeft(Map[Int,Map[String,Int]]())((m:Map[Int,Map[String,Int]],job:Job) => {
+      val subjects: String = job.classHour.subjects.mkString(",")
+      job.classHour.classes.foreach(c => {
+        val classSbjs: Option[Map[String,Int]] = m.get(c)
+        classSbjs match {
+          case None => {
+            val sbjMap = Map[String,Int]((subjects -> job.count))
+            m.put(c,sbjMap)
+          }
+          case Some(csbj) => {
+            val sbjs = csbj.get(subjects)
+            sbjs match {
+              case None => csbj.put(subjects,job.count)
+              case Some(i) => csbj.put(subjects,job.count+i)
+            }
+          }
+        }
+      })
+      m
+    }
+    ).flatMap(e => e._2.map(e2 => (e._1+1)+": "+e2._1+" --- "+e2._2)).toList.sorted.mkString("\n"));
+
+    println
+
 
   }
 

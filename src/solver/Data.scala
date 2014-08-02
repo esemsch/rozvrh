@@ -80,7 +80,7 @@ object Data {
   def data2 = data2014
 
   def data = {
-    val teachers = Set("Tereza","Dana","Hana","Gita","Martina","Bohunka","Lucka","Eva","Iva").map(n => Teacher(n))
+    val teachers = Set("Tereza","Dana","Hana","Gita","Martina","Bohunka","Lucka","Iva").map(n => Teacher(n))
 
     var teachersJobs = data2.flatMap(_.toTeachersJobs)
 
@@ -181,23 +181,12 @@ object Data {
       "Hv 6/7" -> 1
     ).map(e => createJob(e._1,e._2,"Lucka")).toList
 
-    val EvaJobs = Map(
-      "Inf 5/6" -> 1,
-      "Inf 9" -> 2,
-      "Inf 8" -> 1,
-      "Vo 8/9" -> 1,
-      "Rv 8/9" -> 1,
-      "Pč 4/5" -> 1,
-      "Pč 6/7" -> 1,
-      "Pč 8/9" -> 1
-    ).map(e => createJob(e._1,e._2,"Eva")).toList
-
     val IvaJobs = Map(
       "Rj 7/8" -> 2,
       "Rj 9" -> 2
     ).map(e => createJob(e._1,e._2,"Iva")).toList
 
-    TerezaJobs ++ DanaJobs ++ HanaJobs ++ GitaJobs ++ MartinaJobs ++ BohunkaJobs ++ LuckaJobs ++ EvaJobs ++ IvaJobs
+    TerezaJobs ++ DanaJobs ++ HanaJobs ++ GitaJobs ++ MartinaJobs ++ BohunkaJobs ++ LuckaJobs ++ IvaJobs
   }
 
 }

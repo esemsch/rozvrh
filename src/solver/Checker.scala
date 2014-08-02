@@ -15,10 +15,6 @@ object Checker {
     val spojenePredmety = new SpojenePredmetyRano(schoolSchedule)
     val spravnePrirazene = new PredmetySpravnePrirazeneTridam(schoolSchedule)
 
-    val reditelUciJenVPoAPa = new UcitelUciVUrciteDny(schoolSchedule,Teacher("Bohunka"),Set(MONDAY,FRIDAY))
-    val evaVolnoVUtAPa = new UcitelUciVUrciteDny(schoolSchedule,Teacher("Eva"),Set(MONDAY,WEDNESDAY,THURSDAY))
-    val luckaVolnoVPa = new UcitelUciVUrciteDny(schoolSchedule,Teacher("Lucka"),Set(MONDAY,TUESDAY,WEDNESDAY,THURSDAY))
-    val druzinarkaHana = new Druzinar(schoolSchedule,Teacher("Hana"),4)
     val ucitelNeuciVicNez5 = new UcitelNeuciVicNez5(schoolSchedule)
 
     val scheduledJobs: List[TeachersJob] = schoolSchedule.schoolSchedule.foldLeft(List[TeachersJob]())((coll, cs) => coll ++ cs.classSchedule.foldLeft(List[TeachersJob]())((ccoll, ds) => {
@@ -41,9 +37,6 @@ object Checker {
     println("spojenePredmety = "+(spojenePredmety.h))
     println("spravnePrirazene = "+(spravnePrirazene.valid))
 
-    println("reditelUciJenVPoAPa = "+(reditelUciJenVPoAPa.valid))
-    println("evaVolnoVUtAPa = "+(evaVolnoVUtAPa.valid))
-    println("luckaVolnoVPa = "+(luckaVolnoVPa.valid))
     println("ucitelNeuciVicNez5 = "+(ucitelNeuciVicNez5.valid))
   }
 

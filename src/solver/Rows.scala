@@ -33,7 +33,7 @@ object Rows extends App {
 
   val teachersOrder = List(
     Set("Iva","Bohunka","Hana"),
-    Set("Eva","Tereza","Lucka"),
+    Set("Tereza","Lucka"),
     Set("Dana","Gita","Martina")
   )
 

@@ -54,6 +54,7 @@ object Rows extends App {
   freeHours(TUESDAY to FRIDAY,FIRST_GRADE+3 to FIRST_GRADE+4,6 to 7)
   freeHours(List(TUESDAY,WEDNESDAY,FRIDAY),FIRST_GRADE to LAST_GRADE-2,6 to 7)
   freeHours(List(WEDNESDAY,FRIDAY),List(LAST_GRADE-1,LAST_GRADE),6 to 7)
+  freeHours(List(TUESDAY),List(LAST_GRADE-1,LAST_GRADE),List(5))
   freeHours(List(MONDAY),FIRST_GRADE+5 to LAST_GRADE,List(0))
 
   // PRE-PLACEMENTS
@@ -67,6 +68,8 @@ object Rows extends App {
   tilesSolver.applyTile(tilesLookup("Martina")((Set(2,4),true)),WEDNESDAY,5)
   tilesSolver.applyTile(tilesLookup("Martina")((Set(1),true)),TUESDAY,5)
   tilesSolver.applyTile(tilesLookup("Martina")((Set(1),true)),THURSDAY,5)
+
+  tilesSolver.applyTile(tilesLookup("Tereza")((Set(7,8),false)),TUESDAY,7)
 
   val rows = H.tileIndexRows.sortBy(r => {
     r.map(ti => {
@@ -135,6 +138,11 @@ object Rows extends App {
 
   preassignRow(filterRows(WEDNESDAY,2,"Iva",null,Set(6,7),false))
   preassignRow(filterRows(WEDNESDAY,3,"Iva",null,Set(8),false))
+
+//  preassignRow(filterRows(MONDAY,4,List(
+//    ("Bohunka",null,(Set(6,7,8),false)),
+//    ("Hana",null,(Set(2,3,4),false))
+//  )))
 
   preassignRow(filterRows(MONDAY,1,"Tereza",null,Set(6),true))
   preassignRow(filterRows(WEDNESDAY,1,"Tereza",null,Set(6),true))

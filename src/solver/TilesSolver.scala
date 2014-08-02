@@ -88,10 +88,10 @@ class TilesSolver(tiles:Array[Tile],places:Array[Array[Array[Int]]],counts:Array
       if(cnt%1000000==0) {
         println(cnt)
       }
-      if(cnt%10000000==0) {
-        Output.printTiles(places,tiles,placed)
-        println(open)
-      }
+//      if(cnt%10000000==0) {
+//        Output.printTiles(places,tiles,placed)
+//        println(open)
+//      }
       val openSize = open.open.foldLeft(0)((tot,t) => tot + counts(t.id))
       if(openSize<best) {
         Output.printTiles(places,tiles,placed)
@@ -151,13 +151,13 @@ class TilesSolver(tiles:Array[Tile],places:Array[Array[Array[Int]]],counts:Array
     search(0,0,0,0,true,100)
   }
 
-  class RowCalculator(day:Int,hour:Int,completeForGrades:Set[Int] = Set(1,2,3,4,5,6,7,8)) {
+  class RowCalculator(day:Int,hour:Int,completeForGrades:Set[Int] = Set(0,1,2,3,4,5,6,7,8)) {
 
     val open = new Open(completeForGrades)
     var lineCount = 0
     var currLC = 0
     val lines:mutable.SetBuilder[Set[Int],Set[Set[Int]]] = new mutable.SetBuilder[Set[Int],Set[Set[Int]]](Set[Set[Int]]())
-    val grades = completeForGrades.foldLeft(0)((out,gr) => setBit(out,(gr-1)))
+    val grades = completeForGrades.foldLeft(0)((out,gr) => setBit(out,(gr)))
     var maxLine = Set[Set[Int]]()
     var maxSize = 1
 

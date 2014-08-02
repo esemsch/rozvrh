@@ -31,6 +31,13 @@ object Rows extends App {
     THURSDAY,TUESDAY,WEDNESDAY,MONDAY,FRIDAY,
     1000)
 
+  val teachersOrder = List(
+    Set("Iva","Bohunka"),
+    Set("Eva","Hana","Lucka"),
+    Set("Tereza","Matematika","Gita","Martina")
+  )
+
+  // FREEHOURS
   def freeHours(days:Seq[Int],grades:Seq[Int],hours:Seq[Int]) {
     days.foreach(d => hours.foreach(h => {
       grades.foreach(gr => {
@@ -39,13 +46,9 @@ object Rows extends App {
     }))
   }
 
-  // FREEHOURS
-  freeHours(MONDAY to FRIDAY,List(FIRST_GRADE),List(0))
-  freeHours(MONDAY to FRIDAY,List(FIRST_GRADE+1),List(0))
-  freeHours(MONDAY to FRIDAY,List(FIRST_GRADE+2),List(0))
-//  freeHours((TUESDAY to FRIDAY),List(FIRST_GRADE+2),List(0))
+  freeHours(MONDAY to FRIDAY,FIRST_GRADE to FIRST_GRADE+2,List(0))
+  freeHours(MONDAY to FRIDAY,FIRST_GRADE to FIRST_GRADE+2,6 to 7)
   freeHours((MONDAY to TUESDAY)++(THURSDAY to FRIDAY),FIRST_GRADE+3 to FIRST_GRADE+4,List(0))
-  freeHours(MONDAY to FRIDAY,FIRST_GRADE+1 to FIRST_GRADE+2,6 to 7)
   freeHours(MONDAY to FRIDAY,FIRST_GRADE+3 to FIRST_GRADE+4,List(6))
   freeHours(TUESDAY to FRIDAY,FIRST_GRADE+3 to FIRST_GRADE+4,6 to 7)
   freeHours(List(TUESDAY,WEDNESDAY,FRIDAY),FIRST_GRADE+1 to LAST_GRADE,6 to 7)
@@ -55,27 +58,6 @@ object Rows extends App {
   tilesSolver.applyTile(tilesLookup("Hana")((Set(5,6,7,8),false)),MONDAY,6)
   tilesSolver.applyTile(tilesLookup("Hana")((Set(5,6,7,8),false)),THURSDAY,5)
   tilesSolver.applyTile(tilesLookup("Hana")((Set(5,6,7,8),false)),THURSDAY,6)
-
-//  tilesSolver.applyTile(tilesLookup("Bohunka")((Set(7),true)),FRIDAY,5)
-
-//  tilesSolver.applyTile(tilesLookup("Tereza")((Set(7,8),false)),FRIDAY,0)
-//  tilesSolver.applyTile(tilesLookup("Tereza")((Set(3,4),false)),WEDNESDAY,5)
-//  tilesSolver.applyTile(tilesLookup("Tereza")((Set(5,6),false)),FRIDAY,5)
-//  tilesSolver.applyTile(tilesLookup("Hana")(Set(7,8)),FRIDAY,5)
-//  tilesSolver.applyTile(tilesLookup("Hana")(Set(7,8)),WEDNESDAY,0)
-//  tilesSolver.applyTile(tilesLookup("Hana")(Set(6)),WEDNESDAY,5)
-//  tilesSolver.applyTile(tilesLookup("Lucka")(Set(5,6),false),WEDNESDAY,5)
-//  tilesSolver.applyTile(tilesLookup("Lucka")(Set(7,8),false),TUESDAY,0)
-//  tilesSolver.applyTile(tilesLookup("Lucka")(Set(7,8)),WEDNESDAY,5)
-//  tilesSolver.applyTile(tilesLookup("Eva")((Set(7,8),false)),MONDAY,7)
-//  tilesSolver.applyTile(tilesLookup("Eva")((Set(7,8),false)),THURSDAY,7)
-//  tilesSolver.applyTile(tilesLookup("Eva")((Set(7,8),false)),WEDNESDAY,5)
-
-  val teachersOrder = List(
-    Set("Iva","Bohunka"),
-    Set("Eva","Hana","Lucka"),
-    Set("Tereza","Matematika","Gita","Martina")
-  )
 
   val rows = H.tileIndexRows.sortBy(r => {
     r.map(ti => {
@@ -121,12 +103,6 @@ object Rows extends App {
       })
     })
 
-//    ret.foreach(ri => {
-//      val r = rows(ri)
-//      println(r.map(ti => tiles(ti).job).mkString(","))
-//    })
-//
-//    println("===============================================")
     (day,hour,ret)
   }
   def filterRows(day:Int,hour:Int,teacher:String):(Int,Int,List[Int]) = {
@@ -145,38 +121,11 @@ object Rows extends App {
   }
 
   // PRE-ASSIGNMENTS
-//  preassignRow(filterRows(WEDNESDAY,4,"Tereza",null,Set(3,4),false))
-//  preassignRow(filterRows(TUESDAY,4,List(("Tereza",null,(Set(5,6),false)),("Lucka",null,null))))
-//  preassignRow(filterRows(MONDAY,4,"Eva",null,Set(8)))
-//  preassignRow(filterRows(THURSDAY,4,"Eva",null,Set(7,8),false))
-//  preassignRow(filterRows(MONDAY,1,"Bohunka",null,Set(7,8)))
-//  preassignRow(filterRows(MONDAY,2,"Bohunka",null,Set(8)))
-//  preassignRow(filterRows(MONDAY,3,"Bohunka",null,Set(7)))
-//  preassignRow(filterRows(MONDAY,1,"Hana",null,Set(5,6),false))
-
   preassignRow(filterRows(TUESDAY,2,"Iva",null,Set(6,7),false))
   preassignRow(filterRows(TUESDAY,3,"Iva",null,Set(8),false))
 
   preassignRow(filterRows(WEDNESDAY,2,"Iva",null,Set(6,7),false))
   preassignRow(filterRows(WEDNESDAY,3,"Iva",null,Set(8),false))
-//  preassignRow(filterRows(WEDNESDAY,3,List(("Iva",null,(Set(7),false)),("Eva",null,(Set(8),false)),("Lucka",null,null))))
-
-//  preassignRow(filterRows(FRIDAY,4,"Tereza",null,Set(5,6),false))
-//  preassignRow(filterRows(FRIDAY,1,"Bohunka",null,Set(7)))
-//  preassignRow(filterRows(FRIDAY,2,"Bohunka",null,Set(8)))
-//  preassignRow(filterRows(FRIDAY,3,"Bohunka",null,Set(7)))
-//  preassignRow(filterRows(FRIDAY,4,"Bohunka",null,Set(8)))
-
-
-//  preassignRow(filterRows(MONDAY,3,List(("Alena",null,Set(5,6)),("Hana",null,Set(7)))))
-
-//  preassignRow(filterRows(MONDAY,1,"Tereza",null,Set(5,6)))
-//  preassignRow(filterRows(TUESDAY,2,"Martina","Vv",null))
-//  preassignRow(filterRows(TUESDAY,3,"Martina","Vv",Set(4)))
-//  preassignRow(filterRows(MONDAY,4,null,"Vv",Set(3)))
-//  preassignRow(filterRows(THURSDAY,2,"Alena"))
-//  preassignRow(filterRows(THURSDAY,3,"Alena"))
-//  preassignRow(filterRows(FRIDAY,4,List(("Tereza",Set("Vv"),Set(5,6)),("Alena",null,null))))
 
   def rowApplicable(rowInd:Int,day:Int,hour:Int) = {
     rows(rowInd).forall(ti => counts(ti)>0 && tilesSolver.applicable(tiles(ti),day,hour))
@@ -227,10 +176,7 @@ object Rows extends App {
       val coeff = if(hour>=1 && hour <=4) -1 else 1
       rowTiles.foldLeft(0)((tot,t) => tot + (if(t.job.classHour.mainSubject) coeff*t.job.classHour.classes.size else 0))
     }
-//        println(rowTiles.map(t=>t.job).mkString(",")+" --- Teachers = "+teachers+" Spread = "+spread+" Combined = "+combined+" Main = "+main+" Teachers spread = "+teachersSpread)
-//    spread
     teachers + spread + combined + main + teachersSpread
-//    teachers + spread + combined + main + teachersSpread
   }
 
   var cnt = 0
@@ -251,12 +197,6 @@ object Rows extends App {
     else if(hour<=7 && tilesSolver.hourComplete(day,hour)) {
       search((dayIndex+1),if(day==daysOrder(4)) (hour+1) else hour)
     }
-//    else if(((day==TUESDAY || day==WEDNESDAY) && hour>=6)||((day != TUESDAY && day != WEDNESDAY) && hour>=5)) {
-//    else if(((day==TUESDAY || day==WEDNESDAY || day==FRIDAY) && hour>=6)||((day != TUESDAY && day != WEDNESDAY && day!=FRIDAY) && hour>=5)) {
-//    else if(((day==TUESDAY) && hour>=6)||((day != TUESDAY) && hour>=5)) {
-//    else if(hour>=5) {
-//      search((dayIndex+1),1)
-//    }
     else if(rowOpen.isEmpty) {
       false
     }
@@ -264,8 +204,6 @@ object Rows extends App {
       rowOpen.options(day,hour).exists(rowInd => {
         applyRow(rowInd,day,hour)
         rowOpen.popFromOpen(rowInd)
-//        Output.printTiles(places,tiles,placed)
-//        Console.readLine()
         if(!search(dayIndex+1,if(day==daysOrder(4)) (hour+1) else hour)) {
           revertRow(rowInd,day,hour)
           rowOpen.pushToOpen(rowInd)
@@ -310,23 +248,12 @@ object Rows extends App {
 
   maxRowSearch(0,1)
 
-  Output.printSchedule(Conversions.remapGrades(Conversions.tilesToSchoolSchedule(places,tiles,placed)))
+  Output.printSchedule(Conversions.tilesToSchoolSchedule(places,tiles,placed))
 
   val schoolSchedule = Straightener.straighten2(Conversions.tilesToJobsArray(places,tiles,placed),jobs._2.toMap)
 
-//  val preStraightenings = Map[Job,List[(Int,Int,String)]](
-//    (tilesLookup("Gita")(Set(3,4)).job) -> List((MONDAY,7,"Hv"),(WEDNESDAY,2,"M"),(THURSDAY,2,"M"),(TUESDAY,1,"M")),
-//    (tilesLookup("Hana")(Set(5,6)).job) -> List((THURSDAY,1,"D")),
-//    (tilesLookup("Hana")(Set(5)).job) -> List((FRIDAY,1,"Z"),(MONDAY,1,"D")),
-//    (tilesLookup("Hana")(Set(6)).job) -> List((FRIDAY,0,"Z"),(MONDAY,0,"D")),
-//    (tilesLookup("Hana")(Set(7,8)).job) -> List((FRIDAY,5,"D")),
-//    (tilesLookup("Hana")(Set(7)).job) -> List((FRIDAY,4,"Z")),
-//    (tilesLookup("Hana")(Set(8)).job) -> List((FRIDAY,0,"Z"),(MONDAY,0,"D"))
-//  )
-//  val schoolSchedule = Straightener.straighten2(Conversions.tilesToJobsArray(places,tiles,placed),jobs._2.toMap, preStraightenings)
-
   Output.saveToFile(schoolSchedule,"schedule.txt")
-  Output.printSchedule(Conversions.remapGrades(schoolSchedule),true)
+  Output.printSchedule(schoolSchedule,true)
 
   Checker.check(schoolSchedule,jobs._2.flatMap(x => x._2).toList)
 }

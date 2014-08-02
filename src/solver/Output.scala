@@ -43,7 +43,7 @@ object Output {
 
     divide
 
-    printLine((1 to cs(0).size).map(_.toString).toList,"")
+    printLine((0 to cs(0).size-1).map(_.toString).toList,"")
 
     divide
 
@@ -130,7 +130,7 @@ object Output {
       })
       val find = allThatDayAndHour.find(pi => {
         val tile = tiles(pi(2))
-        tile.job.classHour.classes.contains(grade+1)
+        tile.job.classHour.classes.contains(grade)
       })
       find.map(x => tiles(x(2)).job)
     }
@@ -139,8 +139,8 @@ object Output {
         val aux = math.pow(2,pos).toInt
         (int & aux) > 0
       }
-      (FIRST_GRADE+1 to LAST_GRADE).map(gr => if(isBitThere(gr-1,tile(0))) {
-        findJob(gr-1,day,hour) match {
+      (FIRST_GRADE to LAST_GRADE).map(gr => if(isBitThere(gr,tile(0))) {
+        findJob(gr,day,hour) match {
           case None => "?"
           case Some(job) => job.toString
         }
@@ -151,8 +151,8 @@ object Output {
       val dayTable = (FIRST_HOUR to LAST_HOUR).map(h => {
         tileToLine(places(d)(h),d,h)
       })
-      val rotatedDayTable = (FIRST_GRADE+1 to LAST_GRADE).map(gr => {
-        val ngr = gr - 1
+      val rotatedDayTable = (FIRST_GRADE to LAST_GRADE).map(gr => {
+        val ngr = gr
         dayTable.map(allGrs => allGrs(ngr))
       })
       printTable(rotatedDayTable,false)

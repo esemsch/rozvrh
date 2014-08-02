@@ -224,7 +224,7 @@ object TilesSolver {
     val teachers = Data.data._2.toList
     val jobs = Data.data4
     val tiles = jobs._1.map(j => {
-      val clss = j.classHour.classes.foldLeft(0)((result,cls) => setBit(result,cls-1))
+      val clss = j.classHour.classes.foldLeft(0)((result,cls) => setBit(result,cls))
       val teacher = setBit(0,teachers.indexOf(j.teacher))
       Tile(clss,teacher,-1,j)
     }).zipWithIndex.map(ti => Tile(ti._1.classes,ti._1.teacher,ti._2,ti._1.job)).toArray

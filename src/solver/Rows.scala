@@ -11,7 +11,7 @@ object Rows extends App {
     Teacher("Iva") -> (Set(TUESDAY),(0 to 1)++(4 to 7)),
     Teacher("Iva") -> (Set(WEDNESDAY),(0 to 1)++(4 to 7)),
     Teacher("Bohunka") -> (Set(TUESDAY,WEDNESDAY,THURSDAY),0 to 7),
-    Teacher("Matematika") -> (Set(FRIDAY),0 to 7),
+    Teacher("Dana") -> (Set(TUESDAY),0 to 7),
     Teacher("Lucka") -> (Set(THURSDAY,FRIDAY),0 to 7),
     Teacher("Tereza") -> (Set(MONDAY,WEDNESDAY,FRIDAY),3 to 7),
     Teacher("Tereza") -> (Set(TUESDAY),3 to 6),
@@ -32,32 +32,41 @@ object Rows extends App {
     1000)
 
   val teachersOrder = List(
-    Set("Iva","Bohunka"),
-    Set("Eva","Hana","Lucka"),
-    Set("Tereza","Matematika","Gita","Martina")
+    Set("Iva","Bohunka","Hana"),
+    Set("Eva","Tereza","Lucka"),
+    Set("Dana","Gita","Martina")
   )
 
   // FREEHOURS
   def freeHours(days:Seq[Int],grades:Seq[Int],hours:Seq[Int]) {
     days.foreach(d => hours.foreach(h => {
       grades.foreach(gr => {
-        places(d)(h)(0) = setBit(places(d)(h)(0),(gr-1))
+        places(d)(h)(0) = setBit(places(d)(h)(0),(gr))
       })
     }))
   }
 
   freeHours(MONDAY to FRIDAY,FIRST_GRADE to FIRST_GRADE+2,List(0))
   freeHours(MONDAY to FRIDAY,FIRST_GRADE to FIRST_GRADE+2,6 to 7)
+  freeHours(List(FRIDAY),List(FIRST_GRADE+1),5 to 7)
   freeHours((MONDAY to TUESDAY)++(THURSDAY to FRIDAY),FIRST_GRADE+3 to FIRST_GRADE+4,List(0))
   freeHours(MONDAY to FRIDAY,FIRST_GRADE+3 to FIRST_GRADE+4,List(6))
   freeHours(TUESDAY to FRIDAY,FIRST_GRADE+3 to FIRST_GRADE+4,6 to 7)
-  freeHours(List(TUESDAY,WEDNESDAY,FRIDAY),FIRST_GRADE+1 to LAST_GRADE,6 to 7)
+  freeHours(List(TUESDAY,WEDNESDAY,FRIDAY),FIRST_GRADE to LAST_GRADE-2,6 to 7)
+  freeHours(List(WEDNESDAY,FRIDAY),List(LAST_GRADE-1,LAST_GRADE),6 to 7)
+  freeHours(List(MONDAY),FIRST_GRADE+5 to LAST_GRADE,List(0))
 
   // PRE-PLACEMENTS
   tilesSolver.applyTile(tilesLookup("Hana")((Set(5,6,7,8),false)),MONDAY,5)
   tilesSolver.applyTile(tilesLookup("Hana")((Set(5,6,7,8),false)),MONDAY,6)
   tilesSolver.applyTile(tilesLookup("Hana")((Set(5,6,7,8),false)),THURSDAY,5)
   tilesSolver.applyTile(tilesLookup("Hana")((Set(5,6,7,8),false)),THURSDAY,6)
+
+  tilesSolver.applyTile(tilesLookup("Martina")((Set(2,4),true)),MONDAY,5)
+  tilesSolver.applyTile(tilesLookup("Martina")((Set(3),true)),WEDNESDAY,0)
+  tilesSolver.applyTile(tilesLookup("Martina")((Set(2,4),true)),WEDNESDAY,5)
+  tilesSolver.applyTile(tilesLookup("Martina")((Set(1),true)),TUESDAY,5)
+  tilesSolver.applyTile(tilesLookup("Martina")((Set(1),true)),THURSDAY,5)
 
   val rows = H.tileIndexRows.sortBy(r => {
     r.map(ti => {
@@ -126,6 +135,11 @@ object Rows extends App {
 
   preassignRow(filterRows(WEDNESDAY,2,"Iva",null,Set(6,7),false))
   preassignRow(filterRows(WEDNESDAY,3,"Iva",null,Set(8),false))
+
+  preassignRow(filterRows(MONDAY,1,"Tereza",null,Set(6),true))
+  preassignRow(filterRows(WEDNESDAY,1,"Tereza",null,Set(6),true))
+
+  Stats.printStats(tiles,rows,jobs._1);
 
   def rowApplicable(rowInd:Int,day:Int,hour:Int) = {
     rows(rowInd).forall(ti => counts(ti)>0 && tilesSolver.applicable(tiles(ti),day,hour))

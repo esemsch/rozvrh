@@ -141,7 +141,7 @@ object Output {
       }
       (FIRST_GRADE to LAST_GRADE).map(gr => if(isBitThere(gr,tile(0))) {
         findJob(gr,day,hour) match {
-          case None => "?"
+          case None => "x"
           case Some(job) => job.toString
         }
       } else "-")

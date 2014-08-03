@@ -28,7 +28,6 @@ object Checker {
     println("odpol = "+(odpol.valid))
     println("volna = "+(volna.valid))
     println("prvniDruha = "+(prvniDruha.valid))
-//    println("neprerusene = "+(neprerusene.valid))
     println("exklusivitaUcitele = "+(exklusivitaUcitele.valid))
     println("vvVzdyPoSobe = "+(vvVzdyPoSobe.valid))
     println("dvojHodinoveNePoSobe = "+(dvojHodinoveNePoSobe.valid))

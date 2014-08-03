@@ -2,7 +2,15 @@ package solver
 
 import collection.mutable
 
-class TilesSolver(tiles:Array[Tile],places:Array[Array[Array[Int]]],counts:Array[Int],placed:Array[Array[Int]],mapToPlaced:Array[Int],tilesPerDay:Array[(Array[Int],Tile)]) {
+class TilesSolver(
+                   tiles:Array[Tile],
+                   places:Array[Array[Array[Int]]],
+                   counts:Array[Int],
+                   placed:Array[Array[Int]],
+                   mapToPlaced:Array[Int],
+                   tilesPerDay:Array[(Array[Int],Tile)]
+                   ) {
+
   val placedPerHour = (MONDAY to FRIDAY).map(d => (FIRST_HOUR to LAST_HOUR).map(h => 0).toArray).toArray
 
   def applicable(t:Tile,d:Int,h:Int) = {
@@ -103,7 +111,6 @@ class TilesSolver(tiles:Array[Tile],places:Array[Array[Array[Int]]],counts:Array
       }
       else if(depth==maxDepth || day>FRIDAY) {
         false
-//        search(0,0,0,0,true)
       }
       else {
         if(hourComplete(day,hour) || !doTry)
@@ -118,8 +125,6 @@ class TilesSolver(tiles:Array[Tile],places:Array[Array[Array[Int]]],counts:Array
             val options: List[Tile] = open.options(day, hour).take(2)
             if(options.isEmpty && rowDepth==0) {
               search(dayNumber,hour,(depth+1),(rowDepth+1),doTryNow,maxDepth)
-//              Output.printTiles(places,tiles,placed)
-//              println("Options empty! Row depth = "+rowDepth+" open size = "+open.open.size+" day = "+day+" hour = "+hour)
             } else {
               options.exists(t => {
                 applyTile(t,day,hour)

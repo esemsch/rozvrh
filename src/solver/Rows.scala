@@ -62,14 +62,19 @@ object Rows extends App {
   tilesSolver.applyTile(tilesLookup("Hana")((Set(5,6,7,8),false)),MONDAY,6)
   tilesSolver.applyTile(tilesLookup("Hana")((Set(5,6,7,8),false)),THURSDAY,5)
   tilesSolver.applyTile(tilesLookup("Hana")((Set(5,6,7,8),false)),THURSDAY,6)
+  tilesSolver.applyTile(tilesLookup("Hana")((Set(5,6),false)),FRIDAY,5)
 
   tilesSolver.applyTile(tilesLookup("Martina")((Set(2,4),true)),MONDAY,5)
   tilesSolver.applyTile(tilesLookup("Martina")((Set(3),true)),WEDNESDAY,0)
-  tilesSolver.applyTile(tilesLookup("Martina")((Set(2,4),true)),WEDNESDAY,5)
+  tilesSolver.applyTile(tilesLookup("Martina")((Set(2,4),true)),FRIDAY,5)
+  tilesSolver.applyTile(tilesLookup("Martina")((Set(3),true)),WEDNESDAY,5)
   tilesSolver.applyTile(tilesLookup("Martina")((Set(1),true)),TUESDAY,5)
   tilesSolver.applyTile(tilesLookup("Martina")((Set(1),true)),THURSDAY,5)
 
   tilesSolver.applyTile(tilesLookup("Tereza")((Set(7,8),false)),TUESDAY,7)
+
+  tilesSolver.applyTile(tilesLookup("Lucka")((Set(7,8),false)),TUESDAY,6)
+  tilesSolver.applyTile(tilesLookup("Lucka")((Set(2,4),false)),WEDNESDAY,5)
 
   val rows = H.tileIndexRows.sortBy(r => {
     r.map(ti => {
@@ -101,16 +106,14 @@ object Rows extends App {
 
   val rowOpen = new RowOpen()
 
-  def filterRows(day:Int,hour:Int,subjs:List[(String,Set[String],(Set[Int],Boolean))]):(Int,Int,List[Int]) = {
+  def filterRows(day:Int,hour:Int,subjs:List[(String,Set[Int])]):(Int,Int,List[Int]) = {
     val options = rowOpen.options(day, hour)
     val ret = options.filter(ri => {
       subjs.forall(x => {
         rows(ri).exists(ti => {
           val t = tiles(ti)
           (x._1 == null || t.job.teacher.name == x._1) &&
-          (x._2 == null || (t.job.classHour.subjects diff x._2).size < t.job.classHour.subjects.size) &&
-          (x._3 == null || (x._3._1 == t.job.classHour.classes)) &&
-          (x._3 == null || (x._3._2 == t.job.classHour.mainSubject))
+          (x._2 == null || (x._2 == t.job.classHour.classes))
         })
       })
     })
@@ -118,13 +121,10 @@ object Rows extends App {
     (day,hour,ret)
   }
   def filterRows(day:Int,hour:Int,teacher:String):(Int,Int,List[Int]) = {
-    filterRows(day,hour,List[(String,Set[String],(Set[Int],Boolean))]((teacher,null,null)))
+    filterRows(day,hour,List[(String,Set[Int])]((teacher,null)))
   }
-  def filterRows(day:Int,hour:Int,teacher:String,subject:String,grade:Int,main:Boolean):(Int,Int,List[Int]) = {
-    filterRows(day,hour,List[(String,Set[String],(Set[Int],Boolean))]((teacher,Set[String](subject),(Set(grade),main))))
-  }
-  def filterRows(day:Int,hour:Int,teacher:String,subject:String,grades:Set[Int],main:Boolean):(Int,Int,List[Int]) = {
-    filterRows(day,hour,List[(String,Set[String],(Set[Int],Boolean))]((teacher,if(subject!=null)Set(subject) else null,(grades,main))))
+  def filterRows(day:Int,hour:Int,teacher:String,grades:Set[Int]):(Int,Int,List[Int]) = {
+    filterRows(day,hour,List[(String,Set[Int])]((teacher,grades)))
   }
   def preassignRow(candidateRows:(Int,Int,List[Int])) {
     val ri = candidateRows._3.head
@@ -133,19 +133,25 @@ object Rows extends App {
   }
 
   // PRE-ASSIGNMENTS
-  preassignRow(filterRows(TUESDAY,2,"Iva",null,Set(6,7),false))
-  preassignRow(filterRows(TUESDAY,3,"Iva",null,Set(8),false))
+  preassignRow(filterRows(TUESDAY,2,List(
+    ("Iva",Set(6,7)),
+    ("Lucka",Set(8))
+  )))
+  preassignRow(filterRows(TUESDAY,3,List(
+    ("Iva",Set(8)),
+    ("Lucka",Set(7))
+  )))
 
-  preassignRow(filterRows(WEDNESDAY,2,"Iva",null,Set(6,7),false))
-  preassignRow(filterRows(WEDNESDAY,3,"Iva",null,Set(8),false))
+  preassignRow(filterRows(WEDNESDAY,2,"Iva",Set(6,7)))
+  preassignRow(filterRows(WEDNESDAY,3,List(
+    ("Iva",Set(8)),
+    ("Lucka",Set(7))
+  )))
 
-//  preassignRow(filterRows(MONDAY,4,List(
-//    ("Bohunka",null,(Set(6,7,8),false)),
-//    ("Hana",null,(Set(2,3,4),false))
-//  )))
-
-  preassignRow(filterRows(MONDAY,1,"Tereza",null,Set(6),true))
-  preassignRow(filterRows(WEDNESDAY,1,"Tereza",null,Set(6),true))
+  preassignRow(filterRows(FRIDAY,4,List(
+    ("Hana",Set(2,3,4)),
+    ("Bohunka",Set(6,7,8))
+  )))
 
   Stats.printStats(tiles,rows,jobs._1);
 

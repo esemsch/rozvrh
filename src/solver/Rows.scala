@@ -126,7 +126,10 @@ object Rows extends App {
     filterRows(day,hour,List[(String,Set[Int])]((teacher,grades)))
   }
   def preassignRow(candidateRows:(Int,Int,List[Int])) {
-    val ri = candidateRows._3.head
+    println(Output.printDayAndHour(candidateRows._1,candidateRows._2))
+    candidateRows._3.take(10).zipWithIndex.foreach(r => println(r._2+": "+Output.printRow(rows(r._1).map(ti => tiles(ti)))))
+    val ind = Integer.parseInt(io.Source.stdin.bufferedReader().readLine())
+    val ri = candidateRows._3(ind)
     applyRow(ri,candidateRows._1,candidateRows._2)
     rowOpen.popFromOpen(ri)
   }

@@ -19,6 +19,18 @@ object Output {
     })
   }
 
+  def printRow(row:Array[Tile]) = {
+    row
+      .sortWith((t1,t2) => t1.job.teacher.name.compareTo(t2.job.teacher.name)<=0)
+      .map(t => t.job.toString)
+      .map(s => "%23s" format s)
+      .mkString(" | ")
+  }
+
+  def printDayAndHour(day: Int, hour: Int) = {
+    DAY_NAME(day)+" "+hour+"."
+  }
+
   def printTable(cs:Seq[Seq[Any]],leftAxisDays:Boolean) {
     val leftAxisPad = if(leftAxisDays) 10 else 3
 

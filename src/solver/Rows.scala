@@ -7,17 +7,18 @@ object Rows extends App {
   val (tilesSolver,tiles,places,counts,placed,mapToPlaced,tilesPerDay,jobs,tilesLookup,teachers) = TilesSolver.factory
 
   // UNAVAILABILITY
-  List(Teacher("Iva") -> (Set(MONDAY,THURSDAY,FRIDAY),0 to 7),
-    Teacher("Iva") -> (Set(TUESDAY),(0 to 1)++(4 to 7)),
-    Teacher("Iva") -> (Set(WEDNESDAY),(0 to 1)++(4 to 7)),
-    Teacher("Bohunka") -> (Set(TUESDAY,WEDNESDAY,THURSDAY),0 to 7),
-    Teacher("Dana") -> (Set(TUESDAY),0 to 7),
-    Teacher("Lucka") -> (Set(THURSDAY,FRIDAY),0 to 7),
-    Teacher("Tereza") -> (Set(MONDAY,WEDNESDAY,FRIDAY),3 to 7),
-    Teacher("Tereza") -> (Set(TUESDAY),3 to 6),
-    Teacher("Tereza") -> (Set(THURSDAY),0 to 1),
-    Teacher("Gita") -> ((MONDAY to FRIDAY).toSet, 6 to 7), // relax if needed
-    Teacher("Hana") -> (Set(TUESDAY,WEDNESDAY,FRIDAY),5 to 7)).foreach(ta => {
+  List(
+    Teacher("Iva")     -> (Set(MONDAY,THURSDAY,FRIDAY),     0 to 7),
+    Teacher("Iva")     -> (Set(TUESDAY),                   (0 to 1)++(4 to 7)),
+    Teacher("Iva")     -> (Set(WEDNESDAY),                 (0 to 1)++(4 to 7)),
+    Teacher("Bohunka") -> (Set(TUESDAY,WEDNESDAY,THURSDAY), 0 to 7),
+    Teacher("Dana")    -> (Set(TUESDAY),                    0 to 7),
+    Teacher("Lucka")   -> (Set(THURSDAY,FRIDAY),            0 to 7),
+    Teacher("Tereza")  -> (Set(MONDAY,WEDNESDAY,FRIDAY),    3 to 7),
+    Teacher("Tereza")  -> (Set(TUESDAY),                    3 to 6),
+    Teacher("Tereza")  -> (Set(THURSDAY),                   0 to 1),
+    Teacher("Gita")    -> ((MONDAY to FRIDAY).toSet,        6 to 7), // relax if needed
+    Teacher("Hana")    -> (Set(TUESDAY,WEDNESDAY,FRIDAY),   5 to 7)).foreach(ta => {
     val index = teachers.indexOf(ta._1)
     ta._2._1.foreach(d => {
       ta._2._2.foreach(h => places(d)(h)(1) = setBit(places(d)(h)(1),index))
@@ -32,9 +33,7 @@ object Rows extends App {
     1000)
 
   val teachersOrder = List(
-    Set("Iva","Bohunka","Hana"),
-    Set("Tereza","Lucka"),
-    Set("Dana","Gita","Martina")
+    Set("Iva","Bohunka","Hana","Tereza","Lucka","Dana","Gita","Martina")
   )
 
   // FREEHOURS
@@ -46,35 +45,35 @@ object Rows extends App {
     }))
   }
 
-  freeHours(MONDAY to FRIDAY,FIRST_GRADE to FIRST_GRADE+2,List(0))
-  freeHours(MONDAY to FRIDAY,FIRST_GRADE to FIRST_GRADE+2,6 to 7)
-  freeHours(List(FRIDAY),List(FIRST_GRADE+1),5 to 7)
-  freeHours((MONDAY to TUESDAY)++(THURSDAY to FRIDAY),FIRST_GRADE+3 to FIRST_GRADE+4,List(0))
-  freeHours(MONDAY to FRIDAY,FIRST_GRADE+3 to FIRST_GRADE+4,List(6))
-  freeHours(TUESDAY to FRIDAY,FIRST_GRADE+3 to FIRST_GRADE+4,6 to 7)
-  freeHours(List(TUESDAY,WEDNESDAY,FRIDAY),FIRST_GRADE to LAST_GRADE-2,6 to 7)
-  freeHours(List(WEDNESDAY,FRIDAY),List(LAST_GRADE-1,LAST_GRADE),6 to 7)
-  freeHours(List(TUESDAY),List(LAST_GRADE-1,LAST_GRADE),List(5))
-  freeHours(List(MONDAY),FIRST_GRADE+5 to LAST_GRADE,List(0))
+  freeHours(MONDAY to FRIDAY,                         FIRST_GRADE to FIRST_GRADE+2,    List(0))
+  freeHours(MONDAY to FRIDAY,                         FIRST_GRADE to FIRST_GRADE+2,    6 to 7)
+  freeHours(List(FRIDAY),                             List(FIRST_GRADE+1),             5 to 7)
+  freeHours((MONDAY to TUESDAY)++(THURSDAY to FRIDAY),FIRST_GRADE+3 to FIRST_GRADE+4,  List(0))
+  freeHours(MONDAY to FRIDAY,                         FIRST_GRADE+3 to FIRST_GRADE+4,  List(6))
+  freeHours(TUESDAY to FRIDAY,                        FIRST_GRADE+3 to FIRST_GRADE+4,  6 to 7)
+  freeHours(List(TUESDAY,WEDNESDAY,FRIDAY),           FIRST_GRADE to LAST_GRADE-2,     6 to 7)
+  freeHours(List(WEDNESDAY,FRIDAY),                   List(LAST_GRADE-1,LAST_GRADE),   6 to 7)
+  freeHours(List(TUESDAY),                            List(LAST_GRADE-1,LAST_GRADE),   List(5))
+  freeHours(List(MONDAY),                             FIRST_GRADE+5 to LAST_GRADE,     List(0))
 
   // PRE-PLACEMENTS
-  tilesSolver.applyTile(tilesLookup("Hana")((Set(5,6,7,8),false)),MONDAY,5)
-  tilesSolver.applyTile(tilesLookup("Hana")((Set(5,6,7,8),false)),MONDAY,6)
-  tilesSolver.applyTile(tilesLookup("Hana")((Set(5,6,7,8),false)),THURSDAY,5)
-  tilesSolver.applyTile(tilesLookup("Hana")((Set(5,6,7,8),false)),THURSDAY,6)
-  tilesSolver.applyTile(tilesLookup("Hana")((Set(5,6),false)),FRIDAY,5)
+  tilesSolver.applyTile(tilesLookup("Hana")    ((Set(5,6,7,8),  false)), MONDAY,    5)
+  tilesSolver.applyTile(tilesLookup("Hana")    ((Set(5,6,7,8),  false)), MONDAY,    6)
+  tilesSolver.applyTile(tilesLookup("Hana")    ((Set(5,6,7,8),  false)), THURSDAY,  5)
+  tilesSolver.applyTile(tilesLookup("Hana")    ((Set(5,6,7,8),  false)), THURSDAY,  6)
+  tilesSolver.applyTile(tilesLookup("Hana")    ((Set(5,6),      false)), FRIDAY,    5)
 
-  tilesSolver.applyTile(tilesLookup("Martina")((Set(2,4),true)),MONDAY,5)
-  tilesSolver.applyTile(tilesLookup("Martina")((Set(3),true)),WEDNESDAY,0)
-  tilesSolver.applyTile(tilesLookup("Martina")((Set(2,4),true)),FRIDAY,5)
-  tilesSolver.applyTile(tilesLookup("Martina")((Set(3),true)),WEDNESDAY,5)
-  tilesSolver.applyTile(tilesLookup("Martina")((Set(1),true)),TUESDAY,5)
-  tilesSolver.applyTile(tilesLookup("Martina")((Set(1),true)),THURSDAY,5)
+  tilesSolver.applyTile(tilesLookup("Martina") ((Set(2,4),      true)),  MONDAY,    5)
+  tilesSolver.applyTile(tilesLookup("Martina") ((Set(3),        true)),  WEDNESDAY, 0)
+  tilesSolver.applyTile(tilesLookup("Martina") ((Set(2,4),      true)),  FRIDAY,    5)
+  tilesSolver.applyTile(tilesLookup("Martina") ((Set(3),        true)),  WEDNESDAY, 5)
+  tilesSolver.applyTile(tilesLookup("Martina") ((Set(1),        true)),  TUESDAY,   5)
+  tilesSolver.applyTile(tilesLookup("Martina") ((Set(1),        true)),  THURSDAY,  5)
 
-  tilesSolver.applyTile(tilesLookup("Tereza")((Set(7,8),false)),TUESDAY,7)
+  tilesSolver.applyTile(tilesLookup("Tereza")  ((Set(7,8),      false)), TUESDAY,   7)
 
-  tilesSolver.applyTile(tilesLookup("Lucka")((Set(7,8),false)),TUESDAY,6)
-  tilesSolver.applyTile(tilesLookup("Lucka")((Set(2,4),false)),WEDNESDAY,5)
+  tilesSolver.applyTile(tilesLookup("Lucka")   ((Set(7,8),      false)), TUESDAY,   6)
+  tilesSolver.applyTile(tilesLookup("Lucka")   ((Set(2,4),      false)), WEDNESDAY, 5)
 
   val rows = H.tileIndexRows.sortBy(r => {
     r.map(ti => {

@@ -110,7 +110,7 @@ object Straightener {
           } else l
         })
       })
-      if(!remPoss.isEmpty) {
+      if(!remPoss.isEmpty && remPoss.size<x._2._2.size-x._1.count) {
         jobToTJAndPoss += (x._1 -> (x._2._1 diff remPoss.unzip._1, x._2._2 -- remPoss.unzip._2.toSet))
       }
     })
@@ -127,6 +127,9 @@ object Straightener {
           val uniques = tjs.toSet.toList.sortWith((tj1,tj2) => if(minHour>5){
             !tj1.classHour.mainSubject
           } else tj1.classHour.mainSubject)
+          if(uniques.isEmpty) {
+            println
+          }
           val tj = uniques(h%uniques.size)
           tjs = tjs diff List(tj)
           tjsByDays.get(d) match {

@@ -24,6 +24,7 @@ case class Teacher(val name:String)
 
 case class TeachersJob(val teacher:Teacher, val classHour:ClassHour) {
   override def toString = classHour.subject + " ("+teacher.name+")"
+  def linearize = classHour.classes.map(c => new TeachersJob(teacher,new ClassHour(classHour.subject,Set(c))))
 }
 
 case class Job(val teacher:Teacher, val classHour:ClassHour, val count:Int) {

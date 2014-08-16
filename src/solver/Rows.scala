@@ -125,13 +125,29 @@ object Rows extends App {
   def filterRows(day:Int,hour:Int,teacher:String,grades:Set[Int]):(Int,Int,List[Int]) = {
     filterRows(day,hour,List[(String,Set[Int])]((teacher,grades)))
   }
+  val vis = new ScheduleVisualisation
+  vis.refresh(Conversions.tilesToSchoolSchedule(places,tiles,placed))
+
   def preassignRow(candidateRows:(Int,Int,List[Int])) {
     println(Output.printDayAndHour(candidateRows._1,candidateRows._2))
-    candidateRows._3.take(10).zipWithIndex.foreach(r => println(r._2+": "+Output.printRow(rows(r._1).map(ti => tiles(ti)))))
-    val ind = Integer.parseInt(io.Source.stdin.bufferedReader().readLine())
+    candidateRows._3.zipWithIndex.foreach(r => println(r._2+": "+Output.printRow(rows(r._1).map(ti => tiles(ti)))))
+    val options: List[Array[String]] = candidateRows._3.map(r => {
+      val linearized: Array[TeachersJob] = rows(r).flatMap(ti => tiles(ti).job.toTeachersJob.linearize)
+      linearized
+        .sortWith((tj1, tj2) => tj1.classHour.lowestClass < tj2.classHour.lowestClass)
+        .map(tj => tj.classHour.subject.split(" ")(0) + " ("+tj.teacher.name+")")
+        .toArray
+    })
+    if(options.isEmpty) {
+      System.exit(1)
+    }
+    vis.highlight(candidateRows._1,candidateRows._2,java.awt.Color.RED)
+    val ind = new RowDialog(Output.printDayAndHour(candidateRows._1,candidateRows._2),options).selected.getOrElse(0)
     val ri = candidateRows._3(ind)
+    vis.highlight(candidateRows._1,candidateRows._2,java.awt.Color.LIGHT_GRAY)
     applyRow(ri,candidateRows._1,candidateRows._2)
     rowOpen.popFromOpen(ri)
+    vis.refresh(Conversions.tilesToSchoolSchedule(places,tiles,placed))
   }
 
   // PRE-ASSIGNMENTS

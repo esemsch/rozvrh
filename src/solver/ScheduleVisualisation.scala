@@ -1,8 +1,10 @@
 package solver
 
+import java.awt.event.{MouseEvent, MouseAdapter}
+
 import scala.swing.ScrollPane.BarPolicy
 import scala.swing._
-import scala.swing.event.ButtonClicked
+import scala.swing.event.{MousePressed, MouseClicked, ButtonClicked}
 
 object RowDialog {
   var loc:Option[Point] = None
@@ -21,7 +23,11 @@ class RowDialog(pTitle: String, options:List[Array[String]]) extends Dialog {
     private val length: Int = options.maxBy(_.length).length
     contents = new GridPanel(options.size+1, length) {
       contents+=new Label("")
-      (FIRST_GRADE to LAST_GRADE).foreach(g => contents+=new Label(""+(g+1)))
+      (FIRST_GRADE to LAST_GRADE).foreach(g => contents+={
+        val l = new Label(""+(g+1))
+        l.horizontalAlignment = Alignment.Left
+        l
+      })
       options.zipWithIndex.foreach(o => {
         val button = new Button("" + (o._2+1))
         button.reactions += {
@@ -34,16 +40,26 @@ class RowDialog(pTitle: String, options:List[Array[String]]) extends Dialog {
             close()
         }
         contents += button
-        o._1.padTo(length,"").foreach(contents += new Label(_))
+        o._1.padTo(length,"").foreach(s => contents += {
+          val l = new Label(s)
+          l.horizontalAlignment = Alignment.Left
+          l
+        })
       })
     }
   }
   if (!RowDialog.loc.isDefined) centerOnScreen()
   else location = new Point(RowDialog.loc.get.x,RowDialog.loc.get.y)
 
-  preferredSize = new Dimension(800,800)
+  preferredSize = new Dimension(800,400)
+  maximumSize = new Dimension(1200,450)
   open()
 
+}
+
+object AuxObj extends App {
+  val ss = Input.readScheduleFromFile("schedule.txt")
+  ScheduleVisualisation.vis.refresh(ss)
 }
 
 object ScheduleVisualisation {
@@ -55,9 +71,11 @@ class ScheduleVisualisation {
 
   var labels:Array[Array[Array[Label]]] = (MONDAY to FRIDAY).map(d =>
     (FIRST_GRADE to LAST_GRADE).map(g =>
-      (FIRST_HOUR to LAST_HOUR).map(h =>
-        new Label()
-      ).toArray
+      (FIRST_HOUR to LAST_HOUR).map(h => {
+        val l = new Label()
+        l.horizontalAlignment = Alignment.Left
+        l
+      }).toArray
     ).toArray
   ).toArray;
 
@@ -65,38 +83,32 @@ class ScheduleVisualisation {
   val mf = new MainFrame {
     title = "Rozvrh"
 
-    override def closeOperation() {}
-
   }
 
-  var scroll: ScrollPane = null
+  val scroll: ScrollPane = new ScrollPane() {
 
-  mf.contents = new FlowPanel() {
-    scroll = new ScrollPane() {
+    verticalScrollBarPolicy = BarPolicy.Always
+    horizontalScrollBarPolicy = BarPolicy.Always
 
-      verticalScrollBarPolicy = BarPolicy.Always
+    preferredSize = new Dimension(1300, 750)
 
-      preferredSize = new Dimension(1300, 750)
-
-      contents = new GridPanel(5, 1) {
-        (MONDAY to FRIDAY).foreach(d =>
-          contents += new GridPanel(10, 9) {
-            (FIRST_GRADE to LAST_GRADE).foreach(g =>
-              (FIRST_HOUR to LAST_HOUR).foreach(h => {
-                labels(d)(g)(h).text = "-"
-                labels(d)(g)(h).opaque = true
-                contents += labels(d)(g)(h)
-              })
-            )
-            border = Swing.EmptyBorder(15, 10, 10, 10)
-          }
-        )
-      }
+    contents = new GridPanel(5, 1) {
+      (MONDAY to FRIDAY).foreach(d =>
+        contents += new GridPanel(10, 9) {
+          (FIRST_GRADE to LAST_GRADE).foreach(g =>
+            (FIRST_HOUR to LAST_HOUR).foreach(h => {
+              labels(d)(g)(h).text = "-"
+              labels(d)(g)(h).opaque = true
+              contents += labels(d)(g)(h)
+            })
+          )
+          border = Swing.EmptyBorder(3, 2, 2, 2)
+        }
+      )
     }
-    contents+=scroll
-    border = Swing.EmptyBorder(15, 10, 10, 10)
-
   }
+
+  mf.contents = scroll
 
   mf.pack();
 
@@ -108,8 +120,21 @@ class ScheduleVisualisation {
           (FIRST_HOUR to LAST_HOUR).foreach(h => {
             val x = Option(schedule.schoolSchedule(g).classSchedule(d)(h))
             labels(d)(g)(h).text = x.map(o => o.toString).getOrElse("-")
-          })
+            labels(d)(g)(h).peer.addMouseListener(new MouseAdapter {
+
+              override def mouseClicked(e: MouseEvent): Unit = {
+                val dialog = new Dialog()
+                dialog.modal = true
+                dialog.contents = new Label(Output.printDayAndHour(d, h))
+                dialog.pack()
+                dialog.centerOnScreen();
+                dialog.open()
+              }
+
+            })
+          }
         )
+      )
     )
   }
 

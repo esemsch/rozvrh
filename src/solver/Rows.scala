@@ -302,7 +302,7 @@ object Rows extends App {
 
   Output.saveToFile(schoolSchedule,"schedule.txt")
   Output.printSchedule(schoolSchedule,true)
-  ScheduleVisualisation.vis.refresh(Conversions.tilesToSchoolSchedule(places,tiles,placed))
+  ScheduleVisualisation.vis.refresh(schoolSchedule)
 
   Checker.check(schoolSchedule,jobs._2.flatMap(x => x._2).toList)
 }

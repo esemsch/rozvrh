@@ -4,13 +4,6 @@ import scala.swing.ScrollPane.BarPolicy
 import scala.swing._
 import scala.swing.event.ButtonClicked
 
-object ScheduleVisualisation extends App {
-  val schedule = Input.readScheduleFromFile("schedule.txt")
-
-  val v = new ScheduleVisualisation
-  v.refresh(schedule)
-}
-
 object RowDialog {
   var loc:Option[Point] = None
 }
@@ -51,6 +44,11 @@ class RowDialog(pTitle: String, options:List[Array[String]]) extends Dialog {
   preferredSize = new Dimension(800,800)
   open()
 
+}
+
+object ScheduleVisualisation {
+
+  val vis = new ScheduleVisualisation
 }
 
 class ScheduleVisualisation {

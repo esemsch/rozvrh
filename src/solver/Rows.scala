@@ -125,8 +125,8 @@ object Rows extends App {
   def filterRows(day:Int,hour:Int,teacher:String,grades:Set[Int]):(Int,Int,List[Int]) = {
     filterRows(day,hour,List[(String,Set[Int])]((teacher,grades)))
   }
-  val vis = new ScheduleVisualisation
-  vis.refresh(Conversions.tilesToSchoolSchedule(places,tiles,placed))
+
+  ScheduleVisualisation.vis.refresh(Conversions.tilesToSchoolSchedule(places,tiles,placed))
 
   def preassignRow(candidateRows:(Int,Int,List[Int])) {
     println(Output.printDayAndHour(candidateRows._1,candidateRows._2))
@@ -141,13 +141,13 @@ object Rows extends App {
     if(options.isEmpty) {
       System.exit(1)
     }
-    vis.highlight(candidateRows._1,candidateRows._2,java.awt.Color.RED)
+    ScheduleVisualisation.vis.highlight(candidateRows._1,candidateRows._2,java.awt.Color.RED)
     val ind = new RowDialog(Output.printDayAndHour(candidateRows._1,candidateRows._2),options).selected.getOrElse(0)
     val ri = candidateRows._3(ind)
-    vis.highlight(candidateRows._1,candidateRows._2,java.awt.Color.LIGHT_GRAY)
+    ScheduleVisualisation.vis.highlight(candidateRows._1,candidateRows._2,java.awt.Color.LIGHT_GRAY)
     applyRow(ri,candidateRows._1,candidateRows._2)
     rowOpen.popFromOpen(ri)
-    vis.refresh(Conversions.tilesToSchoolSchedule(places,tiles,placed))
+    ScheduleVisualisation.vis.refresh(Conversions.tilesToSchoolSchedule(places,tiles,placed))
   }
 
   // PRE-ASSIGNMENTS
@@ -262,6 +262,7 @@ object Rows extends App {
   search(0,1)
 
   Output.printTiles(places,tiles,placed)
+  ScheduleVisualisation.vis.refresh(Conversions.tilesToSchoolSchedule(places,tiles,placed))
 
   println(Data.data2.foldLeft(0)((total,j) => total + j.count)-placed.filter(pl => (pl(2) != -1)).size)
   tiles.filter(t => counts(t.id)>0).foreach(t => println(t.job+" --- "+counts(t.id)))
@@ -295,11 +296,13 @@ object Rows extends App {
   maxRowSearch(0,1)
 
   Output.printSchedule(Conversions.tilesToSchoolSchedule(places,tiles,placed))
+  ScheduleVisualisation.vis.refresh(Conversions.tilesToSchoolSchedule(places,tiles,placed))
 
   val schoolSchedule = Straightener.straighten2(Conversions.tilesToJobsArray(places,tiles,placed),jobs._2.toMap)
 
   Output.saveToFile(schoolSchedule,"schedule.txt")
   Output.printSchedule(schoolSchedule,true)
+  ScheduleVisualisation.vis.refresh(Conversions.tilesToSchoolSchedule(places,tiles,placed))
 
   Checker.check(schoolSchedule,jobs._2.flatMap(x => x._2).toList)
 }

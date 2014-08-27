@@ -57,6 +57,29 @@ class RowDialog(pTitle: String, options:List[Array[String]]) extends Dialog {
 
 }
 
+class TeacherHourDialog(d:Int, h:Int) extends Dialog {
+
+  val out:Array[Option[Teacher]] = (FIRST_GRADE to LAST_GRADE).map(g => None).toArray
+
+  modal = true
+
+  title = Output.printDayAndHour(d,h)
+
+  contents = new GridPanel(LAST_GRADE-FIRST_GRADE+1,2) {
+    (FIRST_GRADE to LAST_GRADE).foreach(g => {
+      val teachers: List[Teacher] = Data.data._2.toList.sortWith((t1,t2) => t1.name.compareTo(t2.name)<=0)
+      val teachers1: List[Teacher] = Teacher("-") :: teachers
+      contents += new Label(""+(g+1)+".")
+      contents += new ComboBox[Teacher](teachers1)
+    })
+    border = Swing.EmptyBorder(3, 2, 2, 2)
+  }
+
+  preferredSize = new Dimension(300,700)
+  open()
+
+}
+
 object AuxObj extends App {
   val ss = Input.readScheduleFromFile("schedule.txt")
   ScheduleVisualisation.vis.refresh(ss)
@@ -99,6 +122,13 @@ class ScheduleVisualisation {
             (FIRST_HOUR to LAST_HOUR).foreach(h => {
               labels(d)(g)(h).text = "-"
               labels(d)(g)(h).opaque = true
+              labels(d)(g)(h).peer.addMouseListener(new MouseAdapter {
+
+                override def mouseClicked(e: MouseEvent): Unit = {
+                  new TeacherHourDialog(d,h)
+                }
+
+              })
               contents += labels(d)(g)(h)
             })
           )
@@ -120,18 +150,6 @@ class ScheduleVisualisation {
           (FIRST_HOUR to LAST_HOUR).foreach(h => {
             val x = Option(schedule.schoolSchedule(g).classSchedule(d)(h))
             labels(d)(g)(h).text = x.map(o => o.toString).getOrElse("-")
-            labels(d)(g)(h).peer.addMouseListener(new MouseAdapter {
-
-              override def mouseClicked(e: MouseEvent): Unit = {
-                val dialog = new Dialog()
-                dialog.modal = true
-                dialog.contents = new Label(Output.printDayAndHour(d, h))
-                dialog.pack()
-                dialog.centerOnScreen();
-                dialog.open()
-              }
-
-            })
           }
         )
       )

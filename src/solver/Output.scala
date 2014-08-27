@@ -135,16 +135,16 @@ object Output {
     writer.close
   }
 
-  def printTiles(places:Array[Array[Array[Int]]],tiles:Seq[Tile],placed:Seq[Array[Int]]) {
+  def printTiles(solverState:SolverState) {
     def findJob(grade:Int, day:Int, hour:Int) = {
-      val allThatDayAndHour = placed.filter(pi => {
+      val allThatDayAndHour = solverState.placed.filter(pi => {
         (pi(0) == day) && (pi(1) == hour)
       })
       val find = allThatDayAndHour.find(pi => {
-        val tile = tiles(pi(2))
+        val tile = solverState.tiles(pi(2))
         tile.job.classHour.classes.contains(grade)
       })
-      find.map(x => tiles(x(2)).job)
+      find.map(x => solverState.tiles(x(2)).job)
     }
     def tileToLine(tile:Array[Int],day:Int,hour:Int) = {
       def isBitThere(pos:Int,int:Int) = {
@@ -161,7 +161,7 @@ object Output {
     (MONDAY to FRIDAY).foreach(d => {
       println(DAY_NAME(d))
       val dayTable = (FIRST_HOUR to LAST_HOUR).map(h => {
-        tileToLine(places(d)(h),d,h)
+        tileToLine(solverState.places(d)(h),d,h)
       })
       val rotatedDayTable = (FIRST_GRADE to LAST_GRADE).map(gr => {
         val ngr = gr

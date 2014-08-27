@@ -20,7 +20,9 @@ case class ClassHour(val subject:String, val classes:Set[Int]) {
   def isMutuallyExclusive(otherClassHour:ClassHour) = classes.exists(cls => otherClassHour.classes.exists(otherCls => cls==otherCls))
 }
 
-case class Teacher(val name:String)
+case class Teacher(val name:String) {
+  override def toString: String = name
+}
 
 case class TeachersJob(val teacher:Teacher, val classHour:ClassHour) {
   override def toString = classHour.subject + " ("+teacher.name+")"

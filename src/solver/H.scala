@@ -10,9 +10,9 @@ object H extends App {
   }
 
   def calcRows = {
-    val (tilesSolver,tiles,places,counts,placed,mapToPlaced,tilesPerDay,jobs,tilesLookup,teachers) = TilesSolver.factory
+    val solverState = TilesSolver.factory
 
-    val rows = tilesSolver.calcRows(MONDAY,1,Set(0,1,2,3,4,5,6,7,8))
+    val rows = solverState.tilesSolver.calcRows(MONDAY,1,Set(0,1,2,3,4,5,6,7,8))
 
     val writer = new PrintWriter(new File("rows.txt"))
     writer.write(rows.map(r => r.mkString(" | ")).mkString("\n"))

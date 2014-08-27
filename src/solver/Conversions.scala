@@ -2,16 +2,16 @@ package solver
 
 object Conversions {
 
-  def tilesToJobsArray(places:Array[Array[Array[Int]]],tiles:Seq[Tile],placed:Seq[Array[Int]]) = {
+  def tilesToJobsArray(solverState:SolverState) = {
     def findJob(grade:Int, day:Int, hour:Int) = {
-      val allThatDayAndHour = placed.filter(pi => {
+      val allThatDayAndHour = solverState.placed.filter(pi => {
         (pi(0) == day) && (pi(1) == hour)
       })
       val find = allThatDayAndHour.find(pi => {
-        val tile = tiles(pi(2))
+        val tile = solverState.tiles(pi(2))
         tile.job.classHour.classes.contains(grade+1)
       })
-      find.map(x => tiles(x(2)).job)
+      find.map(x => solverState.tiles(x(2)).job)
     }
 
     val sch = new Array[Array[Array[Job]]](LAST_GRADE - FIRST_GRADE + 1)
@@ -28,11 +28,12 @@ object Conversions {
     sch
   }
 
-  def tilesToSchoolSchedule(places:Array[Array[Array[Int]]],tiles:Seq[Tile],placed:Seq[Array[Int]]) = {
+  def tilesToSchoolSchedule(solverState:SolverState) = {
 
     val schoolSchedule = new SchoolSchedule()
 
-    tilesToJobsArray(places,tiles,placed).zipWithIndex.foreach(gr => gr._1.zipWithIndex.foreach(d => d._1.zipWithIndex.foreach(h => {
+    tilesToJobsArray(solverState)
+      .zipWithIndex.foreach(gr => gr._1.zipWithIndex.foreach(d => d._1.zipWithIndex.foreach(h => {
       schoolSchedule.schoolSchedule(gr._2).classSchedule(d._2)(h._2) = Option(h._1).flatMap(j => Option(j.toTeachersJob)).getOrElse(null)
     })))
 

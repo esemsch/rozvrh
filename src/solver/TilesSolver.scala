@@ -11,6 +11,8 @@ class TilesSolver(
                    tilesPerDay:Array[(Array[Int],Tile)]
                    ) {
 
+  val solverState = SolverState(this,tiles,places,counts,placed,mapToPlaced,tilesPerDay,null,null,null)
+
   val placedPerHour = (MONDAY to FRIDAY).map(d => (FIRST_HOUR to LAST_HOUR).map(h => 0).toArray).toArray
 
   def applicable(t:Tile,d:Int,h:Int) = {
@@ -102,8 +104,8 @@ class TilesSolver(
 //      }
       val openSize = open.open.foldLeft(0)((tot,t) => tot + counts(t.id))
       if(openSize<best) {
-        Output.printTiles(places,tiles,placed)
-        ScheduleVisualisation.vis.refresh(Conversions.tilesToSchoolSchedule(places,tiles,placed))
+        Output.printTiles(solverState)
+        ScheduleVisualisation.vis.refresh(Conversions.tilesToSchoolSchedule(solverState))
         println(open)
         best = openSize
       }
@@ -249,6 +251,18 @@ object TilesSolver {
 
     val tilesSolver = new TilesSolver(tiles,places,counts,placed,mapToPlaced,tilesPerDay)
 
-    (tilesSolver,tiles,places,counts,placed,mapToPlaced,tilesPerDay,jobs,tilesLookup,teachers)
+    SolverState(
+      tilesSolver,
+      tiles,
+      places,
+      counts,
+      placed,
+      mapToPlaced,
+      tilesPerDay,
+      jobs,
+      tilesLookup,
+      teachers
+    )
   }
+
 }

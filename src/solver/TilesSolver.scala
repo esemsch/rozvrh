@@ -105,7 +105,7 @@ class TilesSolver(
       val openSize = open.open.foldLeft(0)((tot,t) => tot + counts(t.id))
       if(openSize<best) {
         Output.printTiles(solverState)
-        ScheduleVisualisation.vis.refresh(Conversions.tilesToSchoolSchedule(solverState))
+        ScheduleVisualisation.vis.refresh(Transformations.solverStateToSchoolSchedule(solverState))
         println(open)
         best = openSize
       }

@@ -107,11 +107,7 @@ class RowsSolver(rowOpen:RowOpen,daysOrder: Array[Int]) {
     }
     if(cnt%100000==0) {
       Output.printTiles(solverState)
-      println(Data.data2.foldLeft(0)((total,j) => total + j.count)-solverState.placed.filter(pl => (pl(2) != -1)).size)
-      tiles
-        .filter(t => counts(t.id)>0)
-        .sortWith((t1,t2) => t1.job.teacher.name < t2.job.teacher.name)
-        .foreach(t => println(t.job+" --- "+counts(t.id)))
+      Stats.printTilesToGo(solverState)
     }
     if(day>FRIDAY) {
       true

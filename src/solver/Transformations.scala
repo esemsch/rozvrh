@@ -1,8 +1,8 @@
 package solver
 
-object Conversions {
+object Transformations {
 
-  def tilesToJobsArray(solverState:SolverState) = {
+  def solverStateToJobsArray(solverState:SolverState) = {
     def findJob(grade:Int, day:Int, hour:Int) = {
       val allThatDayAndHour = solverState.placed.filter(pi => {
         (pi(0) == day) && (pi(1) == hour)
@@ -28,11 +28,11 @@ object Conversions {
     sch
   }
 
-  def tilesToSchoolSchedule(solverState:SolverState) = {
+  def solverStateToSchoolSchedule(solverState:SolverState) = {
 
     val schoolSchedule = new SchoolSchedule()
 
-    tilesToJobsArray(solverState)
+    solverStateToJobsArray(solverState)
       .zipWithIndex.foreach(gr => gr._1.zipWithIndex.foreach(d => d._1.zipWithIndex.foreach(h => {
       schoolSchedule.schoolSchedule(gr._2).classSchedule(d._2)(h._2) = Option(h._1).flatMap(j => Option(j.toTeachersJob)).getOrElse(null)
     })))

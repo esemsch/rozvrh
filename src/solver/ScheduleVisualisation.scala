@@ -80,9 +80,13 @@ class TeacherHourDialog(d:Int, h:Int) extends Dialog {
 
 }
 
+
+
 object AuxObj extends App {
-  val ss = Input.readScheduleFromFile("schedule.txt")
-  ScheduleVisualisation.vis.refresh(ss)
+//  val ss = Input.readScheduleFromFile("schedule.txt")
+  val solverState = Input.readSolverStateFromFile("solver-state.json")
+    
+  ScheduleVisualisation.vis.refresh(Transformations.solverStateToSchoolSchedule(solverState))
 }
 
 object ScheduleVisualisation {

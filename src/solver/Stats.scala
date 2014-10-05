@@ -63,7 +63,7 @@ object Stats  {
 
   }
 
-  def printTilesToGo(solverState:SolverState): Unit = {
+  def printUnplacedTiles(solverState:SolverState): Unit = {
     println("Number of tiles to place: "+(Data.data2.foldLeft(0)((total,j) => total + j.count)-solverState.placed.filter(pl => (pl(2) != -1)).size))
     solverState.tiles.filter(t => solverState.counts(t.id)>0).foreach(t => println(t.job+" --- "+solverState.counts(t.id)))
   }

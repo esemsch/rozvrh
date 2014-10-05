@@ -107,7 +107,7 @@ class RowsSolver(rowOpen:RowOpen,daysOrder: Array[Int]) {
     }
     if(cnt%100000==0) {
       Output.printTiles(solverState)
-      Stats.printTilesToGo(solverState)
+      Stats.printUnplacedTiles(solverState)
     }
     if(day>FRIDAY) {
       true

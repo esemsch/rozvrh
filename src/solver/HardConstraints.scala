@@ -2,7 +2,7 @@ package solver
 
 object HardConstraints {
 
-  def applyHardConstraints(solverState:SolverState): Unit = {
+  def applyHardConstraints(solverState:SolverState) = {
     // UNAVAILABILITY
     List(
       Teacher("Iva")     -> (Set(MONDAY,THURSDAY,FRIDAY),     0 to 7),
@@ -41,6 +41,8 @@ object HardConstraints {
     freeHours(List(WEDNESDAY,FRIDAY),                   List(LAST_GRADE-1,LAST_GRADE),   6 to 7)
     freeHours(List(TUESDAY),                            List(LAST_GRADE-1,LAST_GRADE),   List(5))
     freeHours(List(MONDAY),                             FIRST_GRADE+5 to LAST_GRADE,     List(0))
+
+    solverState
   }
 
 }

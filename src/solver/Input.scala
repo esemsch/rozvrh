@@ -1,6 +1,8 @@
 package solver
 
-object Input {
+import spray.json.JsonParser
+
+object Input extends App {
 
   def readScheduleFromFile(file:String) = {
     val rows =  scala.io.Source.fromFile(file).getLines().toArray
@@ -23,5 +25,18 @@ object Input {
     })
     ss
   }
+
+  def readSolverStateFromFile(file:String) = {
+    import Output.SolverStateJsonProtocol._
+
+    val json = scala.io.Source.fromFile(file).getLines().mkString("\n")
+    val ss = JsonParser(json).convertTo[SolverState]
+
+    ss
+  }
+
+  val ss = readSolverStateFromFile("solver-state.json")
+
+  println
 
 }

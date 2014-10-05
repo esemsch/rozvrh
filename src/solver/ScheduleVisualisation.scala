@@ -117,7 +117,7 @@ class ScheduleVisualisation {
 
     contents = new GridPanel(5, 1) {
       (MONDAY to FRIDAY).foreach(d =>
-        contents += new GridPanel(10, 9) {
+        contents += new GridPanel(NUMBER_OF_GRADES + 1, NUMBER_OF_HOURS + 1) {
           (FIRST_GRADE to LAST_GRADE).foreach(g =>
             (FIRST_HOUR to LAST_HOUR).foreach(h => {
               labels(d)(g)(h).text = "-"

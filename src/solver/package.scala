@@ -21,6 +21,11 @@ package object solver {
   val FIRST_GRADE = 0
   val LAST_GRADE = 8
 
+
+  val NUMBER_OF_DAYS = FRIDAY - MONDAY + 1
+  val NUMBER_OF_GRADES = LAST_GRADE - FIRST_GRADE + 1
+  val NUMBER_OF_HOURS = FIRST_HOUR - LAST_HOUR + 1
+
   val VERY_HIGH_H = 10000
 
 

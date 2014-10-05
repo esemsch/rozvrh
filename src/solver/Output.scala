@@ -1,8 +1,10 @@
 package solver
 
 import java.io.{File, PrintWriter}
+import spray.json._
+import scala.collection.Map
 
-object Output {
+object Output extends App {
 
   def printCSV(cs:Seq[Seq[Any]],leftAxisDays:Boolean) {
     def printLine(ds:Seq[Any],leftAxis:String) {
@@ -171,4 +173,84 @@ object Output {
     })
   }
 
+  object SolverStateJsonProtocol extends DefaultJsonProtocol {
+
+    implicit val teachFormat = jsonFormat1(Teacher)
+
+    implicit val classHourFormat = new JsonFormat[ClassHour] {
+      def write(ch: ClassHour) = JsObject(
+        "subject" -> JsString(ch.subject),
+        "classes" -> ch.classes.toJson
+      )
+
+      def read(value:JsValue) = {
+        val fields: Seq[JsValue] = value.asJsObject.getFields("subject","classes")
+        ClassHour(fields(0).toString(),fields(1).convertTo[Set[Int]])
+      }
+    }
+
+    implicit val teachersJobFormat = jsonFormat2(TeachersJob)
+
+    implicit val jobFormat = jsonFormat3(Job)
+
+    implicit val tileFormat = jsonFormat4(Tile)
+
+    implicit val solverStateFormat = new RootJsonFormat[SolverState] {
+      def write(ss: SolverState) = JsObject(
+        "tiles" -> ss.tiles.toJson,
+        "places" -> ss.places.toJson,
+        "counts" -> ss.counts.toJson,
+        "placed" -> ss.placed.toJson,
+        "mapToPlaced" -> ss.mapToPlaced.toJson,
+        "tilesPerDay" -> ss.tilesPerDay.toJson,
+        "jobs" -> ss.jobs._1.toJson,
+        "jobsLookup" -> JsArray(ss.jobs._2.map(e => JsObject(e._1.toString -> e._2.toJson)).toList),
+        "tilesLookup" -> JsObject(ss.tilesLookup.map(e => e._1 -> JsArray(e._2
+          .map(f => JsObject("key" -> f._1.toJson,"value" -> f._2.toJson))
+          .toList))),
+        "teachers" -> ss.teachers.toJson
+      )
+      def read(value: JsValue) = {
+        val fields: Seq[JsValue] = value.asJsObject.getFields("tiles","places","counts","placed","mapToPlaced","tilesPerDay","jobs","jobsLookup","tilesLookup","teachers")
+        val tiles = fields(0).convertTo[Array[Tile]]
+        val places = fields(1).convertTo[Array[Array[Array[Int]]]]
+        val counts = fields(2).convertTo[Array[Int]]
+        val placed = fields(3).convertTo[Array[Array[Int]]]
+        val mapToPlaced = fields(4).convertTo[Array[Int]]
+        val tilesPerDay = fields(5).convertTo[Array[(Array[Int], Tile)]]
+        val jobs = fields(6).convertTo[List[Job]]
+        val jobsLookup = fields(7).convertTo[List[JsObject]]
+
+        SolverState(
+          new TilesSolver(tiles,places,counts,placed,mapToPlaced,tilesPerDay),
+          tiles,
+          places,
+          counts,
+          placed,
+          mapToPlaced,
+          tilesPerDay,
+          null,
+          null,
+          null
+        )
+      }
+    }
+  }
+
+  def saveSolverState(file:String,solverState: SolverState) {
+    val pw = new PrintWriter(new File(file))
+
+    import SolverStateJsonProtocol._
+
+    pw.write(solverState.toJson.prettyPrint)
+
+    pw.flush()
+    pw.close()
+  }
+
+  val solverState = TilesSolver.factory
+
+  HardConstraints.applyHardConstraints(solverState)
+
+  Output.saveSolverState("solver-state.json",solverState)
 }
